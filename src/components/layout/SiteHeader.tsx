@@ -1,8 +1,9 @@
 import Link from "next/link";
+import MobileMenu from "@/components/layout/MobileMenu";
 
 export default function SiteHeader() {
   return (
-    <header className="border-b border-[var(--border)] bg-[var(--paper)]">
+    <header className="relative border-b border-[var(--border)] bg-[var(--paper)]">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
         <Link href="/" className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--forest)] text-sm font-bold text-white">
@@ -17,7 +18,10 @@ export default function SiteHeader() {
           </div>
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex" aria-label="Primary navigation">
+        <nav
+          className="hidden items-center gap-8 md:flex"
+          aria-label="Primary navigation"
+        >
           <Link
             href="/explore"
             className="text-sm font-medium text-[var(--muted)] transition hover:text-[var(--forest)]"
@@ -40,10 +44,10 @@ export default function SiteHeader() {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="hidden items-center gap-3 md:flex">
           <Link
             href="/login"
-            className="hidden text-sm font-semibold text-[var(--forest)] sm:block"
+            className="text-sm font-semibold text-[var(--forest)]"
           >
             Sign in
           </Link>
@@ -55,6 +59,8 @@ export default function SiteHeader() {
             Get started
           </Link>
         </div>
+
+        <MobileMenu />
       </div>
     </header>
   );
