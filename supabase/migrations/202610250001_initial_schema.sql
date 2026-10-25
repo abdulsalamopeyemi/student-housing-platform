@@ -306,7 +306,7 @@ returns trigger
 language plpgsql
 security invoker
 set search_path = ''
-as $
+as $function$
 declare
   provider_id_for_user uuid;
   is_allowed_submission boolean;
@@ -341,7 +341,7 @@ begin
 
   raise exception 'verification/publication fields are controlled by the review process';
 end;
-$;
+$function$;
 
 drop trigger if exists properties_protect_review_fields on public.properties;
 create trigger properties_protect_review_fields
@@ -353,7 +353,7 @@ returns trigger
 language plpgsql
 security invoker
 set search_path = ''
-as $
+as $function$
 begin
   if current_user in ('postgres', 'service_role') or (select private.is_admin()) then
     return new;
@@ -370,7 +370,7 @@ begin
 
   return new;
 end;
-$;
+$function$;
 
 drop trigger if exists inspection_requests_protect_identity on public.inspection_requests;
 create trigger inspection_requests_protect_identity
