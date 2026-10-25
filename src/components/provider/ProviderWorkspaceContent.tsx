@@ -16,6 +16,26 @@ function statusLabel(value: string) {
   return value.replaceAll("_", " ");
 }
 
+function statusMessage(value: string) {
+  if (value === "pending_review") {
+    return "Awaiting admin review";
+  }
+
+  if (value === "published") {
+    return "Published — visible in the marketplace";
+  }
+
+  if (value === "rejected") {
+    return "Changes required before resubmission";
+  }
+
+  if (value === "draft") {
+    return "Draft — not submitted yet";
+  }
+
+  return statusLabel(value);
+}
+
 export default async function ProviderWorkspaceContent({
   searchParams,
 }: ProviderWorkspaceContentProps) {
@@ -171,7 +191,14 @@ export default async function ProviderWorkspaceContent({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
-                      {canSubmit ? (
+                      {property.publication_status === "published" ? (
+                        <Link
+                          href={`/properties/${property.slug}`}
+                          className="rounded-xl bg-[var(--forest)] px-4 py-2.5 text-sm font-bold text-white"
+                        >
+                          View public listing
+                        </Link>
+                      ) : canSubmit ? (
                         <form action={submitPropertyForReview}>
                           <input
                             type="hidden"
@@ -179,14 +206,14 @@ export default async function ProviderWorkspaceContent({
                             value={property.id}
                           />
                           <button className="rounded-xl bg-[var(--gold)] px-4 py-2.5 text-sm font-bold text-[var(--ink)]">
-                            Submit for review
+                            {property.publication_status === "rejected"
+                              ? "Resubmit for review"
+                              : "Submit for review"}
                           </button>
                         </form>
                       ) : (
-                        <span className="text-sm font-semibold capitalize text-[var(--muted)]">
-                          {property.publication_status === "pending_review"
-                            ? "Awaiting review"
-                            : statusLabel(property.publication_status)}
+                        <span className="text-sm font-semibold text-[var(--muted)]">
+                          {statusMessage(property.publication_status)}
                         </span>
                       )}
                     </div>
