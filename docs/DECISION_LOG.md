@@ -63,3 +63,24 @@ Record meaningful product and architecture decisions here.
 **Why:** A URL such as `/explore?location=Malete&budget=250000` can be refreshed, bookmarked, shared, and rendered on the server. The homepage search can also feed directly into the Explore page.
 
 **Trade-off:** The current prototype submits filters through a standard GET form instead of providing instant filtering while the user types. We can add richer client interaction later if testing shows it is valuable.
+
+
+## DEC-010 — Redesigned homepage hero
+
+**Decision:** Replace the original prototype hero in the rendered homepage with a new `HeroV2` while leaving the old `Hero.tsx` file untouched.
+
+**Why:** The original hero proved the page structure but did not yet create a strong first impression. `HeroV2` gives the product a clearer student-first message, stronger visual hierarchy, a search-first CTA, provider entry point, and trust cues without relying on an undocumented stock image.
+
+**Trade-off:** The right side is still a designed product preview rather than final property photography. Real hero imagery will be added only after its source and rights are documented.
+
+## DEC-011 — Stream request-time Explore state
+
+**Decision:** Access `searchParams` inside `ExploreContent`, which is wrapped by React `Suspense`, instead of awaiting `searchParams` at the top level of the Explore page.
+
+**Why:** With Next.js Cache Components enabled, URL search parameters are request-time data. Keeping them behind a Suspense boundary preserves a prerendered page shell and avoids a blocking-route error.
+
+## DEC-012 — Prerender current demo property slugs
+
+**Decision:** Use `generateStaticParams()` for the current demo property slugs.
+
+**Why:** The three prototype property routes are known in advance, so they can be prerendered cleanly while Cache Components are enabled. When properties move to Postgres, this strategy will be reviewed for real marketplace scale.
