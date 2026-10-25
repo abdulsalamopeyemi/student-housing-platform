@@ -27,12 +27,12 @@ export default function ProviderCTA() {
                 List a property
               </Link>
 
-              <Link
+              <a
                 href="/#how-it-works"
                 className="rounded-xl border border-[var(--border)] px-5 py-3 text-sm font-semibold text-[var(--forest)] transition hover:border-[var(--forest)]"
               >
                 See how it works
-              </Link>
+              </a>
             </div>
           </div>
 
