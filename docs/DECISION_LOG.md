@@ -33,3 +33,11 @@ Record meaningful product and architecture decisions here.
 **Decision:** Start the homepage with a designed property preview rather than an undocumented stock photo.
 
 **Why:** We can establish the layout immediately while avoiding unclear image ownership. A real/generated hero asset will only be added after it is registered in `ASSET_REGISTER.md`.
+
+## DEC-006 — Client state boundary
+
+**Decision:** Keep the property card and property data server-rendered; make only the save interaction a Client Component.
+
+**Why:** State belongs where the UI changes from browser interaction. This avoids turning entire sections into client-side JavaScript just because one button uses `useState`.
+
+**Current limitation:** The save state is temporary and resets after a page refresh. Persistence will be added later when we introduce local persistence or authenticated user accounts.
