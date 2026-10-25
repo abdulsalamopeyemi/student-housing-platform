@@ -29,6 +29,29 @@ interface SavedGuestDraft {
   amenityIds: string[];
 }
 
+type PropertyField =
+  | "name"
+  | "universityId"
+  | "area"
+  | "description"
+  | "roomType"
+  | "annualRent"
+  | "availableCount";
+
+type FieldErrors = Partial<Record<PropertyField, string>>;
+
+function ErrorMessage({ message }: { message?: string }) {
+  if (!message) {
+    return null;
+  }
+
+  return (
+    <p className="mt-1.5 text-sm font-medium text-red-700" role="alert">
+      {message}
+    </p>
+  );
+}
+
 function inputValue(form: HTMLFormElement, name: string) {
   const field = form.elements.namedItem(name);
 
@@ -49,6 +72,7 @@ export default function PropertyDraftForm({
   const [feeRows, setFeeRows] = useState([0]);
   const [savedDraft, setSavedDraft] = useState<SavedGuestDraft | null>(null);
   const [allAmenitiesSelected, setAllAmenitiesSelected] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -186,16 +210,112 @@ export default function PropertyDraftForm({
     setAllAmenitiesSelected(nextChecked);
   }
 
-  function saveGuestDraftAndContinue(
-    event: React.FormEvent<HTMLFormElement>,
-  ) {
+  function validatePropertyForm(form: HTMLFormElement) {
+    const errors: FieldErrors = {};
+    const name = inputValue(form, "name").trim();
+    const universityId = inputValue(form, "universityId");
+    const area = inputValue(form, "area").trim();
+    const description = inputValue(form, "description").trim();
+    const roomType = inputValue(form, "roomType").trim();
+    const annualRent = Number(inputValue(form, "annualRent"));
+    const availableRooms = Number(inputValue(form, "availableCount"));
+
+    if (name.length < 3) {
+      errors.name = "Enter a property name with at least 3 characters.";
+    }
+
+    if (!universityId) {
+      errors.universityId = "Choose the university this property serves.";
+    }
+
+    if (area.length < 2) {
+      errors.area = "Enter the property area or neighbourhood.";
+    }
+
+    if (description.length < 20) {
+      errors.description =
+        "Describe the property in at least 20 characters so students know what to expect.";
+    }
+
+    if (roomType.length < 2) {
+      errors.roomType = "Enter a room type, for example Self-contained.";
+    }
+
+    if (!Number.isFinite(annualRent) || annualRent <= 0) {
+      errors.annualRent = "Enter a valid annual rent greater than ₦0.";
+    }
+
+    if (!Number.isInteger(availableRooms) || availableRooms < 0) {
+      errors.availableCount = "Available rooms must be a whole number from 0 upward.";
+    }
+
+    return errors;
+  }
+
+  function focusFirstError(errors: FieldErrors) {
+    const firstField = Object.keys(errors)[0] as PropertyField | undefined;
+
+    if (!firstField) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      const field = formRef.current?.elements.namedItem(firstField);
+
+      if (
+        field instanceof HTMLInputElement ||
+        field instanceof HTMLTextAreaElement ||
+        field instanceof HTMLSelectElement
+      ) {
+        field.focus({ preventScroll: true });
+        field.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
+  }
+
+  function handleFormInput(event: React.FormEvent<HTMLFormElement>) {
+    const target = event.target;
+
+    if (
+      !(target instanceof HTMLInputElement) &&
+      !(target instanceof HTMLTextAreaElement) &&
+      !(target instanceof HTMLSelectElement)
+    ) {
+      return;
+    }
+
+    const name = target.name as PropertyField;
+
+    if (!(name in fieldErrors)) {
+      return;
+    }
+
+    setFieldErrors((current) => {
+      const next = { ...current };
+      delete next[name];
+      return next;
+    });
+  }
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    const form = event.currentTarget;
+    const errors = validatePropertyForm(form);
+
+    if (Object.keys(errors).length > 0) {
+      event.preventDefault();
+      setFieldErrors(errors);
+      focusFirstError(errors);
+      return;
+    }
+
+    setFieldErrors({});
+
     if (mode !== "guest") {
       return;
     }
 
     event.preventDefault();
 
-    const form = event.currentTarget;
     const data = new FormData(form);
 
     const draft: SavedGuestDraft = {
@@ -220,12 +340,27 @@ export default function PropertyDraftForm({
     <form
       ref={formRef}
       action={mode === "provider" ? createPropertyDraft : undefined}
-      onSubmit={mode === "guest" ? saveGuestDraftAndContinue : undefined}
+      onSubmit={handleSubmit}
+      onInput={handleFormInput}
+      noValidate
       className="space-y-8"
     >
       {savedDraft ? (
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
           Your saved browser draft has been restored.
+        </div>
+      ) : null}
+
+      {Object.keys(fieldErrors).length > 0 ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4" role="alert">
+          <p className="font-bold text-red-800">
+            Please fix {Object.keys(fieldErrors).length === 1 ? "this field" : "the highlighted fields"} before saving.
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-red-700">
+            {Object.values(fieldErrors).map((message) => (
+              <li key={message}>{message}</li>
+            ))}
+          </ul>
         </div>
       ) : null}
 
@@ -244,8 +379,12 @@ export default function PropertyDraftForm({
               name="name"
               type="text"
               placeholder="e.g. Victory Lodge"
-              className="w-full rounded-xl border border-[var(--border)] px-4 py-3 outline-none focus:border-[var(--emerald)]"
+              aria-invalid={Boolean(fieldErrors.name)}
+              className={`w-full rounded-xl border px-4 py-3 outline-none focus:border-[var(--emerald)] ${
+                fieldErrors.name ? "border-red-400 bg-red-50/40" : "border-[var(--border)]"
+              }`}
             />
+            <ErrorMessage message={fieldErrors.name} />
           </label>
 
           <label>
@@ -256,7 +395,10 @@ export default function PropertyDraftForm({
               required
               name="universityId"
               defaultValue={universities[0]?.id ?? ""}
-              className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none focus:border-[var(--emerald)]"
+              aria-invalid={Boolean(fieldErrors.universityId)}
+              className={`w-full rounded-xl border bg-white px-4 py-3 outline-none focus:border-[var(--emerald)] ${
+                fieldErrors.universityId ? "border-red-400" : "border-[var(--border)]"
+              }`}
             >
               {universities.map((university) => (
                 <option key={university.id} value={university.id}>
@@ -264,6 +406,7 @@ export default function PropertyDraftForm({
                 </option>
               ))}
             </select>
+            <ErrorMessage message={fieldErrors.universityId} />
           </label>
 
           <label>
@@ -275,8 +418,12 @@ export default function PropertyDraftForm({
               name="area"
               type="text"
               placeholder="e.g. Malete"
-              className="w-full rounded-xl border border-[var(--border)] px-4 py-3 outline-none focus:border-[var(--emerald)]"
+              aria-invalid={Boolean(fieldErrors.area)}
+              className={`w-full rounded-xl border px-4 py-3 outline-none focus:border-[var(--emerald)] ${
+                fieldErrors.area ? "border-red-400 bg-red-50/40" : "border-[var(--border)]"
+              }`}
             />
+            <ErrorMessage message={fieldErrors.area} />
           </label>
 
           <label className="sm:col-span-2">
@@ -301,8 +448,12 @@ export default function PropertyDraftForm({
               name="description"
               rows={5}
               placeholder="Describe the accommodation, access, compound, water situation, and other useful facts."
-              className="w-full resize-y rounded-xl border border-[var(--border)] px-4 py-3 outline-none focus:border-[var(--emerald)]"
+              aria-invalid={Boolean(fieldErrors.description)}
+              className={`w-full resize-y rounded-xl border px-4 py-3 outline-none focus:border-[var(--emerald)] ${
+                fieldErrors.description ? "border-red-400 bg-red-50/40" : "border-[var(--border)]"
+              }`}
             />
+            <ErrorMessage message={fieldErrors.description} />
           </label>
         </div>
       </section>
@@ -322,8 +473,12 @@ export default function PropertyDraftForm({
               name="roomType"
               type="text"
               placeholder="Self-contained room"
-              className="w-full rounded-xl border border-[var(--border)] px-4 py-3 outline-none focus:border-[var(--emerald)]"
+              aria-invalid={Boolean(fieldErrors.roomType)}
+              className={`w-full rounded-xl border px-4 py-3 outline-none focus:border-[var(--emerald)] ${
+                fieldErrors.roomType ? "border-red-400 bg-red-50/40" : "border-[var(--border)]"
+              }`}
             />
+            <ErrorMessage message={fieldErrors.roomType} />
           </label>
 
           <label>
@@ -337,8 +492,12 @@ export default function PropertyDraftForm({
               name="annualRent"
               type="number"
               placeholder="250000"
-              className="w-full rounded-xl border border-[var(--border)] px-4 py-3 outline-none focus:border-[var(--emerald)]"
+              aria-invalid={Boolean(fieldErrors.annualRent)}
+              className={`w-full rounded-xl border px-4 py-3 outline-none focus:border-[var(--emerald)] ${
+                fieldErrors.annualRent ? "border-red-400 bg-red-50/40" : "border-[var(--border)]"
+              }`}
             />
+            <ErrorMessage message={fieldErrors.annualRent} />
           </label>
 
           <label>
@@ -352,8 +511,12 @@ export default function PropertyDraftForm({
               name="availableCount"
               type="number"
               defaultValue="1"
-              className="w-full rounded-xl border border-[var(--border)] px-4 py-3 outline-none focus:border-[var(--emerald)]"
+              aria-invalid={Boolean(fieldErrors.availableCount)}
+              className={`w-full rounded-xl border px-4 py-3 outline-none focus:border-[var(--emerald)] ${
+                fieldErrors.availableCount ? "border-red-400 bg-red-50/40" : "border-[var(--border)]"
+              }`}
             />
+            <ErrorMessage message={fieldErrors.availableCount} />
           </label>
         </div>
       </section>
