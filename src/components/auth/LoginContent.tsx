@@ -41,9 +41,15 @@ export default async function LoginContent({
       {params.error ? (
         <div
           role="alert"
-          className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+          className="mb-6 flex items-start justify-between gap-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
         >
-          {params.error}
+          <span>{params.error}</span>
+          <Link
+            href={`/login?next=${encodeURIComponent(nextPath)}`}
+            className="shrink-0 font-bold underline underline-offset-4"
+          >
+            Dismiss
+          </Link>
         </div>
       ) : null}
 
@@ -141,7 +147,7 @@ export default async function LoginContent({
           </h2>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
             Check your email carefully. We block common domain typos before
-            creating the account and ask you to enter the address twice.
+            creating the account, then verify ownership with a confirmation email.
           </p>
 
           <form action={signup} className="mt-6 space-y-4">
@@ -170,21 +176,6 @@ export default async function LoginContent({
                 required
                 type="email"
                 name="email"
-                autoComplete="email"
-                inputMode="email"
-                spellCheck={false}
-                className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none focus:border-[var(--emerald)]"
-              />
-            </label>
-
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-                Confirm email
-              </span>
-              <input
-                required
-                type="email"
-                name="confirmEmail"
                 autoComplete="email"
                 inputMode="email"
                 spellCheck={false}
