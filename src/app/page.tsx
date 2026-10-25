@@ -1,5 +1,5 @@
 import FeaturedProperties from "@/components/home/FeaturedProperties";
-import Hero from "@/components/home/Hero";
+import HeroV2 from "@/components/home/HeroV2";
 import HowItWorks from "@/components/home/HowItWorks";
 import ProviderCTA from "@/components/home/ProviderCTA";
 import TrustAndSafety from "@/components/home/TrustAndSafety";
@@ -13,7 +13,7 @@ export default function Home() {
       <SiteHeader />
 
       <main>
-        <Hero />
+        <HeroV2 />
         <TrustStrip />
         <FeaturedProperties />
         <HowItWorks />
