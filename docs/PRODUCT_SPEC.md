@@ -34,7 +34,8 @@ Need to review listings, manage verification states, handle reports, and keep ma
 - Explore/search properties
 - Property details
 - Inspection/interest request
-- Authentication when required
+- Authentication
+- Provider onboarding
 - List a property
 - Provider management
 - Admin verification
@@ -65,11 +66,11 @@ Need to review listings, manage verification states, handle reports, and keep ma
 - search entry
 - trust messaging
 - featured property cards
-- responsive navigation
+- responsive/sticky navigation
 - provider CTA
 
 ### M2 — Explore/search
-**Status: implemented with demo data**
+**Status: implemented with demo property data**
 
 - location filter
 - budget filter
@@ -78,7 +79,7 @@ Need to review listings, manage verification states, handle reports, and keep ma
 - empty-results state
 
 ### M3 — Property details
-**Status: implemented with demo data**
+**Status: implemented with demo property data**
 
 - dynamic `/properties/[slug]` route
 - property overview
@@ -86,47 +87,59 @@ Need to review listings, manage verification states, handle reports, and keep ma
 - required fee breakdown
 - availability timestamp
 - trust-status explanation
+- Suspense boundary for request-time route data
 
 ### M4 — Backend/data foundation
+**Status: implemented**
+
+- live Supabase project
+- Postgres schema and migrations
+- RLS and least-privilege grants
+- generated database TypeScript types
+- public university lookup from Supabase
+- security advisor: zero findings after schema/auth migrations
+
+### M5 — Authentication and provider identity
+**Status: implemented foundation**
+
+- email/password sign-up
+- email/password sign-in
+- HTTP-only session cookies
+- protected provider routes
+- refresh-token flow for protected routes
+- provider onboarding
+- automatic student → provider role sync
+- provider workspace
+
+### M6 — Real property submission
 **Next**
 
-- create Supabase project
-- define Postgres schema/migrations
-- enable RLS and least-privilege grants
-- replace demo property reads with database queries
+- draft property form
+- room type entry
+- required fees
+- amenities
+- availability
+- submit property for review
 
-### M5 — Real inspection requests
+### M7 — Real marketplace data + inspection requests
 
-- server validation
+- replace demo property arrays with published Postgres properties
 - persist inspection requests
 - request status
 - provider access to relevant requests
-- confirmation/error states
-
-### M6 — Authentication and student accounts
-
-- cookie-based auth
-- student profile
-- persisted saved homes
-- inspection-request history
-
-### M7 — Provider workflow
-
-- provider profile
-- list/edit property
-- room availability
-- image uploads
-- enquiry management
+- persisted student saved properties
 
 ### M8 — Verification and moderation
 
 - admin roles
 - provider/property review
+- publish/reject actions
 - reporting
 - audit history
 
 ### M9 — Production launch
 
+- property photo Storage buckets and policies
 - analytics
 - performance
 - accessibility review
