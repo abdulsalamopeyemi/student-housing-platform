@@ -8,6 +8,7 @@ import {
   normalizeEmail,
   suggestedEmailCorrection,
 } from "@/lib/auth/email-validation";
+import { getCurrentAccount } from "@/lib/data/account";
 import {
   resendSignupConfirmation,
   signInWithPassword,
@@ -28,11 +29,25 @@ function loginRedirectUrl(
   return `/login?${params.toString()}`;
 }
 
-async function confirmationRedirectUrl() {
+function dashboardForRole(role: "student" | "provider" | "admin" | null) {
+  if (role === "admin") {
+    return "/admin/reviews";
+  }
+
+  if (role === "provider") {
+    return "/list-property";
+  }
+
+  return "/account";
+}
+
+async function confirmationRedirectUrl(nextPath: string) {
   const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 
   if (configuredSiteUrl) {
-    return new URL("/auth/confirm", configuredSiteUrl).toString();
+    const url = new URL("/auth/confirm", configuredSiteUrl);
+    url.searchParams.set("next", nextPath);
+    return url.toString();
   }
 
   const requestHeaders = await headers();
@@ -40,7 +55,7 @@ async function confirmationRedirectUrl() {
     requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
 
   if (!host) {
-    return "http://localhost:3000/auth/confirm";
+    return `http://localhost:3000/auth/confirm?next=${encodeURIComponent(nextPath)}`;
   }
 
   const forwardedProtocol = requestHeaders.get("x-forwarded-proto");
@@ -50,7 +65,7 @@ async function confirmationRedirectUrl() {
       ? "http"
       : "https");
 
-  return `${protocol}://${host}/auth/confirm`;
+  return `${protocol}://${host}/auth/confirm?next=${encodeURIComponent(nextPath)}`;
 }
 
 function submittedEmailError(email: string) {
@@ -138,7 +153,12 @@ export async function login(formData: FormData) {
     );
   }
 
-  redirect(nextPath);
+  if (nextPath !== "/explore") {
+    redirect(nextPath);
+  }
+
+  const { profile } = await getCurrentAccount();
+  redirect(dashboardForRole(profile?.role ?? null));
 }
 
 export async function signup(formData: FormData) {
@@ -146,8 +166,25 @@ export async function signup(formData: FormData) {
   const email = normalizeEmail(formData.get("email"));
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
-  const nextPath = safeNextPath(formData.get("next"));
+  const requestedNextPath = safeNextPath(formData.get("next"));
+  const accountType = String(formData.get("accountType") ?? "student");
+  const nextPath =
+    requestedNextPath === "/explore"
+      ? accountType === "provider"
+        ? "/provider/onboarding?next=/list-property"
+        : "/account"
+      : requestedNextPath;
   const emailError = submittedEmailError(email);
+
+  if (accountType !== "student" && accountType !== "provider") {
+    redirect(
+      loginRedirectUrl(
+        "error",
+        "Choose whether you are looking for accommodation or listing accommodation.",
+        requestedNextPath,
+      ),
+    );
+  }
 
   if (fullName.length < 2 || fullName.length > 100) {
     redirect(
@@ -183,7 +220,7 @@ export async function signup(formData: FormData) {
     );
   }
 
-  const emailRedirectTo = await confirmationRedirectUrl();
+  const emailRedirectTo = await confirmationRedirectUrl(nextPath);
 
   const { session, error } = await signUpWithPassword(
     fullName,
