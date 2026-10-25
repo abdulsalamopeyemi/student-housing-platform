@@ -243,3 +243,26 @@ A provider cannot rewrite:
 - note
 
 This prevents a provider from changing the meaning of a student's original request.
+
+
+## Atomic property draft creation
+
+The live database exposes `public.create_property_draft(...)` for authenticated providers.
+
+The function is:
+
+- `SECURITY INVOKER`
+- executable by `authenticated`
+- not executable by `anon`
+- protected by the existing table RLS policies
+
+It creates, in one Postgres transaction:
+
+1. a draft property
+2. its first room type
+3. required fee rows
+4. selected property amenities
+
+If one insert fails, the transaction fails instead of leaving a partially created listing.
+
+The provider ID is derived from the authenticated user through the protected provider lookup; it is not trusted from browser input.
