@@ -12,8 +12,8 @@
 | HowItWorks | Explains the student journey | Home | default |
 | TrustAndSafety | Explains trust principles and limitations | Home | default |
 | ProviderCTA | Introduces provider value and planned tools | Home | default |
-| SiteFooter | Secondary navigation and product context | Home | default |
-| FilterBar | Search filters | Explore | open/closed/applied |
+| SiteFooter | Secondary navigation and product context | Multiple | default |
+| ExploreFilters | GET-based location, budget, and room filters | Explore | populated/default |
 | VerificationBadge | Verification state | Multiple | verified/pending/unverified |
 | PriceBreakdown | Rent, required fees, total | Property details | normal |
 | FacilityList | Amenities/utilities | Property details | available/unavailable/unknown |
@@ -34,4 +34,4 @@ Current Client Components:
 - `SavePropertyButton` — owns the temporary saved/not-saved state.
 - `MobileMenu` — owns the mobile navigation open/closed state.
 
-The rest of the homepage remains server-rendered.
+The Explore page intentionally uses URL search parameters for filter state, so the results can be refreshed, shared, and rendered on the server.
