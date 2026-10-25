@@ -33,12 +33,12 @@ export default function SiteHeader() {
             Explore homes
           </Link>
 
-          <Link
+          <a
             href="/#how-it-works"
             className="text-sm font-medium text-[var(--muted)] transition hover:text-[var(--forest)]"
           >
             How it works
-          </Link>
+          </a>
 
           <Link
             href="/list-property"
