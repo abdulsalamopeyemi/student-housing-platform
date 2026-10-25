@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import InspectionRequestForm from "@/components/property/InspectionRequestForm";
 import SavePropertyButton from "@/components/property/SavePropertyButton";
-import { getPropertyBySlug } from "@/data/featured-properties";
+import { getPublishedPropertyBySlug } from "@/lib/data/public-properties";
 
 const currencyFormatter = new Intl.NumberFormat("en-NG", {
   style: "currency",
@@ -21,7 +21,7 @@ export default async function PropertyDetailsContent({
   params,
 }: PropertyDetailsContentProps) {
   const { slug } = await params;
-  const property = getPropertyBySlug(slug);
+  const property = await getPublishedPropertyBySlug(slug);
 
   if (!property) {
     notFound();
@@ -35,6 +35,8 @@ export default async function PropertyDetailsContent({
     property.availability === "limited"
       ? `${property.availableRooms} rooms left`
       : `${property.availableRooms} rooms available`;
+
+  const facilityItems = [...new Set([...property.facilities, ...property.utilities])];
 
   return (
     <>
@@ -51,7 +53,7 @@ export default async function PropertyDetailsContent({
             <div>
               <div className="flex flex-wrap items-center gap-3">
                 <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[var(--forest)]">
-                  Sample listing
+                  {property.verified ? "Verified listing" : "Listing"}
                 </span>
 
                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-[var(--emerald)]">
@@ -81,7 +83,7 @@ export default async function PropertyDetailsContent({
                 {currencyFormatter.format(property.annualRent)}
               </p>
               <p className="mt-3 text-sm text-white/65">
-                See the full required-fee breakdown below before making any
+                Review the full required-fee breakdown below before making any
                 payment decision.
               </p>
 
@@ -106,7 +108,7 @@ export default async function PropertyDetailsContent({
                   <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
                     Room type
                   </p>
-                  <p className="mt-2 font-semibold text-[var(--forest)]">
+                  <p className="mt-2 font-semibold capitalize text-[var(--forest)]">
                     {property.roomType}
                   </p>
                 </div>
@@ -116,7 +118,7 @@ export default async function PropertyDetailsContent({
                     Availability last updated
                   </p>
                   <p className="mt-2 font-semibold text-[var(--forest)]">
-                    {property.availabilityUpdatedAt}
+                    {new Date(property.availabilityUpdatedAt).toLocaleDateString("en-NG")}
                   </p>
                 </div>
               </div>
@@ -127,18 +129,22 @@ export default async function PropertyDetailsContent({
                 Facilities and utilities
               </p>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                {[...property.facilities, ...property.utilities].map(
-                  (item, index) => (
+              {facilityItems.length > 0 ? (
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {facilityItems.map((item) => (
                     <div
-                      key={`${item}-${index}`}
+                      key={item}
                       className="rounded-2xl bg-[var(--cream)] px-4 py-3 text-sm font-semibold text-[var(--forest)]"
                     >
                       {item}
                     </div>
-                  ),
-                )}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-4 text-sm text-[var(--muted)]">
+                  No facilities have been added to this listing yet.
+                </p>
+              )}
             </section>
 
             <section className="rounded-3xl border border-[var(--border)] bg-white p-6">
@@ -149,7 +155,7 @@ export default async function PropertyDetailsContent({
               <div className="mt-6 divide-y divide-[var(--border)]">
                 {property.fees.map((fee) => (
                   <div
-                    key={fee.label}
+                    key={`${fee.label}-${fee.amount}`}
                     className="flex items-center justify-between gap-4 py-4 first:pt-0"
                   >
                     <div>
@@ -176,11 +182,6 @@ export default async function PropertyDetailsContent({
                   {currencyFormatter.format(totalRequiredFees)}
                 </p>
               </div>
-
-              <p className="mt-4 text-xs leading-5 text-[var(--muted)]">
-                Demo figures only. A production listing must show every
-                mandatory fee clearly and keep the breakdown current.
-              </p>
             </section>
 
             <section className="rounded-3xl border border-[var(--border)] bg-white p-6">
@@ -189,14 +190,15 @@ export default async function PropertyDetailsContent({
               </p>
 
               <h2 className="mt-3 text-2xl font-bold text-[var(--forest)]">
-                This demo listing is not verified.
+                {property.verified
+                  ? "This listing has passed platform review."
+                  : "Verification is pending."}
               </h2>
 
               <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                In production, verification will be a defined workflow that
-                can include provider identity, authority to list the property,
-                property evidence, and moderation history. We will not display
-                a verified badge until that process exists.
+                Verification reflects the platform review status. Students
+                should still inspect accommodation and confirm payment details
+                before making a final decision.
               </p>
             </section>
           </div>
