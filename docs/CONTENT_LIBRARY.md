@@ -14,30 +14,27 @@ This file owns the reusable product copy.
 
 Eyebrow:
 
-**Starting with KWASU · Malete**
+**Student housing around KWASU · Malete**
 
 Heading:
 
-**Find student housing with fewer surprises.**
+**Find a student room that fits your life near campus.**
 
 Subheading:
 
-**Compare room types, required fees, facilities, distance, and availability before you spend money travelling around or paying for a place you do not fully understand.**
+**Search by area and budget, compare the important details, and request an inspection before making a serious accommodation decision.**
 
-Primary search action:
+Primary actions:
 
-**Find a home**
+- **Find a room**
+- **List a property**
+- **Search homes**
 
-Secondary actions:
+Trust row:
 
-- **Browse sample homes**
-- **I manage a property**
-
-Trust points:
-
-- Clear required fees
-- Availability updates
-- Inspection requests
+- **Location-led** — Start with your campus
+- **Clear costs** — See required fees early
+- **Inspection-first** — Visit before deciding
 
 ## Trust strip
 
