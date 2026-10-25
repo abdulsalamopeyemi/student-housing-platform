@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import ExploreFilters from "@/components/explore/ExploreFilters";
 import PropertyCard from "@/components/property/PropertyCard";
-import { featuredProperties } from "@/data/featured-properties";
+import { getPublishedProperties } from "@/lib/data/public-properties";
 
 interface ExploreContentProps {
   searchParams: Promise<{
@@ -15,7 +15,10 @@ interface ExploreContentProps {
 export default async function ExploreContent({
   searchParams,
 }: ExploreContentProps) {
-  const params = await searchParams;
+  const [params, properties] = await Promise.all([
+    searchParams,
+    getPublishedProperties(),
+  ]);
 
   const location = params.location?.trim() ?? "";
   const budget = params.budget ?? "";
@@ -24,7 +27,7 @@ export default async function ExploreContent({
   const normalizedLocation = location.toLowerCase();
   const maximumBudget = Number(budget) || Number.POSITIVE_INFINITY;
 
-  const filteredProperties = featuredProperties.filter((property) => {
+  const filteredProperties = properties.filter((property) => {
     const matchesLocation =
       normalizedLocation.length === 0 ||
       property.area.toLowerCase().includes(normalizedLocation) ||
@@ -55,8 +58,8 @@ export default async function ExploreContent({
               </h1>
 
               <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--muted)]">
-                Filter by location, budget, and room type. These listings are
-                sample data while we build and validate the product.
+                Browse approved student accommodation with clearer pricing,
+                availability, room information, and location context.
               </p>
             </div>
 
@@ -87,7 +90,7 @@ export default async function ExploreContent({
           ) : (
             <div className="rounded-3xl border border-dashed border-[var(--border)] bg-white px-6 py-16 text-center">
               <h2 className="text-2xl font-bold text-[var(--forest)]">
-                No homes match those filters yet.
+                No approved homes match those filters yet.
               </h2>
 
               <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[var(--muted)]">
