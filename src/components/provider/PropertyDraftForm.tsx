@@ -333,7 +333,7 @@ export default function PropertyDraftForm({
             <input
               required
               min="1"
-              step="1000"
+              step="1"
               name="annualRent"
               type="number"
               placeholder="250000"
