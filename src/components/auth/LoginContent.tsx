@@ -1,6 +1,10 @@
 import Link from "next/link";
 
-import { login, signup } from "@/app/login/actions";
+import {
+  login,
+  resendConfirmation,
+  signup,
+} from "@/app/login/actions";
 import { safeNextPath } from "@/lib/supabase/auth-shared";
 
 interface LoginContentProps {
@@ -34,13 +38,19 @@ export default async function LoginContent({
       </div>
 
       {params.error ? (
-        <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
+        <div
+          role="alert"
+          className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+        >
           {params.error}
         </div>
       ) : null}
 
       {params.message ? (
-        <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+        <div
+          role="status"
+          className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900"
+        >
           {params.message}
         </div>
       ) : null}
@@ -54,7 +64,7 @@ export default async function LoginContent({
             Welcome back
           </h2>
 
-          <form className="mt-6 space-y-4">
+          <form action={login} className="mt-6 space-y-4">
             <input type="hidden" name="next" value={nextPath} />
 
             <label className="block">
@@ -66,6 +76,8 @@ export default async function LoginContent({
                 type="email"
                 name="email"
                 autoComplete="email"
+                inputMode="email"
+                spellCheck={false}
                 className="w-full rounded-xl border border-[var(--border)] px-4 py-3 outline-none focus:border-[var(--emerald)]"
               />
             </label>
@@ -84,12 +96,46 @@ export default async function LoginContent({
             </label>
 
             <button
-              formAction={login}
+              type="submit"
               className="w-full rounded-xl bg-[var(--forest)] px-5 py-3 font-semibold text-white transition hover:bg-[var(--emerald)]"
             >
               Sign in
             </button>
           </form>
+
+          <div className="mt-8 border-t border-[var(--border)] pt-6">
+            <h3 className="font-bold text-[var(--forest)]">
+              Didn&apos;t receive the confirmation email?
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+              Enter the same email you used to register. We&apos;ll request a
+              new confirmation message without revealing whether an account
+              exists.
+            </p>
+
+            <form action={resendConfirmation} className="mt-4 space-y-3">
+              <input type="hidden" name="next" value={nextPath} />
+              <label className="block">
+                <span className="sr-only">Email for confirmation resend</span>
+                <input
+                  required
+                  type="email"
+                  name="resendEmail"
+                  autoComplete="email"
+                  inputMode="email"
+                  spellCheck={false}
+                  placeholder="you@example.com"
+                  className="w-full rounded-xl border border-[var(--border)] px-4 py-3 outline-none focus:border-[var(--emerald)]"
+                />
+              </label>
+              <button
+                type="submit"
+                className="w-full rounded-xl border border-[var(--border)] px-5 py-3 font-semibold text-[var(--forest)] transition hover:bg-[var(--cream)]"
+              >
+                Resend confirmation email
+              </button>
+            </form>
+          </div>
         </section>
 
         <section className="rounded-3xl border border-[var(--border)] bg-[var(--cream)] p-6 sm:p-8">
@@ -99,8 +145,12 @@ export default async function LoginContent({
           <h2 className="mt-2 text-2xl font-bold text-[var(--forest)]">
             Create an account
           </h2>
+          <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
+            Check your email carefully. We block common domain typos before
+            creating the account and ask you to enter the address twice.
+          </p>
 
-          <form className="mt-6 space-y-4">
+          <form action={signup} className="mt-6 space-y-4">
             <input type="hidden" name="next" value={nextPath} />
 
             <label className="block">
@@ -109,6 +159,8 @@ export default async function LoginContent({
               </span>
               <input
                 required
+                minLength={2}
+                maxLength={100}
                 type="text"
                 name="fullName"
                 autoComplete="name"
@@ -125,6 +177,23 @@ export default async function LoginContent({
                 type="email"
                 name="email"
                 autoComplete="email"
+                inputMode="email"
+                spellCheck={false}
+                className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none focus:border-[var(--emerald)]"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+                Confirm email
+              </span>
+              <input
+                required
+                type="email"
+                name="confirmEmail"
+                autoComplete="email"
+                inputMode="email"
+                spellCheck={false}
                 className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none focus:border-[var(--emerald)]"
               />
             </label>
@@ -141,10 +210,27 @@ export default async function LoginContent({
                 autoComplete="new-password"
                 className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none focus:border-[var(--emerald)]"
               />
+              <span className="mt-1.5 block text-xs text-[var(--muted)]">
+                Use at least 8 characters.
+              </span>
+            </label>
+
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+                Confirm password
+              </span>
+              <input
+                required
+                minLength={8}
+                type="password"
+                name="confirmPassword"
+                autoComplete="new-password"
+                className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none focus:border-[var(--emerald)]"
+              />
             </label>
 
             <button
-              formAction={signup}
+              type="submit"
               className="w-full rounded-xl bg-[var(--gold)] px-5 py-3 font-bold text-[var(--ink)] transition hover:brightness-105"
             >
               Create account
