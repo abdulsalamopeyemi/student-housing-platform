@@ -4,7 +4,7 @@ Every production image, icon, illustration, logo, or map should be registered he
 
 | Asset ID | Filename | Type | Usage | Source | Permission | Alt text | Ratio/size | Status | Notes |
 |---|---|---|---|---|---|---|---|---|---|
-| IMG-HOME-001 | TBD | Photo | Homepage hero | Planned | TBD | Students viewing student accommodation near campus | 4:3 / responsive | Planned | Natural Nigerian/African university-age students; no visible third-party logos |
+| IMG-HOME-001 | remote-unsplash-hero | Photo | Homepage hero | Unsplash — Alice Chikova (@alice_chkv), "A modern house illuminated at twilight" | Unsplash License | Modern illuminated residential building at twilight | Full-width landscape crop | In use (prototype) | Remote URL used for the prototype. Replace with a locally optimized, market-relevant property image before production launch. |
 | IMG-PROP-SET | TBD | Photos | Property gallery | Provider/original | Provider grants use | Property-specific | 4:3 + square crops | Planned | Exterior, bedroom, bathroom, common area, utilities |
 | ICON-VERIFY | TBD | Icon | Verification badge | Original/generated | Project-owned | Context-dependent | SVG | Planned | Must remain readable at 16–24px |
 | MAP-AREA | TBD | Map | Property details | Map provider | Provider terms | Property area and campus proximity | Responsive | Planned | Consider privacy before showing exact location |
