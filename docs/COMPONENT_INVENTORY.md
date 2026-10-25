@@ -2,22 +2,22 @@
 
 | Component | Responsibility | Initial page | States |
 |---|---|---|---|
-| SiteHeader | Brand, desktop navigation, auth actions | Home | desktop |
-| MobileMenu | Mobile navigation toggle and links | Home | open/closed |
+| SiteHeader | Brand, desktop navigation, auth actions | Multiple | desktop |
+| MobileMenu | Mobile navigation toggle and links | Multiple | open/closed |
 | Hero | Core promise and search entry | Home | default |
 | TrustStrip | Short trust differentiators | Home | default |
 | FeaturedProperties | Maps demo property data into cards | Home | default |
-| PropertyCard | Comparable property summary | Home/Explore | available/limited |
-| SavePropertyButton | Interactive save toggle | Home/Explore | saved/not saved |
+| PropertyCard | Comparable property summary and detail link | Home/Explore | available/limited |
+| SavePropertyButton | Interactive save toggle | Home/Explore/Details | saved/not saved |
 | HowItWorks | Explains the student journey | Home | default |
 | TrustAndSafety | Explains trust principles and limitations | Home | default |
 | ProviderCTA | Introduces provider value and planned tools | Home | default |
 | SiteFooter | Secondary navigation and product context | Multiple | default |
 | ExploreFilters | GET-based location, budget, and room filters | Explore | populated/default |
+| InspectionRequestForm | Captures inspection intent | Property details | idle/submitting/success |
 | VerificationBadge | Verification state | Multiple | verified/pending/unverified |
 | PriceBreakdown | Rent, required fees, total | Property details | normal |
 | FacilityList | Amenities/utilities | Property details | available/unavailable/unknown |
-| InspectionRequest | Viewing/interest action | Property details | idle/submitting/success/error |
 | EmptyState | No-data guidance | Multiple | contextual |
 | Notice/Toast | Action feedback | Multiple | success/error/info |
 
@@ -33,5 +33,6 @@ Current Client Components:
 
 - `SavePropertyButton` — owns the temporary saved/not-saved state.
 - `MobileMenu` — owns the mobile navigation open/closed state.
+- `InspectionRequestForm` — owns temporary submit/loading/success UI state until the form is connected to a Server Action.
 
 The Explore page intentionally uses URL search parameters for filter state, so the results can be refreshed, shared, and rendered on the server.
