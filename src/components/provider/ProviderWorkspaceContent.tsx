@@ -185,9 +185,21 @@ export default async function ProviderWorkspaceContent({
                       <h3 className="mt-3 text-2xl font-bold text-[var(--forest)]">
                         {property.name}
                       </h3>
-                      <p className="mt-1 text-sm text-[var(--muted)]">
-                        {property.area}
-                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2" aria-label="Property location">
+                        <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-[var(--emerald)]">
+                          📍 {property.area}
+                        </span>
+                        {property.universities?.name ? (
+                          <span className="rounded-full bg-[var(--cream)] px-3 py-1.5 text-xs font-semibold text-[var(--forest)]">
+                            🎓 {property.universities.name}
+                          </span>
+                        ) : null}
+                        {property.distance_label ? (
+                          <span className="rounded-full bg-slate-50 px-3 py-1.5 text-xs font-semibold text-[var(--muted)]">
+                            ↔ {property.distance_label}
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
