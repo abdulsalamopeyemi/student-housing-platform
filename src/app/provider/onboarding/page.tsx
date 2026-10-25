@@ -7,6 +7,7 @@ import ProviderOnboardingContent from "@/components/provider/ProviderOnboardingC
 interface ProviderOnboardingPageProps {
   searchParams: Promise<{
     error?: string;
+    next?: string;
   }>;
 }
 
