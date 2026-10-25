@@ -1,3 +1,4 @@
+import FeaturedProperties from "@/components/home/FeaturedProperties";
 import Hero from "@/components/home/Hero";
 import TrustStrip from "@/components/home/TrustStrip";
 import SiteHeader from "@/components/layout/SiteHeader";
@@ -8,6 +9,7 @@ export default function Home() {
       <SiteHeader />
       <Hero />
       <TrustStrip />
+      <FeaturedProperties />
     </main>
   );
 }
