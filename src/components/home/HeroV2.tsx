@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { getUniversityBySlug } from "@/lib/data/universities";
+
 const heroImageUrl =
   "https://images.unsplash.com/photo-1751239837215-c21ca4571663?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=80&w=2400";
 
@@ -9,7 +11,19 @@ const trustItems = [
   { label: "Inspection-first", note: "Visit before deciding" },
 ];
 
-export default function HeroV2() {
+export default async function HeroV2() {
+  let universityLabel = "KWASU · Malete";
+
+  try {
+    const university = await getUniversityBySlug("kwasu");
+
+    if (university) {
+      universityLabel = `${university.name} · ${university.city}`;
+    }
+  } catch {
+    // Keep the homepage usable if the public database lookup is temporarily unavailable.
+  }
+
   return (
     <section
       className="relative isolate min-h-[650px] overflow-hidden bg-[var(--forest)] text-white"
@@ -27,7 +41,7 @@ export default function HeroV2() {
       <div className="relative mx-auto flex min-h-[650px] max-w-7xl flex-col px-5 py-16 lg:px-8 lg:py-20">
         <div className="flex max-w-2xl flex-1 flex-col justify-center">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--gold)]">
-            Student housing around KWASU · Malete
+            Student housing around {universityLabel}
           </p>
 
           <h1 className="mt-5 text-5xl font-bold leading-[1.02] tracking-[-0.04em] text-white sm:text-6xl lg:text-7xl">
