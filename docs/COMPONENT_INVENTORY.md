@@ -21,6 +21,9 @@
 | FacilityList | Amenities/utilities | Property details | available/unavailable/unknown |
 | EmptyState | No-data guidance | Multiple | contextual |
 | Notice/Toast | Action feedback | Multiple | success/error/info |
+| PropertyDraftForm | Creates a live provider-owned property draft | Provider new property | dynamic fee rows |
+| NewPropertyContent | Loads provider, universities, amenities, and draft form | Provider new property | default/error |
+| ProviderWorkspaceContent | Shows provider identity, real properties, and review actions | Provider workspace | empty/list/review states |
 
 ## Component rule
 
