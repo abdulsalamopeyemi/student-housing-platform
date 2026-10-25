@@ -128,6 +128,32 @@ Planned provider tools:
 - Student enquiry tracking
 - Verification and moderation status
 
+## Explore page
+
+Eyebrow:
+
+**Explore student homes**
+
+Heading:
+
+**Compare the details that matter.**
+
+Supporting copy:
+
+**Filter by location, budget, and room type. These listings are sample data while we build and validate the product.**
+
+Empty-state heading:
+
+**No homes match those filters yet.**
+
+Empty-state guidance:
+
+**Try widening your budget, changing the room type, or searching a broader location.**
+
+Reset action:
+
+**Clear filters**
+
 ## Common interface messages
 
 No results:
