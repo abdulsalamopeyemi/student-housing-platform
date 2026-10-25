@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 
+import ListPropertyContent from "@/components/provider/ListPropertyContent";
 import SiteFooter from "@/components/layout/SiteFooter";
 import SiteHeader from "@/components/layout/SiteHeader";
-import ProviderWorkspaceContent from "@/components/provider/ProviderWorkspaceContent";
 
 interface ListPropertyPageProps {
   searchParams: Promise<{
@@ -24,7 +24,7 @@ export default function ListPropertyPage({
             </div>
           }
         >
-          <ProviderWorkspaceContent searchParams={searchParams} />
+          <ListPropertyContent searchParams={searchParams} />
         </Suspense>
       </main>
       <SiteFooter />
