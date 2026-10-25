@@ -4,7 +4,7 @@
 |---|---|---|---|
 | SiteHeader | Brand, desktop navigation, auth actions | Multiple | desktop |
 | MobileMenu | Mobile navigation toggle and links | Multiple | open/closed |
-| Hero | Core promise and search entry | Home | default |
+| HeroV2 | Primary product promise, search entry, trust cues, provider path | Home | default |
 | TrustStrip | Short trust differentiators | Home | default |
 | FeaturedProperties | Maps demo property data into cards | Home | default |
 | PropertyCard | Comparable property summary and detail link | Home/Explore | available/limited |
@@ -13,6 +13,7 @@
 | TrustAndSafety | Explains trust principles and limitations | Home | default |
 | ProviderCTA | Introduces provider value and planned tools | Home | default |
 | SiteFooter | Secondary navigation and product context | Multiple | default |
+| ExploreContent | Request-dependent Explore results | Explore | filtered/empty |
 | ExploreFilters | GET-based location, budget, and room filters | Explore | populated/default |
 | InspectionRequestForm | Captures inspection intent | Property details | idle/submitting/success |
 | VerificationBadge | Verification state | Multiple | verified/pending/unverified |
@@ -35,4 +36,4 @@ Current Client Components:
 - `MobileMenu` — owns the mobile navigation open/closed state.
 - `InspectionRequestForm` — owns temporary submit/loading/success UI state until the form is connected to a Server Action.
 
-The Explore page intentionally uses URL search parameters for filter state, so the results can be refreshed, shared, and rendered on the server.
+The Explore page keeps the static page shell outside a `Suspense` boundary and streams `ExploreContent`, because `searchParams` is request-time data when Cache Components are enabled.
