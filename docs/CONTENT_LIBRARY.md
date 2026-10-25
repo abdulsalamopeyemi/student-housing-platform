@@ -43,6 +43,29 @@ Context note:
 - Property information
 - Safer enquiries
 
+## Featured properties
+
+Eyebrow:
+
+**Sample homes**
+
+Heading:
+
+**See how properties will be compared.**
+
+Supporting copy:
+
+**These are demo listings while we design the marketplace. Real properties will only be presented as verified when a real verification process is in place.**
+
+Card disclosure:
+
+**Demo data for interface development**
+
+Save action states:
+
+- **Save**
+- **Saved**
+
 ## Common interface messages
 
 No results:
