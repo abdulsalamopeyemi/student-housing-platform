@@ -93,3 +93,30 @@ Record meaningful product and architecture decisions here.
 **Why:** The desired direction is closer to a hospitality/property landing page: the accommodation image should establish emotion and context immediately, while the text and search sit on top of it. This better matches the reference direction without copying its exact content or branding.
 
 **Prototype asset:** A free-to-use Unsplash image is used temporarily. Before production, replace it with a locally stored, optimized image that better represents the real KWASU/Malete accommodation market.
+
+
+## DEC-014 — Server-side auth cookies
+
+**Decision:** Store access and refresh tokens in HTTP-only, SameSite=Lax cookies written by server actions rather than localStorage.
+
+**Why:** Authentication tokens should not be directly readable by ordinary browser JavaScript. Protected routes validate or refresh the session in `proxy.ts`.
+
+## DEC-015 — Auth HTTP adapter before SDK dependency
+
+**Decision:** The first authentication milestone uses Supabase Auth's supported HTTP endpoints directly instead of introducing `@supabase/ssr` while the automated environment cannot resolve new npm packages reliably.
+
+**Why:** This keeps `npm ci` and the existing lockfile stable while still using Supabase Auth, secure cookies, refresh tokens, and RLS-backed authenticated requests.
+
+**Trade-off:** Supabase recommends `@supabase/ssr` for Next.js SSR integrations. Before production launch, revisit this adapter and migrate to the maintained SSR helper if dependency installation is available.
+
+## DEC-016 — Provider role promotion is database-controlled
+
+**Decision:** Creating a valid provider row automatically promotes a profile from `student` to `provider` through a protected database trigger.
+
+**Why:** The browser must not be able to submit arbitrary role values. Provider ownership is proven through authenticated RLS, while `admin` remains controlled separately.
+
+## DEC-017 — Provider onboarding does not equal verification
+
+**Decision:** A provider profile starts as `unverified`.
+
+**Why:** Being able to create a provider account only proves authenticated account ownership. Verification requires a separate operational review before trust badges or public verification claims are allowed.
