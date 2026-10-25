@@ -66,6 +66,68 @@ Save action states:
 - **Save**
 - **Saved**
 
+## How it works
+
+Eyebrow:
+
+**How it works**
+
+Heading:
+
+**A clearer path from search to inspection.**
+
+Supporting copy:
+
+**We want students to understand a property before spending transport money, inspection fees, or making payments.**
+
+Steps:
+
+1. **Search by campus and budget**
+2. **Compare the important details**
+3. **Request an inspection**
+
+## Trust and safety
+
+Eyebrow:
+
+**Trust is part of the product**
+
+Heading:
+
+**Better information before money changes hands.**
+
+Supporting copy:
+
+**We cannot promise that every risk disappears. What we can build is a system that makes important information easier to inspect, compare, question, and report.**
+
+Trust principles:
+
+- Clear price breakdowns
+- Availability timestamps
+- Verification with meaning
+- Reporting and support
+
+## Provider CTA
+
+Eyebrow:
+
+**For property providers**
+
+Heading:
+
+**Own or manage student accommodation?**
+
+Supporting copy:
+
+**Present your property with clearer pricing, room information, facilities, availability, and a professional enquiry flow.**
+
+Planned provider tools:
+
+- Property and room management
+- Availability updates
+- Student enquiry tracking
+- Verification and moderation status
+
 ## Common interface messages
 
 No results:
