@@ -1,0 +1,74 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+
+export default function MobileMenu() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  function closeMenu() {
+    setIsOpen(false);
+  }
+
+  return (
+    <div className="md:hidden">
+      <button
+        type="button"
+        aria-expanded={isOpen}
+        aria-controls="mobile-navigation"
+        onClick={() => setIsOpen((currentValue) => !currentValue)}
+        className="flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--border)] bg-white text-[var(--forest)]"
+      >
+        <span className="sr-only">
+          {isOpen ? "Close navigation menu" : "Open navigation menu"}
+        </span>
+
+        <span className="text-xl leading-none" aria-hidden="true">
+          {isOpen ? "×" : "☰"}
+        </span>
+      </button>
+
+      {isOpen ? (
+        <nav
+          id="mobile-navigation"
+          aria-label="Mobile navigation"
+          className="absolute left-5 right-5 top-[76px] z-50 rounded-2xl border border-[var(--border)] bg-white p-4 shadow-xl shadow-black/10"
+        >
+          <div className="flex flex-col">
+            <Link
+              href="/explore"
+              onClick={closeMenu}
+              className="rounded-xl px-4 py-3 text-sm font-semibold text-[var(--forest)] hover:bg-[var(--cream)]"
+            >
+              Explore homes
+            </Link>
+
+            <Link
+              href="/#how-it-works"
+              onClick={closeMenu}
+              className="rounded-xl px-4 py-3 text-sm font-semibold text-[var(--forest)] hover:bg-[var(--cream)]"
+            >
+              How it works
+            </Link>
+
+            <Link
+              href="/list-property"
+              onClick={closeMenu}
+              className="rounded-xl px-4 py-3 text-sm font-semibold text-[var(--forest)] hover:bg-[var(--cream)]"
+            >
+              List a property
+            </Link>
+
+            <Link
+              href="/login"
+              onClick={closeMenu}
+              className="mt-2 rounded-xl border border-[var(--border)] px-4 py-3 text-center text-sm font-semibold text-[var(--forest)]"
+            >
+              Sign in
+            </Link>
+          </div>
+        </nav>
+      ) : null}
+    </div>
+  );
+}
