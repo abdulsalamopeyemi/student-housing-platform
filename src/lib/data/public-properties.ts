@@ -57,7 +57,7 @@ function mapProperty(row: PublicPropertyRow): StudentProperty | null {
     facilities,
     description: row.description,
     distanceFromCampus: row.distance_label ?? "Distance not provided",
-    utilities: facilities,
+    utilities: [],
     fees: [
       {
         label: "Annual rent",
