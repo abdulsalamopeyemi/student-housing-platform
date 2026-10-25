@@ -5,13 +5,19 @@ import InspectionRequestForm from "@/components/property/InspectionRequestForm";
 import SavePropertyButton from "@/components/property/SavePropertyButton";
 import SiteFooter from "@/components/layout/SiteFooter";
 import SiteHeader from "@/components/layout/SiteHeader";
-import { getPropertyBySlug } from "@/data/featured-properties";
+import { featuredProperties, getPropertyBySlug } from "@/data/featured-properties";
 
 const currencyFormatter = new Intl.NumberFormat("en-NG", {
   style: "currency",
   currency: "NGN",
   maximumFractionDigits: 0,
 });
+
+export function generateStaticParams() {
+  return featuredProperties.map((property) => ({
+    slug: property.slug,
+  }));
+}
 
 interface PropertyDetailsPageProps {
   params: Promise<{
