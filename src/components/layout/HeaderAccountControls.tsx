@@ -13,7 +13,7 @@ function accountDestination(role: "student" | "provider" | "admin" | null) {
     return { href: "/list-property", label: "Provider dashboard" };
   }
 
-  return { href: "/explore", label: "Explore homes" };
+  return { href: "/account", label: "My account" };
 }
 
 export default async function HeaderAccountControls() {
@@ -51,10 +51,10 @@ export default async function HeaderAccountControls() {
             </Link>
 
             <Link
-              href="/explore"
+              href="/login#signup"
               className="rounded-xl bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--emerald)]"
             >
-              Get started
+              Create account
             </Link>
           </>
         )}
@@ -80,10 +80,10 @@ export function HeaderAccountFallback() {
         </Link>
 
         <Link
-          href="/explore"
+          href="/login#signup"
           className="rounded-xl bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold text-white"
         >
-          Get started
+          Create account
         </Link>
       </div>
 
