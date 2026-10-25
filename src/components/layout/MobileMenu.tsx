@@ -19,7 +19,7 @@ function accountDestination(role: MobileMenuProps["role"]) {
     return { href: "/list-property", label: "Provider dashboard" };
   }
 
-  return { href: "/explore", label: "Explore homes" };
+  return { href: "/account", label: "My account" };
 }
 
 export default function MobileMenu({
@@ -102,13 +102,22 @@ export default function MobileMenu({
                 </form>
               </>
             ) : (
-              <Link
-                href="/login"
-                onClick={closeMenu}
-                className="mt-2 rounded-xl border border-[var(--border)] px-4 py-3 text-center text-sm font-semibold text-[var(--forest)]"
-              >
-                Sign in
-              </Link>
+              <div className="mt-2 grid gap-2">
+                <Link
+                  href="/login"
+                  onClick={closeMenu}
+                  className="rounded-xl border border-[var(--border)] px-4 py-3 text-center text-sm font-semibold text-[var(--forest)]"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/login#signup"
+                  onClick={closeMenu}
+                  className="rounded-xl bg-[var(--forest)] px-4 py-3 text-center text-sm font-semibold text-white"
+                >
+                  Create account
+                </Link>
+              </div>
             )}
           </div>
         </nav>
