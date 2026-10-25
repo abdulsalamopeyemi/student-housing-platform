@@ -1,6 +1,6 @@
 # Application Architecture
 
-This document explains how the Student Housing application should evolve from the current prototype into a production application.
+This document explains how the Student Housing application evolves into a production application.
 
 ## Architecture goal
 
@@ -24,34 +24,31 @@ Next.js is the application framework. React builds the UI.
 Use:
 
 - Server Components for data-heavy pages that do not need browser state.
-- Client Components only for interactive browser behavior such as mobile menus, save buttons, and interactive form feedback.
-- Dynamic routes such as `/properties/[slug]` for individual property pages.
+- Client Components only for browser interaction such as menus, save buttons, and form feedback.
+- Dynamic routes such as `/properties/[slug]`.
 - URL search parameters for shareable search/filter state.
-- Server Actions for internal form mutations when we connect the database.
-- Route Handlers for external APIs, webhooks, or integrations that need HTTP endpoints.
+- Server Actions for internal form mutations.
+- `proxy.ts` for protected-route session refresh.
 
 ### TypeScript
 
 TypeScript defines the shape of application data and component props.
 
-Examples:
+The live Supabase project now generates database types into:
 
-- `StudentProperty`
-- inspection request data
-- provider profiles
-- database query results
+`src/types/database.ts`
 
-The goal is to catch invalid assumptions before runtime and make the code easier to understand.
+This makes the application code reflect the actual Postgres schema.
 
 ### Tailwind CSS
 
 Tailwind handles UI styling.
 
-We still maintain product-level design tokens in `globals.css` and document them in `DESIGN_SYSTEM.md`.
+Product-level design tokens still live in `globals.css` and are documented in `DESIGN_SYSTEM.md`.
 
 ### Supabase Postgres
 
-Postgres will become the source of truth for real application data.
+Postgres is the source of truth for production data.
 
 Why Postgres fits this product:
 
@@ -63,205 +60,110 @@ Why Postgres fits this product:
 - verification and reports have relationships and history
 - transactions and constraints matter
 
-This data is relational, so a relational database is a natural fit.
-
 ### Supabase Auth
 
-Use server-side, cookie-based authentication.
+Authentication is handled by Supabase Auth.
 
-Planned user roles:
+Current implementation:
 
-- student
-- provider
-- admin
+- email/password sign-up
+- email/password sign-in
+- secure HTTP-only cookies
+- refresh tokens on protected routes
+- authenticated requests carry the user's access token
+- no service-role/secret key is exposed to the browser
 
-Authentication proves who the user is. Authorization decides what that user is allowed to do.
+The current repo calls Supabase Auth's supported HTTP endpoints directly so the authentication milestone can work without adding an unresolved package dependency to CI. Before production launch, we should evaluate switching the session adapter to `@supabase/ssr`, which is Supabase's recommended Next.js helper package.
 
-### Row Level Security (RLS)
+### Authorization and Row Level Security
 
-Database policies should enforce access rules close to the data.
+Authentication answers:
+
+**Who is this user?**
+
+RLS answers:
+
+**Which rows may this user access or modify?**
 
 Examples:
 
-- anyone may read published public property information
-- a provider may update only properties they own/manage
-- a student may read only their own private inspection requests and saved-property records
-- ordinary users cannot perform admin verification actions
+- anonymous users may read published properties
+- providers may manage only properties they own
+- students may read only their own saved properties/inspection requests
+- ordinary users may not perform admin verification actions
 
-Do not rely only on hiding buttons in the UI.
+The UI is not treated as a security boundary.
 
 ### Supabase Storage
 
-Use object storage for:
+Planned for:
 
-- property photos
-- provider verification evidence
+- public property photos
+- private provider verification evidence
 - avatars later
 
-Public listing photos and private identity evidence must not share the same access policy.
+Public property media and private identity evidence must use separate access policies.
 
-## High-level request flow
+## High-level flows
 
 ### Public property browsing
 
 Browser
 → Next.js Server Component
-→ Postgres query
+→ Supabase/Postgres
 → rendered HTML
 → browser
 
-This avoids shipping unnecessary client JavaScript for read-only content.
-
-### Interactive browser state
-
-Browser
-→ small Client Component
-→ React state
-
-Examples:
-
-- mobile menu open/closed
-- temporary save-button state
-- form feedback
-
-### Real inspection request
+### Account sign-in
 
 Browser form
 → Server Action
-→ validate input
-→ authenticated/anonymous policy checks
+→ Supabase Auth
+→ access + refresh token
+→ HTTP-only cookies
+→ protected route
+
+### Protected provider route
+
+Browser request
+→ Next.js proxy
+→ validate access token
+→ refresh when necessary
+→ Server Component
+→ authenticated PostgREST query
+→ RLS
+→ provider-owned rows only
+
+### Provider onboarding
+
+Authenticated user
+→ create provider row
+→ RLS verifies `profile_id = auth.uid()`
+→ database trigger promotes profile role to `provider`
+→ provider remains `unverified` until review
+
+### Real inspection request (next marketplace milestone)
+
+Browser form
+→ Server Action
+→ authenticated user
+→ server validation
 → Postgres insert
-→ revalidate relevant pages
+→ RLS ownership checks
 → confirmation UI
-
-## Planned core tables
-
-### profiles
-
-- id
-- user_id
-- role
-- full_name
-- phone
-- university_id
-- created_at
-
-### universities
-
-- id
-- name
-- slug
-- city
-- state
-- country
-
-### providers
-
-- id
-- profile_id
-- provider_type
-- verification_status
-- created_at
-
-### properties
-
-- id
-- provider_id
-- university_id
-- name
-- slug
-- description
-- area
-- latitude / longitude with privacy controls
-- verification_status
-- publication_status
-- created_at
-- updated_at
-
-### room_types
-
-- id
-- property_id
-- name
-- annual_rent
-- capacity
-- available_count
-- availability_updated_at
-
-### property_fees
-
-- id
-- room_type_id
-- label
-- amount
-- required
-
-### property_images
-
-- id
-- property_id
-- storage_path
-- alt_text
-- sort_order
-
-### amenities
-
-- id
-- name
-- category
-
-### property_amenities
-
-- property_id
-- amenity_id
-
-### saved_properties
-
-- student_user_id
-- property_id
-- created_at
-
-### inspection_requests
-
-- id
-- student_user_id
-- property_id
-- room_type_id
-- preferred_date
-- contact_phone
-- note
-- status
-- created_at
-
-### reports
-
-- id
-- reporter_user_id
-- property_id
-- reason
-- details
-- status
-- created_at
-
-### verification_events
-
-- id
-- property_id / provider_id
-- admin_user_id
-- action
-- notes
-- created_at
 
 ## Security principles
 
 1. Never expose private identity documents as public URLs.
 2. Never trust a user-supplied role such as `admin`.
 3. Validate all server mutations.
-4. Keep secret keys server-only.
+4. Keep secret/service-role keys server-only and out of source control.
 5. Use RLS and least-privilege grants.
-6. Public pages should expose only information intended for the marketplace.
+6. Public pages expose only marketplace-safe data.
 7. Log meaningful moderation and verification actions.
-8. Do not claim a property is verified until the verification workflow exists.
+8. Never display a verified badge before a defined verification process succeeds.
+9. Redirect targets from forms must be restricted to local application paths.
+10. Provider creation must not grant admin privileges.
 
 ## Why not a separate Express backend right now?
 
@@ -270,45 +172,29 @@ A separate API server would add:
 - another deployment
 - duplicate routing and validation
 - another authentication boundary
-- more CORS and environment configuration
-- more code to learn before the product needs it
+- more CORS/environment configuration
+- more code before the product needs it
 
-Next.js already supports server-side application logic.
-
-We can introduce a separate backend later if we genuinely need one for mobile clients, independent public APIs, complex background services, or organizational scaling.
-
-## Payments
-
-Do not build rent payment first.
-
-First validate:
-
-1. students can discover useful properties
-2. providers keep listings accurate
-3. inspection requests create real matches
-4. users trust the information enough to act
-
-Payment adds significant operational, security, refund, fraud, and compliance complexity.
+Next.js already supports the required server-side application logic.
 
 ## Current status
 
 Implemented:
 
-- homepage
-- search entry
-- Explore route and filters
-- reusable property cards
-- save-button UI state
-- responsive mobile menu
-- property-details dynamic route
-- transparent sample fee breakdown
-- inspection-request prototype UI
+- homepage and photo-led hero
+- Explore filters
+- property details
+- live Supabase project
+- production-oriented Postgres schema
+- RLS and security checks
+- generated database types
+- login/signup
+- protected provider routes
+- provider onboarding
+- provider workspace
 
 Next production milestone:
 
-- create Supabase project
-- define database migrations
-- install Supabase client packages
-- configure server/client utilities
-- replace demo property data with database reads
-- persist inspection requests
+- real draft property creation tied to the authenticated provider
+- room types, fees, amenities, availability
+- submit-for-review workflow
