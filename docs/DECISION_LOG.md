@@ -120,3 +120,18 @@ Record meaningful product and architecture decisions here.
 **Decision:** A provider profile starts as `unverified`.
 
 **Why:** Being able to create a provider account only proves authenticated account ownership. Verification requires a separate operational review before trust badges or public verification claims are allowed.
+
+
+## DEC-018 — Atomic property draft RPC
+
+**Decision:** Create the initial property, first room type, fees, and amenities through one security-invoker Postgres function.
+
+**Why:** A multi-table listing should not be left half-created if one step fails. A single database transaction keeps the draft internally consistent.
+
+**Security:** The function derives the provider from the authenticated identity, runs as the caller, remains subject to RLS, and is not executable by anonymous users.
+
+## DEC-019 — Draft before review
+
+**Decision:** New provider properties always begin as `draft` and `unverified`.
+
+**Why:** Saving property information is not the same as platform approval. Providers explicitly submit a completed draft for review, which moves it to `pending_review` / `pending`; final publication remains an admin action.
