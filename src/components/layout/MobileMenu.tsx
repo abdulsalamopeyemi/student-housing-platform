@@ -3,8 +3,31 @@
 import Link from "next/link";
 import { useState } from "react";
 
-export default function MobileMenu() {
+import { signOut } from "@/app/auth/actions";
+
+interface MobileMenuProps {
+  isAuthenticated: boolean;
+  role: "student" | "provider" | "admin" | null;
+}
+
+function accountDestination(role: MobileMenuProps["role"]) {
+  if (role === "admin") {
+    return { href: "/admin/reviews", label: "Admin dashboard" };
+  }
+
+  if (role === "provider") {
+    return { href: "/list-property", label: "Provider dashboard" };
+  }
+
+  return { href: "/explore", label: "Explore homes" };
+}
+
+export default function MobileMenu({
+  isAuthenticated,
+  role,
+}: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const destination = accountDestination(role);
 
   function closeMenu() {
     setIsOpen(false);
@@ -59,13 +82,34 @@ export default function MobileMenu() {
               List a property
             </Link>
 
-            <Link
-              href="/login"
-              onClick={closeMenu}
-              className="mt-2 rounded-xl border border-[var(--border)] px-4 py-3 text-center text-sm font-semibold text-[var(--forest)]"
-            >
-              Sign in
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  href={destination.href}
+                  onClick={closeMenu}
+                  className="mt-2 rounded-xl bg-[var(--forest)] px-4 py-3 text-center text-sm font-semibold text-white"
+                >
+                  {destination.label}
+                </Link>
+
+                <form action={signOut} className="mt-2">
+                  <button
+                    type="submit"
+                    className="w-full rounded-xl border border-[var(--border)] px-4 py-3 text-center text-sm font-semibold text-[var(--forest)]"
+                  >
+                    Sign out
+                  </button>
+                </form>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                onClick={closeMenu}
+                className="mt-2 rounded-xl border border-[var(--border)] px-4 py-3 text-center text-sm font-semibold text-[var(--forest)]"
+              >
+                Sign in
+              </Link>
+            )}
           </div>
         </nav>
       ) : null}
