@@ -27,10 +27,20 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         </span>
 
         <div>
-          <p className="text-sm font-medium text-white/70">
-            {property.area} · {property.university}
-          </p>
-          <h3 className="mt-1 text-2xl font-bold text-white">
+          <div className="flex flex-wrap gap-2" aria-label="Property location">
+            <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
+              📍 {property.area}
+            </span>
+            <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
+              🎓 {property.university}
+            </span>
+            {property.distanceFromCampus !== "Distance not provided" ? (
+              <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">
+                ↔ {property.distanceFromCampus}
+              </span>
+            ) : null}
+          </div>
+          <h3 className="mt-3 text-2xl font-bold text-white">
             {property.name}
           </h3>
         </div>
