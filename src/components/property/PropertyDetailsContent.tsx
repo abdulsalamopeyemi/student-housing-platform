@@ -65,10 +65,19 @@ export default async function PropertyDetailsContent({
                 {property.name}
               </h1>
 
-              <p className="mt-3 text-base text-[var(--muted)]">
-                {property.area} · {property.university} ·{" "}
-                {property.distanceFromCampus}
-              </p>
+              <div className="mt-4 flex flex-wrap gap-2" aria-label="Property location">
+                <span className="rounded-full border border-[var(--border)] bg-white px-3 py-1.5 text-sm font-semibold text-[var(--forest)]">
+                  📍 {property.area}
+                </span>
+                <span className="rounded-full border border-[var(--border)] bg-white px-3 py-1.5 text-sm font-semibold text-[var(--forest)]">
+                  🎓 {property.university}
+                </span>
+                {property.distanceFromCampus !== "Distance not provided" ? (
+                  <span className="rounded-full border border-[var(--border)] bg-white px-3 py-1.5 text-sm font-semibold text-[var(--muted)]">
+                    ↔ {property.distanceFromCampus}
+                  </span>
+                ) : null}
+              </div>
 
               <p className="mt-6 max-w-3xl text-base leading-7 text-[var(--muted)]">
                 {property.description}
