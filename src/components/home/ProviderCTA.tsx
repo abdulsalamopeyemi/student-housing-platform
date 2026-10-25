@@ -38,19 +38,19 @@ export default function ProviderCTA() {
 
           <div className="flex min-h-72 flex-col justify-between bg-[var(--cream)] p-8 sm:p-10 lg:p-12">
             <p className="text-sm font-semibold text-[var(--muted)]">
-              Provider tools we are designing
+              Provider tools available now
             </p>
 
             <ul className="mt-6 space-y-4 text-sm font-semibold text-[var(--forest)]">
-              <li>Property and room management</li>
-              <li>Availability updates</li>
-              <li>Student enquiry tracking</li>
-              <li>Verification and moderation status</li>
+              <li>Create and manage property drafts</li>
+              <li>Set room pricing and availability</li>
+              <li>Submit listings for platform review</li>
+              <li>Track verification and publication status</li>
             </ul>
 
             <p className="mt-8 text-xs leading-5 text-[var(--muted)]">
-              These tools are part of the planned product roadmap and are not
-              yet active in this prototype.
+              Inspection-request management and richer provider analytics are
+              still being developed.
             </p>
           </div>
         </div>
