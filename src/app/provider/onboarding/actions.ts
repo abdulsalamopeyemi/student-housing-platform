@@ -3,37 +3,65 @@
 import { redirect } from "next/navigation";
 
 import { getCurrentUser } from "@/lib/supabase/auth-server";
+import { safeNextPath } from "@/lib/supabase/auth-shared";
 import { supabaseAuthenticatedRest } from "@/lib/supabase/authenticated-rest";
 import type { TablesInsert } from "@/types/database";
 
 const providerTypes = ["landlord", "agent", "property_manager"] as const;
 
+function resolvedNextPath(value: FormDataEntryValue | null) {
+  return typeof value === "string" && value
+    ? safeNextPath(value)
+    : "/list-property";
+}
+
+function onboardingUrl(nextPath: string, error?: string) {
+  const params = new URLSearchParams({ next: nextPath });
+
+  if (error) {
+    params.set("error", error);
+  }
+
+  return `/provider/onboarding?${params.toString()}`;
+}
+
 export async function createProvider(formData: FormData) {
+  const nextPath = resolvedNextPath(formData.get("next"));
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect("/login?next=/provider/onboarding");
+    redirect(
+      `/login?next=${encodeURIComponent(onboardingUrl(nextPath))}`,
+    );
   }
 
   const displayName = String(formData.get("displayName") ?? "").trim();
   const providerType = String(formData.get("providerType") ?? "");
 
   if (displayName.length < 2) {
-    redirect("/provider/onboarding?error=Enter+a+provider+or+business+name.");
+    redirect(
+      onboardingUrl(
+        nextPath,
+        "Enter a provider or business name.",
+      ),
+    );
   }
 
   if (!providerTypes.includes(providerType as (typeof providerTypes)[number])) {
-    redirect("/provider/onboarding?error=Choose+a+valid+provider+type.");
+    redirect(
+      onboardingUrl(
+        nextPath,
+        "Choose a valid provider type.",
+      ),
+    );
   }
 
-  const existing = await supabaseAuthenticatedRest<
-    Array<{ id: string }>
-  >(
+  const existing = await supabaseAuthenticatedRest<Array<{ id: string }>>(
     `providers?profile_id=eq.${encodeURIComponent(user.id)}&select=id&limit=1`,
   );
 
   if (existing.length > 0) {
-    redirect("/list-property");
+    redirect(nextPath);
   }
 
   const payload: TablesInsert<"providers"> = {
@@ -48,5 +76,5 @@ export async function createProvider(formData: FormData) {
     body: JSON.stringify(payload),
   });
 
-  redirect("/list-property?message=Provider+profile+created.");
+  redirect(nextPath);
 }
