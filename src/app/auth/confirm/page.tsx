@@ -63,10 +63,16 @@ export default function ConfirmEmailPage() {
         return;
       }
 
+      const requestedNext = new URLSearchParams(window.location.search).get("next");
+      const nextPath =
+        requestedNext &&
+        requestedNext.startsWith("/") &&
+        !requestedNext.startsWith("//")
+          ? requestedNext
+          : "/account";
+
       window.history.replaceState({}, "", "/auth/confirm");
-      window.location.replace(
-        "/list-property?message=Email+confirmed.+You+are+signed+in.",
-      );
+      window.location.replace(nextPath);
     }
 
     void confirmSession();
@@ -87,7 +93,7 @@ export default function ConfirmEmailPage() {
 
         {state === "error" ? (
           <Link
-            href="/login?next=%2Flist-property"
+            href="/login"
             className="mt-6 inline-flex rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-semibold text-white"
           >
             Go to sign in
