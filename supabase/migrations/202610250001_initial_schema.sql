@@ -301,6 +301,82 @@ $$;
 revoke execute on function private.current_provider_id() from public, anon;
 grant execute on function private.current_provider_id() to authenticated;
 
+create or replace function public.protect_property_review_fields()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $
+declare
+  provider_id_for_user uuid;
+  is_allowed_submission boolean;
+begin
+  if current_user in ('postgres', 'service_role') or (select private.is_admin()) then
+    return new;
+  end if;
+
+  provider_id_for_user := (select private.current_provider_id());
+
+  if old.provider_id is distinct from new.provider_id then
+    raise exception 'provider_id cannot be changed by a property provider';
+  end if;
+
+  if old.verification_status is not distinct from new.verification_status
+     and old.publication_status is not distinct from new.publication_status
+     and old.published_at is not distinct from new.published_at then
+    return new;
+  end if;
+
+  is_allowed_submission :=
+    old.provider_id = provider_id_for_user
+    and old.publication_status in ('draft', 'rejected')
+    and new.publication_status = 'pending_review'
+    and old.verification_status in ('unverified', 'rejected')
+    and new.verification_status = 'pending'
+    and old.published_at is not distinct from new.published_at;
+
+  if is_allowed_submission then
+    return new;
+  end if;
+
+  raise exception 'verification/publication fields are controlled by the review process';
+end;
+$;
+
+drop trigger if exists properties_protect_review_fields on public.properties;
+create trigger properties_protect_review_fields
+before update on public.properties
+for each row execute function public.protect_property_review_fields();
+
+create or replace function public.protect_inspection_request_identity()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $
+begin
+  if current_user in ('postgres', 'service_role') or (select private.is_admin()) then
+    return new;
+  end if;
+
+  if old.student_user_id is distinct from new.student_user_id
+     or old.property_id is distinct from new.property_id
+     or old.room_type_id is distinct from new.room_type_id
+     or old.preferred_date is distinct from new.preferred_date
+     or old.contact_phone is distinct from new.contact_phone
+     or old.note is distinct from new.note then
+    raise exception 'providers may only update the inspection request status';
+  end if;
+
+  return new;
+end;
+$;
+
+drop trigger if exists inspection_requests_protect_identity on public.inspection_requests;
+create trigger inspection_requests_protect_identity
+before update on public.inspection_requests
+for each row execute function public.protect_inspection_request_identity();
+
 alter table public.universities enable row level security;
 alter table public.profiles enable row level security;
 alter table public.providers enable row level security;
@@ -424,6 +500,13 @@ on public.providers
 for select
 to authenticated
 using ((select private.is_admin()));
+
+create policy "admins can update providers"
+on public.providers
+for update
+to authenticated
+using ((select private.is_admin()))
+with check ((select private.is_admin()));
 
 create policy "providers can read own properties"
 on public.properties
@@ -679,8 +762,22 @@ with check ((select private.is_admin()));
 grant select on public.universities, public.amenities to anon, authenticated;
 grant select on public.properties, public.room_types, public.property_fees, public.property_images, public.property_amenities to anon, authenticated;
 
+grant usage on type
+  public.app_role,
+  public.provider_type,
+  public.verification_status,
+  public.publication_status,
+  public.inspection_status,
+  public.report_status
+to authenticated;
+
+grant usage on type
+  public.verification_status,
+  public.publication_status
+to anon;
+
 grant select on public.profiles to authenticated;
-grant select, insert on public.providers to authenticated;
+grant select, insert, update on public.providers to authenticated;
 grant select, insert, update on public.properties to authenticated;
 grant select, insert, update, delete on public.room_types, public.property_fees, public.property_images, public.property_amenities to authenticated;
 grant select, insert, delete on public.saved_properties to authenticated;
