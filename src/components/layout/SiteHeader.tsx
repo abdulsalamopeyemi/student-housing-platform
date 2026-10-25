@@ -3,7 +3,7 @@ import MobileMenu from "@/components/layout/MobileMenu";
 
 export default function SiteHeader() {
   return (
-    <header className="relative border-b border-[var(--border)] bg-[var(--paper)]">
+    <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--paper)]/95 shadow-sm backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
         <Link href="/" className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--forest)] text-sm font-bold text-white">
