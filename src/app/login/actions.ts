@@ -118,7 +118,6 @@ export async function login(formData: FormData) {
 export async function signup(formData: FormData) {
   const fullName = String(formData.get("fullName") ?? "").trim();
   const email = normalizeEmail(formData.get("email"));
-  const confirmEmail = normalizeEmail(formData.get("confirmEmail"));
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
   const nextPath = safeNextPath(formData.get("next"));
@@ -136,16 +135,6 @@ export async function signup(formData: FormData) {
 
   if (emailError) {
     redirect(loginRedirectUrl("error", emailError, nextPath));
-  }
-
-  if (email !== confirmEmail) {
-    redirect(
-      loginRedirectUrl(
-        "error",
-        "The email addresses do not match. Check them carefully before creating the account.",
-        nextPath,
-      ),
-    );
   }
 
   if (password.length < 8) {
