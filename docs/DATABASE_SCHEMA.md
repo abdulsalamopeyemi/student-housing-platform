@@ -204,3 +204,42 @@ The schema intentionally does not yet include:
 - notification delivery tables
 
 Those features should be added only after the core discovery → inspection workflow is validated.
+
+
+## Mutation guards
+
+RLS controls which rows a user can reach, but some rows contain sensitive workflow fields that need an additional rule.
+
+### Property review fields
+
+Providers may edit content on properties they own, but they cannot arbitrarily change:
+
+- `provider_id`
+- `verification_status`
+- `publication_status`
+- `published_at`
+
+A database trigger allows only the defined provider transition into review:
+
+`draft/rejected → pending_review`
+
+with:
+
+`unverified/rejected → pending`
+
+Final verification/publication remains an admin responsibility.
+
+### Inspection request identity
+
+A provider can update the workflow status of an inspection request for a property they manage.
+
+A provider cannot rewrite:
+
+- the student user
+- the property
+- the selected room type
+- preferred date
+- phone number
+- note
+
+This prevents a provider from changing the meaning of a student's original request.
