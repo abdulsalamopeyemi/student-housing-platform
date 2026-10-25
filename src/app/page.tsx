@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 
+import AudiencePaths from "@/components/home/AudiencePaths";
 import FeaturedProperties from "@/components/home/FeaturedProperties";
 import HeroV2 from "@/components/home/HeroV2";
 import HowItWorks from "@/components/home/HowItWorks";
@@ -36,6 +37,7 @@ export default function Home() {
       <main>
         <HeroV2 />
         <TrustStrip />
+        <AudiencePaths />
         <Suspense fallback={<FeaturedPropertiesFallback />}>
           <FeaturedProperties />
         </Suspense>
