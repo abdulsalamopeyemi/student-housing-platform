@@ -84,3 +84,12 @@ Record meaningful product and architecture decisions here.
 **Decision:** Use `generateStaticParams()` for the current demo property slugs.
 
 **Why:** The three prototype property routes are known in advance, so they can be prerendered cleanly while Cache Components are enabled. When properties move to Postgres, this strategy will be reviewed for real marketplace scale.
+
+
+## DEC-013 — Photo-led hero structure
+
+**Decision:** Rework `HeroV2` into a full-width photographic hero with a dark overlay, left-aligned content, primary/secondary CTAs, search controls, and a trust row at the bottom.
+
+**Why:** The desired direction is closer to a hospitality/property landing page: the accommodation image should establish emotion and context immediately, while the text and search sit on top of it. This better matches the reference direction without copying its exact content or branding.
+
+**Prototype asset:** A free-to-use Unsplash image is used temporarily. Before production, replace it with a locally stored, optimized image that better represents the real KWASU/Malete accommodation market.
