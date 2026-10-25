@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import {
@@ -25,6 +26,31 @@ function loginRedirectUrl(
   });
 
   return `/login?${params.toString()}`;
+}
+
+async function confirmationRedirectUrl() {
+  const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+
+  if (configuredSiteUrl) {
+    return new URL("/auth/confirm", configuredSiteUrl).toString();
+  }
+
+  const requestHeaders = await headers();
+  const host =
+    requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+
+  if (!host) {
+    return "http://localhost:3000/auth/confirm";
+  }
+
+  const forwardedProtocol = requestHeaders.get("x-forwarded-proto");
+  const protocol =
+    forwardedProtocol ??
+    (host.startsWith("localhost") || host.startsWith("127.0.0.1")
+      ? "http"
+      : "https");
+
+  return `${protocol}://${host}/auth/confirm`;
 }
 
 function submittedEmailError(email: string) {
@@ -157,10 +183,13 @@ export async function signup(formData: FormData) {
     );
   }
 
+  const emailRedirectTo = await confirmationRedirectUrl();
+
   const { session, error } = await signUpWithPassword(
     fullName,
     email,
     password,
+    emailRedirectTo,
   );
 
   if (error) {

@@ -48,6 +48,7 @@ export default function PropertyDraftForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [feeRows, setFeeRows] = useState([0]);
   const [savedDraft, setSavedDraft] = useState<SavedGuestDraft | null>(null);
+  const [allAmenitiesSelected, setAllAmenitiesSelected] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -127,11 +128,17 @@ export default function PropertyDraftForm({
 
     const selectedAmenities = new Set(savedDraft.amenityIds ?? []);
 
-    form
-      .querySelectorAll<HTMLInputElement>('input[name="amenities"]')
-      .forEach((field) => {
-        field.checked = selectedAmenities.has(field.value);
-      });
+    const amenityFields = Array.from(
+      form.querySelectorAll<HTMLInputElement>('input[name="amenities"]'),
+    );
+
+    amenityFields.forEach((field) => {
+      field.checked = selectedAmenities.has(field.value);
+    });
+
+    setAllAmenitiesSelected(
+      amenityFields.length > 0 && amenityFields.every((field) => field.checked),
+    );
   }, [savedDraft, feeRows.length, universities]);
 
   function addFeeRow() {
@@ -143,6 +150,40 @@ export default function PropertyDraftForm({
 
   function removeFeeRow(id: number) {
     setFeeRows((rows) => rows.filter((rowId) => rowId !== id));
+  }
+
+  function syncAllAmenitiesSelected() {
+    const form = formRef.current;
+
+    if (!form) {
+      return;
+    }
+
+    const amenityFields = Array.from(
+      form.querySelectorAll<HTMLInputElement>('input[name="amenities"]'),
+    );
+
+    setAllAmenitiesSelected(
+      amenityFields.length > 0 && amenityFields.every((field) => field.checked),
+    );
+  }
+
+  function toggleAllAmenities() {
+    const form = formRef.current;
+
+    if (!form) {
+      return;
+    }
+
+    const nextChecked = !allAmenitiesSelected;
+
+    form
+      .querySelectorAll<HTMLInputElement>('input[name="amenities"]')
+      .forEach((field) => {
+        field.checked = nextChecked;
+      });
+
+    setAllAmenitiesSelected(nextChecked);
   }
 
   function saveGuestDraftAndContinue(
@@ -375,6 +416,22 @@ export default function PropertyDraftForm({
           Amenities
         </p>
 
+        <div className="mt-4 flex flex-col gap-4 rounded-2xl bg-[var(--cream)] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="max-w-2xl text-sm leading-6 text-[var(--muted)]">
+            Check whether your hostel has all the amenities listed below. If it
+            does, use the button to select everything at once instead of
+            clicking each amenity one by one.
+          </p>
+
+          <button
+            type="button"
+            onClick={toggleAllAmenities}
+            className="shrink-0 rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-bold text-[var(--forest)]"
+          >
+            {allAmenitiesSelected ? "Clear all amenities" : "Select all amenities"}
+          </button>
+        </div>
+
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {amenities.map((amenity) => (
             <label
@@ -385,6 +442,7 @@ export default function PropertyDraftForm({
                 type="checkbox"
                 name="amenities"
                 value={amenity.id}
+                onChange={syncAllAmenitiesSelected}
                 className="mt-1 h-4 w-4"
               />
               <span>

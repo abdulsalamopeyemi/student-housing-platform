@@ -45,7 +45,13 @@ function cookieOptions(maxAge: number) {
   };
 }
 
-export async function storeAuthSession(session: SupabaseAuthSession) {
+interface AuthTokens {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+}
+
+async function storeAuthTokens(session: AuthTokens) {
   const cookieStore = await cookies();
 
   cookieStore.set(
@@ -59,6 +65,10 @@ export async function storeAuthSession(session: SupabaseAuthSession) {
     session.refresh_token,
     cookieOptions(60 * 60 * 24 * 60),
   );
+}
+
+export async function storeAuthSession(session: SupabaseAuthSession) {
+  await storeAuthTokens(session);
 }
 
 export async function clearAuthSession() {
@@ -93,6 +103,37 @@ export async function getCurrentUser(): Promise<SupabaseAuthUser | null> {
   }
 
   return (await response.json()) as SupabaseAuthUser;
+}
+
+export async function adoptAuthTokens(
+  accessToken: string,
+  refreshToken: string,
+  expiresIn: number,
+) {
+  const response = await fetch(`${supabasePublicConfig.url}/auth/v1/user`, {
+    headers: {
+      apikey: supabasePublicConfig.publishableKey,
+      Authorization: `Bearer ${accessToken}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return {
+      user: null,
+      error: "We could not verify the confirmation session.",
+    };
+  }
+
+  const user = (await response.json()) as SupabaseAuthUser;
+
+  await storeAuthTokens({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    expires_in: expiresIn,
+  });
+
+  return { user, error: null };
 }
 
 export async function signInWithPassword(email: string, password: string) {
@@ -130,8 +171,15 @@ export async function signUpWithPassword(
   fullName: string,
   email: string,
   password: string,
+  emailRedirectTo?: string,
 ) {
-  const response = await fetch(`${supabasePublicConfig.url}/auth/v1/signup`, {
+  const signupUrl = new URL(`${supabasePublicConfig.url}/auth/v1/signup`);
+
+  if (emailRedirectTo) {
+    signupUrl.searchParams.set("redirect_to", emailRedirectTo);
+  }
+
+  const response = await fetch(signupUrl, {
     method: "POST",
     headers: {
       apikey: supabasePublicConfig.publishableKey,
