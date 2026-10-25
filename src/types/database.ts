@@ -522,7 +522,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_property_draft: {
+        Args: {
+          p_amenity_ids?: string[]
+          p_annual_rent: number
+          p_area: string
+          p_available_count: number
+          p_description: string
+          p_distance_label: string
+          p_fees?: Json
+          p_name: string
+          p_room_type_name: string
+          p_slug: string
+          p_university_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "student" | "provider" | "admin"
