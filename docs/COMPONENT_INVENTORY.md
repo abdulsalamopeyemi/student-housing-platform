@@ -5,7 +5,9 @@
 | SiteHeader | Brand, navigation, auth actions | Home | desktop/mobile |
 | Hero | Core promise and search entry | Home | default |
 | TrustStrip | Trust differentiators | Home | default |
-| PropertyCard | Comparable property summary | Home/Explore | available/stale/unavailable/saved |
+| FeaturedProperties | Maps demo property data into cards | Home | default |
+| PropertyCard | Comparable property summary | Home/Explore | available/limited |
+| SavePropertyButton | Interactive save toggle | Home/Explore | saved/not saved |
 | FilterBar | Search filters | Explore | open/closed/applied |
 | VerificationBadge | Verification state | Multiple | verified/pending/unverified |
 | PriceBreakdown | Rent, required fees, total | Property details | normal |
@@ -17,3 +19,7 @@
 ## Component rule
 
 A component should represent a reusable UI responsibility, not simply exist to make files smaller.
+
+## Client boundary rule
+
+Keep components server-rendered by default. Add `"use client"` only where browser interaction or React client hooks are actually required. For the first property cards, only `SavePropertyButton` owns React state.
