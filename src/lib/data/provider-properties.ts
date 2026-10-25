@@ -1,23 +1,25 @@
 import "server-only";
 
 import { supabaseAuthenticatedRest } from "@/lib/supabase/authenticated-rest";
-import type { Tables } from "@/types/database";
 
-export type ProviderProperty = Pick<
-  Tables<"properties">,
-  | "id"
-  | "name"
-  | "slug"
-  | "area"
-  | "publication_status"
-  | "verification_status"
-  | "updated_at"
->;
+export interface ProviderProperty {
+  id: string;
+  name: string;
+  slug: string;
+  area: string;
+  distance_label: string | null;
+  publication_status: "draft" | "pending_review" | "published" | "rejected" | "archived";
+  verification_status: "unverified" | "pending" | "verified" | "rejected";
+  updated_at: string;
+  universities: {
+    name: string;
+  } | null;
+}
 
 export async function getProviderProperties(providerId: string) {
   return supabaseAuthenticatedRest<ProviderProperty[]>(
     `properties?provider_id=eq.${encodeURIComponent(
       providerId,
-    )}&select=id,name,slug,area,publication_status,verification_status,updated_at&order=updated_at.desc`,
+    )}&select=id,name,slug,area,distance_label,publication_status,verification_status,updated_at,universities(name)&order=updated_at.desc`,
   );
 }
