@@ -27,6 +27,14 @@ function authErrorMessage(payload: AuthErrorPayload, fallback: string) {
   );
 }
 
+async function readAuthPayload(response: Response) {
+  try {
+    return (await response.json()) as AuthErrorPayload;
+  } catch {
+    return {} as AuthErrorPayload;
+  }
+}
+
 function cookieOptions(maxAge: number) {
   return {
     httpOnly: true,
@@ -173,6 +181,34 @@ export async function signUpWithPassword(
       : null;
 
   return { session: null, user, error: null };
+}
+
+export async function resendSignupConfirmation(email: string) {
+  const response = await fetch(`${supabasePublicConfig.url}/auth/v1/resend`, {
+    method: "POST",
+    headers: {
+      apikey: supabasePublicConfig.publishableKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      type: "signup",
+      email,
+    }),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const payload = await readAuthPayload(response);
+
+    return {
+      error: authErrorMessage(
+        payload,
+        "Unable to resend the confirmation email.",
+      ),
+    };
+  }
+
+  return { error: null };
 }
 
 export async function signOutCurrentUser() {
