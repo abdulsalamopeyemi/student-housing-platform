@@ -3,13 +3,6 @@ import { Suspense } from "react";
 import PropertyDetailsContent from "@/components/property/PropertyDetailsContent";
 import SiteFooter from "@/components/layout/SiteFooter";
 import SiteHeader from "@/components/layout/SiteHeader";
-import { featuredProperties } from "@/data/featured-properties";
-
-export function generateStaticParams() {
-  return featuredProperties.map((property) => ({
-    slug: property.slug,
-  }));
-}
 
 interface PropertyDetailsPageProps {
   params: Promise<{
