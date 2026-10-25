@@ -5,6 +5,7 @@ import {
   resendConfirmation,
   signup,
 } from "@/app/login/actions";
+import PasswordField from "@/components/auth/PasswordField";
 import { safeNextPath } from "@/lib/supabase/auth-shared";
 
 interface LoginContentProps {
@@ -82,18 +83,11 @@ export default async function LoginContent({
               />
             </label>
 
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-                Password
-              </span>
-              <input
-                required
-                type="password"
-                name="password"
-                autoComplete="current-password"
-                className="w-full rounded-xl border border-[var(--border)] px-4 py-3 outline-none focus:border-[var(--emerald)]"
-              />
-            </label>
+            <PasswordField
+              name="password"
+              label="Password"
+              autoComplete="current-password"
+            />
 
             <button
               type="submit"
@@ -198,36 +192,22 @@ export default async function LoginContent({
               />
             </label>
 
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-                Password
-              </span>
-              <input
-                required
-                minLength={8}
-                type="password"
-                name="password"
-                autoComplete="new-password"
-                className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none focus:border-[var(--emerald)]"
-              />
-              <span className="mt-1.5 block text-xs text-[var(--muted)]">
-                Use at least 8 characters.
-              </span>
-            </label>
+            <PasswordField
+              name="password"
+              label="Password"
+              autoComplete="new-password"
+              minLength={8}
+              helpText="Use at least 8 characters."
+              backgroundClassName="bg-white"
+            />
 
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-                Confirm password
-              </span>
-              <input
-                required
-                minLength={8}
-                type="password"
-                name="confirmPassword"
-                autoComplete="new-password"
-                className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none focus:border-[var(--emerald)]"
-              />
-            </label>
+            <PasswordField
+              name="confirmPassword"
+              label="Confirm password"
+              autoComplete="new-password"
+              minLength={8}
+              backgroundClassName="bg-white"
+            />
 
             <button
               type="submit"
