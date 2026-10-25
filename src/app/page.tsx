@@ -1,15 +1,27 @@
 import FeaturedProperties from "@/components/home/FeaturedProperties";
 import Hero from "@/components/home/Hero";
+import HowItWorks from "@/components/home/HowItWorks";
+import ProviderCTA from "@/components/home/ProviderCTA";
+import TrustAndSafety from "@/components/home/TrustAndSafety";
 import TrustStrip from "@/components/home/TrustStrip";
+import SiteFooter from "@/components/layout/SiteFooter";
 import SiteHeader from "@/components/layout/SiteHeader";
 
 export default function Home() {
   return (
-    <main>
+    <>
       <SiteHeader />
-      <Hero />
-      <TrustStrip />
-      <FeaturedProperties />
-    </main>
+
+      <main>
+        <Hero />
+        <TrustStrip />
+        <FeaturedProperties />
+        <HowItWorks />
+        <TrustAndSafety />
+        <ProviderCTA />
+      </main>
+
+      <SiteFooter />
+    </>
   );
 }
