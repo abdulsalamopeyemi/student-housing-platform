@@ -1,21 +1,124 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { createPropertyDraft } from "@/app/provider/properties/new/actions";
 import type { Amenity } from "@/lib/data/amenities";
 import type { University } from "@/lib/data/universities";
 
+const GUEST_DRAFT_KEY = "student-housing-guest-property-draft";
+
 interface PropertyDraftFormProps {
   universities: University[];
   amenities: Amenity[];
+  mode?: "guest" | "provider";
+}
+
+interface SavedGuestDraft {
+  name: string;
+  universityId: string;
+  area: string;
+  distanceLabel: string;
+  description: string;
+  roomType: string;
+  annualRent: string;
+  availableCount: string;
+  feeLabels: string[];
+  feeAmounts: string[];
+  amenityIds: string[];
+}
+
+function inputValue(form: HTMLFormElement, name: string) {
+  const field = form.elements.namedItem(name);
+
+  if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement || field instanceof HTMLSelectElement) {
+    return field.value;
+  }
+
+  return "";
 }
 
 export default function PropertyDraftForm({
   universities,
   amenities,
+  mode = "provider",
 }: PropertyDraftFormProps) {
+  const formRef = useRef<HTMLFormElement>(null);
   const [feeRows, setFeeRows] = useState([0]);
+  const [savedDraft, setSavedDraft] = useState<SavedGuestDraft | null>(null);
+
+  useEffect(() => {
+    try {
+      const rawDraft = window.localStorage.getItem(GUEST_DRAFT_KEY);
+
+      if (!rawDraft) {
+        return;
+      }
+
+      const draft = JSON.parse(rawDraft) as SavedGuestDraft;
+      setSavedDraft(draft);
+      setFeeRows(
+        Array.from(
+          { length: Math.max(1, draft.feeLabels?.length ?? 0) },
+          (_, index) => index,
+        ),
+      );
+    } catch {
+      window.localStorage.removeItem(GUEST_DRAFT_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    const form = formRef.current;
+
+    if (!form || !savedDraft) {
+      return;
+    }
+
+    const setSingleValue = (name: string, value: string) => {
+      const field = form.elements.namedItem(name);
+
+      if (
+        field instanceof HTMLInputElement ||
+        field instanceof HTMLTextAreaElement ||
+        field instanceof HTMLSelectElement
+      ) {
+        field.value = value;
+      }
+    };
+
+    setSingleValue("name", savedDraft.name ?? "");
+    setSingleValue(
+      "universityId",
+      savedDraft.universityId || universities[0]?.id || "",
+    );
+    setSingleValue("area", savedDraft.area ?? "");
+    setSingleValue("distanceLabel", savedDraft.distanceLabel ?? "");
+    setSingleValue("description", savedDraft.description ?? "");
+    setSingleValue("roomType", savedDraft.roomType ?? "");
+    setSingleValue("annualRent", savedDraft.annualRent ?? "");
+    setSingleValue("availableCount", savedDraft.availableCount ?? "1");
+
+    form
+      .querySelectorAll<HTMLInputElement>('input[name="feeLabel"]')
+      .forEach((field, index) => {
+        field.value = savedDraft.feeLabels?.[index] ?? "";
+      });
+
+    form
+      .querySelectorAll<HTMLInputElement>('input[name="feeAmount"]')
+      .forEach((field, index) => {
+        field.value = savedDraft.feeAmounts?.[index] ?? "";
+      });
+
+    const selectedAmenities = new Set(savedDraft.amenityIds ?? []);
+
+    form
+      .querySelectorAll<HTMLInputElement>('input[name="amenities"]')
+      .forEach((field) => {
+        field.checked = selectedAmenities.has(field.value);
+      });
+  }, [savedDraft, feeRows.length, universities]);
 
   function addFeeRow() {
     setFeeRows((rows) => {
@@ -28,8 +131,49 @@ export default function PropertyDraftForm({
     setFeeRows((rows) => rows.filter((rowId) => rowId !== id));
   }
 
+  function saveGuestDraftAndContinue(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
+    if (mode !== "guest") {
+      return;
+    }
+
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    const data = new FormData(form);
+
+    const draft: SavedGuestDraft = {
+      name: inputValue(form, "name"),
+      universityId: inputValue(form, "universityId"),
+      area: inputValue(form, "area"),
+      distanceLabel: inputValue(form, "distanceLabel"),
+      description: inputValue(form, "description"),
+      roomType: inputValue(form, "roomType"),
+      annualRent: inputValue(form, "annualRent"),
+      availableCount: inputValue(form, "availableCount"),
+      feeLabels: data.getAll("feeLabel").map(String),
+      feeAmounts: data.getAll("feeAmount").map(String),
+      amenityIds: data.getAll("amenities").map(String),
+    };
+
+    window.localStorage.setItem(GUEST_DRAFT_KEY, JSON.stringify(draft));
+    window.location.assign("/login?next=%2Flist-property%2Fstart");
+  }
+
   return (
-    <form action={createPropertyDraft} className="space-y-8">
+    <form
+      ref={formRef}
+      action={mode === "provider" ? createPropertyDraft : undefined}
+      onSubmit={mode === "guest" ? saveGuestDraftAndContinue : undefined}
+      className="space-y-8"
+    >
+      {savedDraft ? (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+          Your saved browser draft has been restored.
+        </div>
+      ) : null}
+
       <section className="rounded-3xl border border-[var(--border)] bg-white p-6 sm:p-8">
         <p className="text-sm font-bold uppercase tracking-wide text-[var(--emerald)]">
           Property basics
@@ -244,9 +388,13 @@ export default function PropertyDraftForm({
 
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-[var(--forest)] p-6 text-white">
         <div>
-          <p className="font-bold">Save as a draft</p>
+          <p className="font-bold">
+            {mode === "guest" ? "Continue with your listing" : "Save as a draft"}
+          </p>
           <p className="mt-1 text-sm text-white/65">
-            This does not publish or verify the property.
+            {mode === "guest"
+              ? "We will keep these details in this browser, then ask you to sign in before saving them to the platform."
+              : "This does not publish or verify the property."}
           </p>
         </div>
 
@@ -254,7 +402,7 @@ export default function PropertyDraftForm({
           type="submit"
           className="rounded-xl bg-[var(--gold)] px-5 py-3 font-bold text-[var(--ink)]"
         >
-          Save property draft
+          {mode === "guest" ? "Continue to sign in" : "Save property draft"}
         </button>
       </div>
     </form>
