@@ -38,10 +38,10 @@ export default function Home() {
         <HeroV2 />
         <TrustStrip />
         <AudiencePaths />
+        <HowItWorks />
         <Suspense fallback={<FeaturedPropertiesFallback />}>
           <FeaturedProperties />
         </Suspense>
-        <HowItWorks />
         <TrustAndSafety />
         <ProviderCTA />
       </main>
