@@ -29,12 +29,11 @@ export default async function LoginContent({
           Your account
         </p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight text-[var(--forest)] sm:text-5xl">
-          Sign in or create your account.
+          One account, with the right workspace for you.
         </h1>
         <p className="mt-4 text-base leading-7 text-[var(--muted)]">
-          Students will use accounts for saved homes and inspection history.
-          Property providers will use the same secure account system before
-          creating and managing listings.
+          Browse accommodation without signing in. Create an account when you
+          want to save homes, request inspections, or list and manage property.
         </p>
       </div>
 
@@ -138,7 +137,7 @@ export default async function LoginContent({
           </div>
         </section>
 
-        <section className="rounded-3xl border border-[var(--border)] bg-[var(--cream)] p-6 sm:p-8">
+        <section id="signup" className="scroll-mt-28 rounded-3xl border border-[var(--border)] bg-[var(--cream)] p-6 sm:p-8">
           <p className="text-sm font-bold uppercase tracking-wide text-[var(--emerald)]">
             New here?
           </p>
@@ -146,12 +145,50 @@ export default async function LoginContent({
             Create an account
           </h2>
           <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-            Check your email carefully. We block common domain typos before
-            creating the account, then verify ownership with a confirmation email.
+            Choose how you plan to use the platform. Admin access is managed
+            separately and cannot be created from this form.
           </p>
 
           <form action={signup} className="mt-6 space-y-4">
             <input type="hidden" name="next" value={nextPath} />
+
+            <fieldset>
+              <legend className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+                I want to
+              </legend>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="cursor-pointer rounded-2xl border border-[var(--border)] bg-white p-4 has-[:checked]:border-[var(--emerald)] has-[:checked]:ring-2 has-[:checked]:ring-emerald-100">
+                  <input
+                    type="radio"
+                    name="accountType"
+                    value="student"
+                    defaultChecked
+                    className="sr-only"
+                  />
+                  <span className="block font-bold text-[var(--forest)]">
+                    Find accommodation
+                  </span>
+                  <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">
+                    Save homes and manage inspection requests.
+                  </span>
+                </label>
+
+                <label className="cursor-pointer rounded-2xl border border-[var(--border)] bg-white p-4 has-[:checked]:border-[var(--emerald)] has-[:checked]:ring-2 has-[:checked]:ring-emerald-100">
+                  <input
+                    type="radio"
+                    name="accountType"
+                    value="provider"
+                    className="sr-only"
+                  />
+                  <span className="block font-bold text-[var(--forest)]">
+                    List accommodation
+                  </span>
+                  <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">
+                    For landlords, agents and property managers.
+                  </span>
+                </label>
+              </div>
+            </fieldset>
 
             <label className="block">
               <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
