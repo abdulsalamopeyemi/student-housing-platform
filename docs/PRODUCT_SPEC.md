@@ -112,13 +112,14 @@ Need to review listings, manage verification states, handle reports, and keep ma
 - provider workspace
 
 ### M6 — Real property submission
-**Next**
+**Status: implemented foundation**
 
-- draft property form
-- room type entry
-- required fees
+- authenticated draft property form
+- atomic property + first room type creation
+- required fee entry
 - amenities
-- availability
+- room availability
+- provider draft list
 - submit property for review
 
 ### M7 — Real marketplace data + inspection requests
