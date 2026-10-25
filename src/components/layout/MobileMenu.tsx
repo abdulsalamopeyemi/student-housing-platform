@@ -66,13 +66,13 @@ export default function MobileMenu({
               Explore homes
             </Link>
 
-            <Link
+            <a
               href="/#how-it-works"
               onClick={closeMenu}
               className="rounded-xl px-4 py-3 text-sm font-semibold text-[var(--forest)] hover:bg-[var(--cream)]"
             >
               How it works
-            </Link>
+            </a>
 
             <Link
               href="/list-property"
