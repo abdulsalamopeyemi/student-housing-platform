@@ -54,3 +54,12 @@ Record meaningful product and architecture decisions here.
 **Decision:** Keep the main header server-rendered and isolate the open/closed mobile navigation state inside a small `MobileMenu` Client Component.
 
 **Why:** Responsive navigation needs browser interaction, but the rest of the header does not need client-side JavaScript.
+
+
+## DEC-009 — Explore filters in the URL
+
+**Decision:** Use URL search parameters for the first Explore filters instead of storing the filters only in React memory.
+
+**Why:** A URL such as `/explore?location=Malete&budget=250000` can be refreshed, bookmarked, shared, and rendered on the server. The homepage search can also feed directly into the Explore page.
+
+**Trade-off:** The current prototype submits filters through a standard GET form instead of providing instant filtering while the user types. We can add richer client interaction later if testing shows it is valuable.
