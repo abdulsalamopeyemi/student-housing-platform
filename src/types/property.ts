@@ -1,5 +1,11 @@
 export type PropertyAvailability = "available" | "limited";
 
+export interface PropertyFee {
+  label: string;
+  amount: number;
+  required: boolean;
+}
+
 export interface StudentProperty {
   id: string;
   slug: string;
@@ -11,4 +17,9 @@ export interface StudentProperty {
   availableRooms: number;
   availability: PropertyAvailability;
   facilities: string[];
+  description: string;
+  distanceFromCampus: string;
+  utilities: string[];
+  fees: PropertyFee[];
+  availabilityUpdatedAt: string;
 }
