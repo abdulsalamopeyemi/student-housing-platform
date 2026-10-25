@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { createPropertyDraft } from "@/app/provider/properties/new/actions";
 import type { Amenity } from "@/lib/data/amenities";
@@ -43,29 +44,42 @@ export default function PropertyDraftForm({
   amenities,
   mode = "provider",
 }: PropertyDraftFormProps) {
+  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [feeRows, setFeeRows] = useState([0]);
   const [savedDraft, setSavedDraft] = useState<SavedGuestDraft | null>(null);
 
   useEffect(() => {
-    try {
-      const rawDraft = window.localStorage.getItem(GUEST_DRAFT_KEY);
+    let cancelled = false;
 
-      if (!rawDraft) {
+    queueMicrotask(() => {
+      if (cancelled) {
         return;
       }
 
-      const draft = JSON.parse(rawDraft) as SavedGuestDraft;
-      setSavedDraft(draft);
-      setFeeRows(
-        Array.from(
-          { length: Math.max(1, draft.feeLabels?.length ?? 0) },
-          (_, index) => index,
-        ),
-      );
-    } catch {
-      window.localStorage.removeItem(GUEST_DRAFT_KEY);
-    }
+      try {
+        const rawDraft = window.localStorage.getItem(GUEST_DRAFT_KEY);
+
+        if (!rawDraft) {
+          return;
+        }
+
+        const draft = JSON.parse(rawDraft) as SavedGuestDraft;
+        setSavedDraft(draft);
+        setFeeRows(
+          Array.from(
+            { length: Math.max(1, draft.feeLabels?.length ?? 0) },
+            (_, index) => index,
+          ),
+        );
+      } catch {
+        window.localStorage.removeItem(GUEST_DRAFT_KEY);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -158,7 +172,7 @@ export default function PropertyDraftForm({
     };
 
     window.localStorage.setItem(GUEST_DRAFT_KEY, JSON.stringify(draft));
-    window.location.assign("/login?next=%2Flist-property%2Fstart");
+    router.push("/login?next=%2Flist-property%2Fstart");
   }
 
   return (
