@@ -2,7 +2,15 @@
 
 ## Student discovery
 
-Home → search → results → filters → property details → save or request inspection → authenticate only when necessary → confirmation/status.
+Home → search → Explore results → refine filters → property details → save or request inspection → authenticate only when necessary → confirmation/status.
+
+### Current implemented slice
+
+1. The homepage hero submits `location` and `budget` as URL search parameters.
+2. `/explore` reads those values on the server.
+3. The result set is filtered by location, budget, and room type.
+4. If nothing matches, the user gets a useful empty state and a clear way to reset filters.
+5. Property details and inspection requests are the next discovery steps to build.
 
 ## Provider listing
 
