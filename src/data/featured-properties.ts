@@ -1,0 +1,40 @@
+import type { StudentProperty } from "@/types/property";
+
+export const featuredProperties: StudentProperty[] = [
+  {
+    id: "demo-001",
+    slug: "victory-lodge",
+    name: "Victory Lodge",
+    university: "KWASU",
+    area: "Malete",
+    roomType: "Self-contained room",
+    annualRent: 250000,
+    availableRooms: 2,
+    availability: "limited",
+    facilities: ["Water supply", "Private bathroom", "Near campus"],
+  },
+  {
+    id: "demo-002",
+    slug: "greenview-residence",
+    name: "Greenview Residence",
+    university: "KWASU",
+    area: "Malete",
+    roomType: "Single room",
+    annualRent: 180000,
+    availableRooms: 6,
+    availability: "available",
+    facilities: ["Water supply", "Security", "Study-friendly area"],
+  },
+  {
+    id: "demo-003",
+    slug: "harmony-court",
+    name: "Harmony Court",
+    university: "KWASU",
+    area: "Malete",
+    roomType: "Self-contained room",
+    annualRent: 320000,
+    availableRooms: 3,
+    availability: "available",
+    facilities: ["Private bathroom", "Kitchen space", "Fenced compound"],
+  },
+];
