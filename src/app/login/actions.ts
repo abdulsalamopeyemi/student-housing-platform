@@ -65,7 +65,7 @@ function friendlyAuthError(
     normalized.includes("too many requests") ||
     normalized.includes("email rate limit exceeded")
   ) {
-    return "Too many email requests were made recently. Wait a little before requesting another confirmation email.";
+    return "Email sending is temporarily limited because several confirmation emails were requested while testing. Your account may already exist, so do not keep creating it again. Use your confirmed account to sign in, or try Resend confirmation later.";
   }
 
   if (
