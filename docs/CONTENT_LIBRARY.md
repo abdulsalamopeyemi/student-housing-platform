@@ -14,27 +14,30 @@ This file owns the reusable product copy.
 
 Eyebrow:
 
-**Student housing, made clearer**
+**Starting with KWASU · Malete**
 
 Heading:
 
-**Find a student home you can trust.**
+**Find student housing with fewer surprises.**
 
 Subheading:
 
-**Compare clear prices, facilities, availability and property information near your campus before you spend your time or money.**
+**Compare room types, required fees, facilities, distance, and availability before you spend money travelling around or paying for a place you do not fully understand.**
 
-Primary action:
+Primary search action:
 
-**Search homes**
+**Find a home**
 
-Secondary/provider action:
+Secondary actions:
 
-**List a property**
+- **Browse sample homes**
+- **I manage a property**
 
-Context note:
+Trust points:
 
-**Start with Malete · More university communities coming later.**
+- Clear required fees
+- Availability updates
+- Inspection requests
 
 ## Trust strip
 
