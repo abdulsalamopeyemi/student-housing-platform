@@ -22,5 +22,5 @@ export interface StudentProperty {
   utilities: string[];
   fees: PropertyFee[];
   availabilityUpdatedAt: string;
-  verified: boolean;
+  verified?: boolean;
 }
