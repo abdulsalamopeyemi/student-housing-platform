@@ -41,3 +41,16 @@ Record meaningful product and architecture decisions here.
 **Why:** State belongs where the UI changes from browser interaction. This avoids turning entire sections into client-side JavaScript just because one button uses `useState`.
 
 **Current limitation:** The save state is temporary and resets after a page refresh. Persistence will be added later when we introduce local persistence or authenticated user accounts.
+
+
+## DEC-007 — Homepage trust language
+
+**Decision:** Explain trust as better information and defined verification processes rather than promising that the platform eliminates all accommodation risk.
+
+**Why:** Strong safety promises would be misleading before the platform has real operational verification, dispute, and support processes.
+
+## DEC-008 — Mobile navigation state
+
+**Decision:** Keep the main header server-rendered and isolate the open/closed mobile navigation state inside a small `MobileMenu` Client Component.
+
+**Why:** Responsive navigation needs browser interaction, but the rest of the header does not need client-side JavaScript.
