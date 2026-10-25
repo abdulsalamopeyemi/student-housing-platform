@@ -2,203 +2,148 @@
 
 This document connects the concepts you are learning to the actual project.
 
-## 1. Components
+## Components and props
 
-A React component represents a reusable UI responsibility.
+React components own reusable UI responsibilities.
 
 Examples:
 
 - `SiteHeader.tsx`
 - `PropertyCard.tsx`
-- `HowItWorks.tsx`
+- `ProviderOnboardingContent.tsx`
 
-Why:
+Props pass data into reusable components instead of hard-coding one result.
 
-Instead of putting the entire application inside one `page.tsx`, each component owns one clear responsibility.
+## State
 
-## 2. Props
-
-Props pass information from a parent component to a child component.
-
-Example:
-
-`PropertyCard` receives a `property` prop.
-
-That means the card UI is reusable for many different properties instead of hard-coding one property.
-
-## 3. State
-
-State represents information that can change while the user interacts with the current browser session.
+React state is for browser interaction that changes during the current session.
 
 Examples:
 
-### SavePropertyButton
+- `SavePropertyButton` → saved/not saved
+- `MobileMenu` → open/closed
+- `InspectionRequestForm` → idle/submitting/success
 
-`isSaved` changes between `false` and `true`.
+Not every changing value belongs in `useState`.
 
-The component re-renders when the state changes.
+## URL state
 
-### MobileMenu
-
-`isOpen` determines whether the mobile navigation is visible.
-
-Important lesson:
-
-Not every value belongs in React state.
-
-## 4. URL state
-
-Explore filters currently live in the URL.
+Explore filters live in the URL.
 
 Example:
 
 `/explore?location=Malete&budget=250000`
 
-Why this is better than putting every filter in `useState`:
+Benefits:
 
-- refreshing keeps the filters
-- the URL can be shared
-- browser navigation works naturally
-- the server can read the filter values
+- refresh preserves filters
+- links are shareable
+- browser navigation works
+- the server can render from the URL
 
-## 5. Server Components
+## Server Components
 
-Most of the app is server-rendered by default.
+Most read-only application UI is server-rendered.
 
 Examples:
 
-- homepage sections
 - Explore results
-- Property details
+- property details
+- provider onboarding status
+- provider workspace
 
-Why:
+They can read server-only data without shipping all data-access logic to the browser.
 
-These components mainly read data and render HTML. They do not need browser-side React state.
+## Suspense and request-time data
 
-## 6. Client Components
+With Cache Components enabled, request values such as:
 
-A Client Component begins with:
+- `searchParams`
+- dynamic `params`
+- authenticated cookies
 
-`"use client"`
+must be isolated appropriately.
+
+We use `Suspense` boundaries around request-dependent content so static shells remain fast.
+
+## Server Actions
+
+Server Actions handle trusted server-side form mutations.
 
 Current examples:
 
-- `SavePropertyButton.tsx`
-- `MobileMenu.tsx`
-- `InspectionRequestForm.tsx`
+- login
+- signup
+- provider creation
+- sign out
 
-Why:
+The browser submits a normal form, but sensitive Supabase calls and cookie writes happen on the server.
 
-They need browser interaction and React hooks.
+## Authentication vs authorization
 
-## 7. Dynamic routes
+Authentication:
 
-The property page uses:
+**Who are you?**
 
-`src/app/properties/[slug]/page.tsx`
+Current flow:
 
-A URL such as:
+email/password
+→ Supabase Auth
+→ access token + refresh token
+→ HTTP-only cookies
 
-`/properties/victory-lodge`
+Authorization:
 
-provides the slug `victory-lodge` to the page.
+**What are you allowed to do?**
 
-The page then finds the correct property.
+Current flow:
 
-Later the slug will be used to query Postgres instead of the temporary array.
+authenticated request
+→ access token
+→ Postgres
+→ RLS
+→ allowed rows only
 
-## 8. TypeScript interfaces
+A signed-in user is not automatically an admin.
 
-`StudentProperty` describes the expected shape of property data.
+## Provider onboarding
 
-Why:
+A normal account starts as a student profile.
 
-If a property is missing required data or uses the wrong type, TypeScript can warn us while developing.
+When that authenticated user creates a valid provider row:
 
-When the database is introduced, these data types will become even more important.
+- RLS checks that the provider belongs to the current user
+- a database trigger promotes the profile role to `provider`
+- verification remains `unverified`
 
-## 9. Temporary data vs real data
+This separates **provider identity** from **provider verification**.
 
-Current source:
+## Generated database types
 
-`src/data/featured-properties.ts`
+`src/types/database.ts` is generated from the live Supabase schema.
 
-This is temporary demo data.
+This means TypeScript can understand actual table shapes such as:
 
-It exists because we needed to understand:
+- `providers`
+- `properties`
+- `inspection_requests`
 
-- what information a property needs
-- how cards should compare properties
-- what the property-details page needs
-- what the future database schema should contain
+This is stronger than manually guessing what the database looks like.
 
-We are not pretending it is production data.
+## Temporary property data vs real backend data
 
-## 10. Forms
+Property cards/details still use the temporary demo array.
 
-The current inspection form teaches:
+The backend is real, but the first real property has not been created yet.
 
-- form fields
-- submit events
-- component state
-- loading/success UI states
+The next milestone replaces this gap through the provider workflow:
 
-It does not yet persist data.
-
-Production flow will become:
-
-form
-→ server validation
-→ database insert
-→ notification/status
-→ confirmation
-
-## 11. Why we are delaying authentication
-
-Authentication is not useful by itself.
-
-We first needed to know what authenticated users actually need to do.
-
-Now we know:
-
-Student actions:
-
-- save a property
-- request inspections
-- see request history
-
-Provider actions:
-
-- create properties
-- update rooms and availability
-- receive inspection requests
-
-Admin actions:
-
-- verify providers/properties
-- moderate reports
-
-That makes the eventual auth/authorization design much clearer.
-
-## 12. Why this project is good React practice
-
-You are learning React concepts in situations where they are genuinely required rather than adding hooks artificially.
-
-As the product grows you will encounter:
-
-- component composition
-- props
-- state
-- forms
-- controlled inputs
-- custom hooks
-- context where appropriate
-- async UI
-- error boundaries
-- loading states
-- authentication state
-
-At the same time, Next.js teaches when some state and data should live on the server instead of the browser.
+provider account
+→ property draft
+→ room/pricing data
+→ review
+→ published property
+→ Explore
 
 ## Current mental model
 
@@ -214,10 +159,10 @@ Postgres answers:
 
 **What real data exists and how is it related?**
 
-Auth answers:
+Supabase Auth answers:
 
 **Who is this user?**
 
-Authorization/RLS answers:
+RLS answers:
 
-**What is this user allowed to access or change?**
+**Which database rows is this user allowed to access or change?**
