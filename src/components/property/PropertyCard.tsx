@@ -23,7 +23,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
     <article className="overflow-hidden rounded-3xl border border-[var(--border)] bg-white shadow-sm shadow-black/5">
       <div className="relative flex min-h-48 items-end bg-[var(--forest)] p-5">
         <span className="absolute left-5 top-5 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-[var(--forest)]">
-          Sample listing
+          {property.verified ? "Verified listing" : "Listing"}
         </span>
 
         <div>
@@ -52,20 +52,26 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           </span>
         </div>
 
-        <p className="mt-4 text-sm font-semibold text-[var(--ink)]">
+        <p className="mt-4 text-sm font-semibold capitalize text-[var(--ink)]">
           {property.roomType}
         </p>
 
-        <ul className="mt-4 flex flex-wrap gap-2" aria-label="Property facilities">
-          {property.facilities.map((facility) => (
-            <li
-              key={facility}
-              className="rounded-full bg-[var(--cream)] px-3 py-1.5 text-xs font-medium text-[var(--muted)]"
-            >
-              {facility}
-            </li>
-          ))}
-        </ul>
+        {property.facilities.length > 0 ? (
+          <ul className="mt-4 flex flex-wrap gap-2" aria-label="Property facilities">
+            {property.facilities.map((facility) => (
+              <li
+                key={facility}
+                className="rounded-full bg-[var(--cream)] px-3 py-1.5 text-xs font-medium text-[var(--muted)]"
+              >
+                {facility}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-4 text-xs text-[var(--muted)]">
+            Facilities have not been added yet.
+          </p>
+        )}
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
           <Link
@@ -79,7 +85,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         </div>
 
         <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
-          Demo data for interface development
+          Approved through the platform review workflow.
         </p>
       </div>
     </article>
