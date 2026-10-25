@@ -2,10 +2,12 @@ import Link from "next/link";
 
 import { createProvider } from "@/app/provider/onboarding/actions";
 import { getCurrentProvider } from "@/lib/data/providers";
+import { safeNextPath } from "@/lib/supabase/auth-shared";
 
 interface ProviderOnboardingContentProps {
   searchParams: Promise<{
     error?: string;
+    next?: string;
   }>;
 }
 
@@ -16,6 +18,8 @@ export default async function ProviderOnboardingContent({
     getCurrentProvider(),
     searchParams,
   ]);
+
+  const nextPath = params.next ? safeNextPath(params.next) : "/list-property";
 
   if (provider) {
     return (
@@ -34,10 +38,10 @@ export default async function ProviderOnboardingContent({
             </span>
           </p>
           <Link
-            href="/list-property"
+            href={nextPath}
             className="mt-6 inline-flex rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-semibold text-white"
           >
-            Continue to provider workspace
+            Continue
           </Link>
         </div>
       </div>
@@ -78,6 +82,8 @@ export default async function ProviderOnboardingContent({
         ) : null}
 
         <form action={createProvider} className="mt-6 space-y-5">
+          <input type="hidden" name="next" value={nextPath} />
+
           <label className="block">
             <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
               Provider / business name
@@ -112,12 +118,12 @@ export default async function ProviderOnboardingContent({
 
           <div className="rounded-2xl bg-[var(--cream)] p-4 text-sm leading-6 text-[var(--muted)]">
             Your profile begins as <strong>unverified</strong>. Verification
-            will be a separate review process; creating this account does not
-            grant a verified badge.
+            is a separate review process; creating this profile does not grant
+            a verified badge.
           </div>
 
           <button className="w-full rounded-xl bg-[var(--forest)] px-5 py-3 font-semibold text-white transition hover:bg-[var(--emerald)]">
-            Create provider profile
+            Create provider profile and continue
           </button>
         </form>
       </section>
