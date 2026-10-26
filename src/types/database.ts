@@ -14,6 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
+      accommodation_payments: {
+        Row: {
+          access_code: string | null
+          amount_kobo: number
+          channel: string | null
+          checkout_url: string | null
+          created_at: string
+          currency: string
+          gateway_response: string | null
+          gateway_transaction_id: number | null
+          id: string
+          inspection_request_id: string
+          paid_at: string | null
+          processor: string
+          property_id: string
+          provider_id: string
+          reference: string
+          room_type_id: string
+          status: string
+          student_user_id: string
+          updated_at: string
+          verified_at: string | null
+        }
+        Insert: {
+          access_code?: string | null
+          amount_kobo: number
+          channel?: string | null
+          checkout_url?: string | null
+          created_at?: string
+          currency?: string
+          gateway_response?: string | null
+          gateway_transaction_id?: number | null
+          id?: string
+          inspection_request_id: string
+          paid_at?: string | null
+          processor?: string
+          property_id: string
+          provider_id: string
+          reference: string
+          room_type_id: string
+          status?: string
+          student_user_id: string
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Update: {
+          access_code?: string | null
+          amount_kobo?: number
+          channel?: string | null
+          checkout_url?: string | null
+          created_at?: string
+          currency?: string
+          gateway_response?: string | null
+          gateway_transaction_id?: number | null
+          id?: string
+          inspection_request_id?: string
+          paid_at?: string | null
+          processor?: string
+          property_id?: string
+          provider_id?: string
+          reference?: string
+          room_type_id?: string
+          status?: string
+          student_user_id?: string
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accommodation_payments_inspection_request_id_fkey"
+            columns: ["inspection_request_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accommodation_payments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accommodation_payments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accommodation_payments_room_type_id_fkey"
+            columns: ["room_type_id"]
+            isOneToOne: false
+            referencedRelation: "room_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       amenities: {
         Row: {
           category: string
@@ -338,6 +436,44 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_payment_accounts: {
+        Row: {
+          created_at: string
+          created_by_admin_user_id: string | null
+          processor: string
+          provider_id: string
+          status: string
+          subaccount_code: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_admin_user_id?: string | null
+          processor?: string
+          provider_id: string
+          status?: string
+          subaccount_code: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by_admin_user_id?: string | null
+          processor?: string
+          provider_id?: string
+          status?: string
+          subaccount_code?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_payment_accounts_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: true
+            referencedRelation: "providers"
             referencedColumns: ["id"]
           },
         ]
