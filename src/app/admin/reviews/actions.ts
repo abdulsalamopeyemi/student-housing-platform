@@ -161,3 +161,60 @@ export async function rejectProperty(formData: FormData) {
 
   adminRedirect("Property rejected. The provider can revise and resubmit it.");
 }
+
+
+const allowedReportStatuses = ["reviewing", "resolved", "dismissed"] as const;
+
+export async function updatePropertyReportStatus(formData: FormData) {
+  await requireAdmin();
+
+  const reportId = String(formData.get("reportId") ?? "").trim();
+  const nextStatus = String(formData.get("status") ?? "").trim();
+
+  if (
+    !reportId ||
+    !allowedReportStatuses.includes(
+      nextStatus as (typeof allowedReportStatuses)[number],
+    )
+  ) {
+    adminRedirect("Report status could not be updated.");
+  }
+
+  const reports = await supabaseAuthenticatedRest<
+    Array<{ id: string; status: "open" | "reviewing" | "resolved" | "dismissed" }>
+  >(
+    `reports?id=eq.${encodeURIComponent(
+      reportId,
+    )}&select=id,status&limit=1`,
+  );
+
+  const report = reports[0];
+
+  if (!report || report.status === "resolved" || report.status === "dismissed") {
+    adminRedirect("This report is no longer active.");
+  }
+
+  const rows = await supabaseAuthenticatedRest<Array<{ id: string }>>(
+    `reports?id=eq.${encodeURIComponent(reportId)}&select=id`,
+    {
+      method: "PATCH",
+      prefer: "return=representation",
+      body: JSON.stringify({
+        status: nextStatus,
+        updated_at: new Date().toISOString(),
+      }),
+    },
+  );
+
+  if (rows.length === 0) {
+    adminRedirect("Report status could not be updated.");
+  }
+
+  adminRedirect(
+    nextStatus === "reviewing"
+      ? "Report moved to reviewing."
+      : nextStatus === "resolved"
+        ? "Report marked resolved."
+        : "Report dismissed.",
+  );
+}
