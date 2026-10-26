@@ -45,6 +45,8 @@ export async function updateRoomAvailability(formData: FormData) {
     );
   }
 
+  let updateError = "";
+
   try {
     const rows = await supabaseAuthenticatedRest<Array<{ id: string }>>(
       `room_types?id=eq.${encodeURIComponent(roomTypeId)}&select=id`,
@@ -60,14 +62,14 @@ export async function updateRoomAvailability(formData: FormData) {
     );
 
     if (rows.length === 0) {
-      redirect(
-        workspaceMessage(
-          "You do not have permission to update this room availability.",
-        ),
-      );
+      updateError = "You do not have permission to update this room availability.";
     }
   } catch {
-    redirect(workspaceMessage("We could not update room availability."));
+    updateError = "We could not update room availability.";
+  }
+
+  if (updateError) {
+    redirect(workspaceMessage(updateError));
   }
 
   revalidatePath("/list-property");

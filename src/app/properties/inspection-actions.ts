@@ -17,6 +17,28 @@ function safePropertyPath(slug: string) {
     : "/explore";
 }
 
+function lagosToday() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Lagos",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+function isValidDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+
+  return (
+    !Number.isNaN(parsed.getTime()) &&
+    parsed.toISOString().slice(0, 10) === value
+  );
+}
+
 export async function requestInspection(
   _previousState: InspectionActionState,
   formData: FormData,
@@ -50,28 +72,27 @@ export async function requestInspection(
     };
   }
 
-  if (phone.length < 7 || phone.length > 30) {
+  const phoneDigits = phone.replace(/\D/g, "");
+
+  if (
+    !/^[+\d()\s.-]+$/.test(phone) ||
+    phoneDigits.length < 7 ||
+    phoneDigits.length > 20
+  ) {
     return {
       status: "error",
       message: "Enter a valid phone number we can use for the inspection.",
     };
   }
 
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(preferredDate)) {
+  if (!isValidDate(preferredDate)) {
     return {
       status: "error",
       message: "Choose a valid preferred inspection date.",
     };
   }
 
-  const today = new Date();
-  const todayString = [
-    today.getFullYear(),
-    String(today.getMonth() + 1).padStart(2, "0"),
-    String(today.getDate()).padStart(2, "0"),
-  ].join("-");
-
-  if (preferredDate < todayString) {
+  if (preferredDate < lagosToday()) {
     return {
       status: "error",
       message: "Choose today or a future date for the inspection.",
