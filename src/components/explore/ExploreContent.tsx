@@ -2,7 +2,9 @@ import Link from "next/link";
 
 import ExploreFilters from "@/components/explore/ExploreFilters";
 import PropertyCard from "@/components/property/PropertyCard";
+import { getCurrentAccount } from "@/lib/data/account";
 import { getPublishedProperties } from "@/lib/data/public-properties";
+import { getStudentSavedPropertyIds } from "@/lib/data/student-saved-properties";
 import { getUniversities } from "@/lib/data/universities";
 
 interface ExploreContentProps {
@@ -19,11 +21,19 @@ interface ExploreContentProps {
 export default async function ExploreContent({
   searchParams,
 }: ExploreContentProps) {
-  const [params, properties, universities] = await Promise.all([
+  const [params, properties, universities, account] = await Promise.all([
     searchParams,
     getPublishedProperties(),
     getUniversities(),
+    getCurrentAccount(),
   ]);
+
+  const canSaveProperties =
+    !account.user || account.profile?.role === "student";
+  const savedPropertyIds =
+    account.profile?.role === "student"
+      ? await getStudentSavedPropertyIds()
+      : new Set<string>();
 
   const legacyLocation = params.location?.trim() ?? "";
   const university = params.university?.trim() ?? "";
@@ -128,7 +138,12 @@ export default async function ExploreContent({
           {sortedProperties.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {sortedProperties.map((property) => (
-                <PropertyCard key={property.id} property={property} />
+                <PropertyCard
+                  key={property.id}
+                  property={property}
+                  showSaveButton={canSaveProperties}
+                  initiallySaved={savedPropertyIds.has(property.id)}
+                />
               ))}
             </div>
           ) : (
