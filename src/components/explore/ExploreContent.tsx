@@ -12,6 +12,7 @@ interface ExploreContentProps {
     location?: string;
     budget?: string;
     roomType?: string;
+    sort?: string;
   }>;
 }
 
@@ -29,6 +30,11 @@ export default async function ExploreContent({
   const area = params.area?.trim() ?? "";
   const budget = params.budget ?? "";
   const roomType = params.roomType ?? "";
+  const sort = ["rent-low", "rent-high", "availability"].includes(
+    params.sort ?? "",
+  )
+    ? params.sort!
+    : "recent";
 
   const normalizedUniversity = university.toLowerCase();
   const normalizedArea = area.toLowerCase();
@@ -53,11 +59,29 @@ export default async function ExploreContent({
 
           const matchesRoomType =
             roomType.length === 0 ||
-            property.roomType.toLowerCase().includes(roomType.toLowerCase());
+            property.roomType.toLowerCase() === roomType.toLowerCase();
 
           return matchesUniversity && matchesArea && matchesBudget && matchesRoomType;
         })
       : properties;
+
+  const sortedProperties = [...filteredProperties];
+
+  if (sort === "rent-low") {
+    sortedProperties.sort((a, b) => a.annualRent - b.annualRent);
+  } else if (sort === "rent-high") {
+    sortedProperties.sort((a, b) => b.annualRent - a.annualRent);
+  } else if (sort === "availability") {
+    sortedProperties.sort(
+      (a, b) =>
+        b.availableRooms - a.availableRooms ||
+        a.annualRent - b.annualRent,
+    );
+  }
+
+  const roomTypes = Array.from(
+    new Set(properties.map((property) => property.roomType.trim()).filter(Boolean)),
+  ).sort((a, b) => a.localeCompare(b));
 
   return (
     <>
@@ -80,18 +104,20 @@ export default async function ExploreContent({
             </div>
 
             <p className="text-sm font-semibold text-[var(--muted)]">
-              {filteredProperties.length}{" "}
-              {filteredProperties.length === 1 ? "property" : "properties"} shown
+              {sortedProperties.length}{" "}
+              {sortedProperties.length === 1 ? "property" : "properties"} shown
             </p>
           </div>
 
           <div className="mt-8">
             <ExploreFilters
               universities={universities}
+              roomTypes={roomTypes}
               university={university}
               area={area}
               budget={budget}
               roomType={roomType}
+              sort={sort}
             />
           </div>
         </div>
@@ -99,9 +125,9 @@ export default async function ExploreContent({
 
       <section className="bg-[var(--paper)] py-14 sm:py-16">
         <div className="mx-auto max-w-7xl px-5 lg:px-8">
-          {filteredProperties.length > 0 ? (
+          {sortedProperties.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {filteredProperties.map((property) => (
+              {sortedProperties.map((property) => (
                 <PropertyCard key={property.id} property={property} />
               ))}
             </div>
