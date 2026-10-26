@@ -42,9 +42,11 @@ export default async function PropertyDetailsContent({
     .reduce((total, fee) => total + fee.amount, 0);
 
   const availabilityLabel =
-    property.availability === "limited"
-      ? `${property.availableRooms} rooms left`
-      : `${property.availableRooms} rooms available`;
+    property.availability === "occupied"
+      ? "Fully occupied"
+      : property.availability === "limited"
+        ? `${property.availableRooms} rooms left`
+        : `${property.availableRooms} rooms available`;
 
   const facilityItems = [...new Set([...property.facilities, ...property.utilities])];
 
@@ -125,6 +127,20 @@ export default async function PropertyDetailsContent({
               </p>
 
               <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                <div className="sm:col-span-2 grid grid-cols-3 gap-3 rounded-2xl bg-[var(--cream)] p-4 text-center">
+                  <div>
+                    <p className="text-2xl font-bold text-[var(--forest)]">{property.totalRooms}</p>
+                    <p className="mt-1 text-xs font-medium text-[var(--muted)]">Total rooms</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-[var(--forest)]">{property.availableRooms}</p>
+                    <p className="mt-1 text-xs font-medium text-[var(--muted)]">Available</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-[var(--forest)]">{property.occupiedRooms}</p>
+                    <p className="mt-1 text-xs font-medium text-[var(--muted)]">Occupied</p>
+                  </div>
+                </div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
                     Room type
