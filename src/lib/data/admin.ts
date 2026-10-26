@@ -37,6 +37,12 @@ export interface PendingPropertyReview {
     id: string;
     name: string;
   } | null;
+  property_images: Array<{
+    id: string;
+    storage_path: string;
+    alt_text: string;
+    sort_order: number;
+  }>;
 }
 
 export async function requireAdmin(nextPath = "/admin/reviews") {
@@ -71,6 +77,6 @@ export async function getPendingPropertyReviews() {
   await requireAdmin();
 
   return supabaseAuthenticatedRest<PendingPropertyReview[]>(
-    "properties?publication_status=eq.pending_review&select=id,name,slug,description,area,distance_label,publication_status,verification_status,created_at,updated_at,providers(id,display_name,provider_type,verification_status),universities(id,name)&order=updated_at.asc",
+    "properties?publication_status=eq.pending_review&select=id,name,slug,description,area,distance_label,publication_status,verification_status,created_at,updated_at,providers(id,display_name,provider_type,verification_status),universities(id,name),property_images(id,storage_path,alt_text,sort_order)&order=updated_at.asc",
   );
 }
