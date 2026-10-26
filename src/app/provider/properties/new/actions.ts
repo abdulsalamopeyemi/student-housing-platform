@@ -37,6 +37,7 @@ export async function createPropertyDraft(formData: FormData) {
   const distanceLabel = String(formData.get("distanceLabel") ?? "").trim();
   const roomType = String(formData.get("roomType") ?? "").trim();
   const annualRent = Number(formData.get("annualRent"));
+  const totalCount = Number(formData.get("totalCount"));
   const availableCount = Number(formData.get("availableCount"));
 
   if (name.length < 3) {
@@ -63,8 +64,16 @@ export async function createPropertyDraft(formData: FormData) {
     redirect(errorUrl("Enter a valid annual rent."));
   }
 
+  if (!Number.isInteger(totalCount) || totalCount < 1) {
+    redirect(errorUrl("Total rooms must be a whole number of at least 1."));
+  }
+
   if (!Number.isInteger(availableCount) || availableCount < 0) {
     redirect(errorUrl("Available rooms must be 0 or more."));
+  }
+
+  if (availableCount > totalCount) {
+    redirect(errorUrl("Available rooms cannot be greater than total rooms."));
   }
 
   const feeLabels = formData.getAll("feeLabel").map(String);
@@ -99,6 +108,7 @@ export async function createPropertyDraft(formData: FormData) {
         p_distance_label: distanceLabel || null,
         p_room_type_name: roomType,
         p_annual_rent: annualRent,
+        p_total_count: totalCount,
         p_available_count: availableCount,
         p_fees: fees,
         p_amenity_ids: amenityIds,
