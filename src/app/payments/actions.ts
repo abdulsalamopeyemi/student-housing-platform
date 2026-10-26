@@ -47,42 +47,59 @@ export async function startAccommodationPayment(formData: FormData) {
     );
   }
 
+  let existing;
   try {
-    const existing = await getExistingInspectionPayments(inspectionRequestId);
-    const paid = existing.find((payment) => payment.status === "paid");
+    existing = await getExistingInspectionPayments(inspectionRequestId);
+  } catch {
+    redirect(accountMessage("We could not check your previous payment attempts."));
+  }
 
-    if (paid) {
-      redirect(
-        accountMessage(
-          "This accommodation payment has already been completed.",
-        ),
-      );
-    }
+  const paid = existing.find((payment) => payment.status === "paid");
 
-    const resumable = existing.find(
-      (payment) =>
-        payment.status === "pending" && Boolean(payment.checkout_url),
+  if (paid) {
+    redirect(
+      accountMessage(
+        "This accommodation payment has already been completed.",
+      ),
     );
+  }
 
-    if (resumable?.checkout_url) {
-      redirect(resumable.checkout_url);
-    }
+  const resumable = existing.find(
+    (payment) =>
+      payment.status === "pending" && Boolean(payment.checkout_url),
+  );
 
-    const context = await getAccommodationPaymentContext(
+  if (resumable?.checkout_url) {
+    redirect(resumable.checkout_url);
+  }
+
+  let context;
+  try {
+    context = await getAccommodationPaymentContext(
       user.id,
       inspectionRequestId,
     );
+  } catch {
+    redirect(
+      accountMessage(
+        "Online payments are not fully configured yet for this property.",
+      ),
+    );
+  }
 
-    if (!context) {
-      redirect(
-        accountMessage(
-          "Payment is not available yet. The inspection must be completed, the room must still be available, and the provider must have an active payout account.",
-        ),
-      );
-    }
+  if (!context) {
+    redirect(
+      accountMessage(
+        "Payment is not available yet. The inspection must be completed, the room must still be available, and the provider must have an active payout account.",
+      ),
+    );
+  }
 
-    const reference = `housing-${randomUUID()}`;
+  const reference = `housing-${randomUUID()}`;
 
+  let payment: { id: string; reference: string } | undefined;
+
+  try {
     const created = await supabaseAuthenticatedRest<
       Array<{ id: string; reference: string }>
     >("accommodation_payments?select=id,reference", {
@@ -102,50 +119,58 @@ export async function startAccommodationPayment(formData: FormData) {
       }),
     });
 
-    const payment = created[0];
+    payment = created[0];
+  } catch {
+    redirect(
+      accountMessage(
+        "Payment could not be initialized. Please refresh and try again.",
+      ),
+    );
+  }
 
-    if (!payment) {
-      redirect(accountMessage("Payment could not be initialized."));
-    }
+  if (!payment) {
+    redirect(accountMessage("Payment could not be initialized."));
+  }
 
-    const siteUrl = paymentSiteUrl();
+  const siteUrl = paymentSiteUrl();
+  let authorizationUrl = "";
 
-    try {
-      const initialized = await initializePaystackTransaction({
-        email: user.email,
-        amountKobo: context.amountKobo,
+  try {
+    const initialized = await initializePaystackTransaction({
+      email: user.email,
+      amountKobo: context.amountKobo,
+      reference,
+      subaccountCode: context.providerPaymentAccount.subaccount_code,
+      callbackUrl: `${siteUrl}/payments/verify?reference=${encodeURIComponent(
         reference,
-        subaccountCode:
-          context.providerPaymentAccount.subaccount_code,
-        callbackUrl: `${siteUrl}/payments/verify?reference=${encodeURIComponent(
-          reference,
+      )}`,
+      metadata: {
+        payment_id: payment.id,
+        property_id: context.property.id,
+        inspection_request_id: context.inspection.id,
+        cancel_action: `${siteUrl}/account?message=${encodeURIComponent(
+          "Payment was cancelled. You can try again from My Account.",
         )}`,
-        metadata: {
-          payment_id: payment.id,
-          property_id: context.property.id,
-          inspection_request_id: context.inspection.id,
-          cancel_action: `${siteUrl}/account?message=${encodeURIComponent(
-            "Payment was cancelled. You can try again from My Account.",
-          )}`,
-        },
-      });
+      },
+    });
 
-      await supabaseSecretRest(
-        `accommodation_payments?id=eq.${encodeURIComponent(payment.id)}`,
-        {
-          method: "PATCH",
-          prefer: "return=minimal",
-          body: JSON.stringify({
-            status: "pending",
-            access_code: initialized.data.access_code,
-            checkout_url: initialized.data.authorization_url,
-            updated_at: new Date().toISOString(),
-          }),
-        },
-      );
+    authorizationUrl = initialized.data.authorization_url;
 
-      redirect(initialized.data.authorization_url);
-    } catch {
+    await supabaseSecretRest(
+      `accommodation_payments?id=eq.${encodeURIComponent(payment.id)}`,
+      {
+        method: "PATCH",
+        prefer: "return=minimal",
+        body: JSON.stringify({
+          status: "pending",
+          access_code: initialized.data.access_code,
+          checkout_url: initialized.data.authorization_url,
+          updated_at: new Date().toISOString(),
+        }),
+      },
+    );
+  } catch {
+    try {
       await supabaseSecretRest(
         `accommodation_payments?id=eq.${encodeURIComponent(payment.id)}`,
         {
@@ -157,18 +182,16 @@ export async function startAccommodationPayment(formData: FormData) {
           }),
         },
       );
-
-      redirect(
-        accountMessage(
-          "The payment gateway could not be started. Please try again.",
-        ),
-      );
+    } catch {
+      // Keep the original checkout error as the user-facing outcome.
     }
-  } catch {
+
     redirect(
       accountMessage(
-        "Online payments are not fully configured yet for this property.",
+        "The payment gateway could not be started. Please try again.",
       ),
     );
   }
+
+  redirect(authorizationUrl);
 }
