@@ -201,6 +201,14 @@ export default async function ProviderWorkspaceContent({
                       </p>
                       <p>
                         <span className="font-semibold text-[var(--forest)]">
+                          Planning to stay:
+                        </span>{" "}
+                        {request.occupant_group_size === "4+"
+                          ? "4+ people"
+                          : `${request.occupant_group_size} ${request.occupant_group_size === "1" ? "person" : "people"}`}
+                      </p>
+                      <p>
+                        <span className="font-semibold text-[var(--forest)]">
                           Student phone:
                         </span>{" "}
                         <a
