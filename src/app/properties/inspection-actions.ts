@@ -11,13 +11,6 @@ export interface InspectionActionState {
   message: string;
 }
 
-const initialInspectionActionState: InspectionActionState = {
-  status: "idle",
-  message: "",
-};
-
-export { initialInspectionActionState };
-
 function safePropertyPath(slug: string) {
   return /^[a-z0-9-]+$/i.test(slug)
     ? `/properties/${slug}`
