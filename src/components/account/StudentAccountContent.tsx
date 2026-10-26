@@ -140,6 +140,11 @@ export default async function StudentAccountContent() {
                       <p className="mt-1 text-sm text-[var(--muted)]">
                         Preferred date: {new Date(item.preferred_date).toLocaleDateString("en-NG")}
                       </p>
+                      <p className="mt-1 text-sm text-[var(--muted)]">
+                        Planning to stay: {item.occupant_group_size === "4+"
+                          ? "4+ people"
+                          : `${item.occupant_group_size} ${item.occupant_group_size === "1" ? "person" : "people"}`}
+                      </p>
                       <p className="mt-1 text-xs text-[var(--muted)]">
                         {item.status === "requested"
                           ? "Waiting for the provider to respond."
