@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import type { StudentProperty } from "@/types/property";
@@ -13,6 +14,7 @@ const currencyFormatter = new Intl.NumberFormat("en-NG", {
 });
 
 export default function PropertyCard({ property }: PropertyCardProps) {
+  const coverImage = property.images[0] ?? null;
   const availabilityLabel =
     property.availability === "occupied"
       ? "Fully occupied"
@@ -22,13 +24,24 @@ export default function PropertyCard({ property }: PropertyCardProps) {
 
   return (
     <article className="overflow-hidden rounded-3xl border border-[var(--border)] bg-white shadow-sm shadow-black/5">
-      <div className="relative flex min-h-48 items-end bg-[var(--forest)] p-5">
-        <span className="absolute left-5 top-5 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-[var(--forest)]">
+      <div className="relative flex min-h-52 items-end overflow-hidden bg-[var(--forest)] p-5">
+        {coverImage ? (
+          <Image
+            src={coverImage.url}
+            alt={coverImage.altText || `${property.name} accommodation`}
+            fill
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover"
+          />
+        ) : null}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/5" />
+
+        <span className="absolute left-5 top-5 z-10 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-[var(--forest)]">
           {property.verified ? "Verified listing" : "Listing"}
         </span>
 
-        <div>
-          <p className="text-sm font-medium text-white/75">
+        <div className="relative z-10">
+          <p className="text-sm font-medium text-white/80">
             {property.area} · {property.university}
           </p>
           <h3 className="mt-1 text-2xl font-bold text-white">
