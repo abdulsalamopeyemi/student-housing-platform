@@ -7,6 +7,7 @@ import {
   rescheduleStudentInspection,
 } from "@/app/account/inspection-actions";
 import { startAccommodationPayment } from "@/app/payments/actions";
+import SavePropertyButton from "@/components/property/SavePropertyButton";
 import { getStudentPayments } from "@/lib/data/accommodation-payments";
 import { getCurrentAccount } from "@/lib/data/account";
 import { getStudentDashboardData } from "@/lib/data/student-dashboard";
@@ -252,12 +253,21 @@ export default async function StudentAccountContent({
                           </>
                         ) : null}
 
-                        <Link
-                          href={`/properties/${property.slug}`}
-                          className="mt-4 inline-flex text-sm font-bold text-[var(--emerald)] underline underline-offset-4"
-                        >
-                          Review this home
-                        </Link>
+                        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                          <Link
+                            href={`/properties/${property.slug}`}
+                            className="inline-flex text-sm font-bold text-[var(--emerald)] underline underline-offset-4"
+                          >
+                            Review this home
+                          </Link>
+                          <SavePropertyButton
+                            propertyId={item.property_id}
+                            propertySlug={property.slug}
+                            propertyName={property.name}
+                            initiallySaved
+                            variant="light"
+                          />
+                        </div>
                       </div>
                     </div>
                   </article>

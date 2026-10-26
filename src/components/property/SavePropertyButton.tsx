@@ -12,6 +12,7 @@ interface SavePropertyButtonProps {
   propertySlug: string;
   propertyName: string;
   initiallySaved: boolean;
+  variant?: "dark" | "light";
 }
 
 export default function SavePropertyButton({
@@ -19,6 +20,7 @@ export default function SavePropertyButton({
   propertySlug,
   propertyName,
   initiallySaved,
+  variant = "dark",
 }: SavePropertyButtonProps) {
   const initialState: SavePropertyState = {
     saved: initiallySaved,
@@ -66,7 +68,13 @@ export default function SavePropertyButton({
           role={state.status === "error" ? "alert" : "status"}
           className={[
             "mt-2 text-xs leading-5",
-            state.status === "error" ? "text-red-200" : "text-white/70",
+            state.status === "error"
+              ? variant === "light"
+                ? "text-red-700"
+                : "text-red-200"
+              : variant === "light"
+                ? "text-[var(--muted)]"
+                : "text-white/70",
           ].join(" ")}
         >
           {state.message}
