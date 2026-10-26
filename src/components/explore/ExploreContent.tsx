@@ -25,23 +25,25 @@ export default async function ExploreContent({
   const roomType = params.roomType ?? "";
 
   const normalizedLocation = location.toLowerCase();
+  const hasLocation = normalizedLocation.length > 0;
   const maximumBudget = Number(budget) || Number.POSITIVE_INFINITY;
 
-  const filteredProperties = properties.filter((property) => {
-    const matchesLocation =
-      normalizedLocation.length === 0 ||
-      property.area.toLowerCase().includes(normalizedLocation) ||
-      property.university.toLowerCase().includes(normalizedLocation) ||
-      property.name.toLowerCase().includes(normalizedLocation);
+  const filteredProperties = hasLocation
+    ? properties.filter((property) => {
+        const matchesLocation =
+          property.area.toLowerCase().includes(normalizedLocation) ||
+          property.university.toLowerCase().includes(normalizedLocation) ||
+          property.name.toLowerCase().includes(normalizedLocation);
 
-    const matchesBudget = property.annualRent <= maximumBudget;
+        const matchesBudget = property.annualRent <= maximumBudget;
 
-    const matchesRoomType =
-      roomType.length === 0 ||
-      property.roomType.toLowerCase().includes(roomType.toLowerCase());
+        const matchesRoomType =
+          roomType.length === 0 ||
+          property.roomType.toLowerCase().includes(roomType.toLowerCase());
 
-    return matchesLocation && matchesBudget && matchesRoomType;
-  });
+        return matchesLocation && matchesBudget && matchesRoomType;
+      })
+    : properties;
 
   return (
     <>
