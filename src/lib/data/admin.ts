@@ -8,6 +8,14 @@ import type { Tables } from "@/types/database";
 
 type AdminProfile = Pick<Tables<"profiles">, "id" | "full_name" | "role">;
 
+export interface PendingProviderVerification {
+  id: string;
+  display_name: string | null;
+  provider_type: "landlord" | "agent" | "property_manager";
+  verification_status: "unverified" | "pending";
+  created_at: string;
+}
+
 export interface PendingPropertyReview {
   id: string;
   name: string;
@@ -49,6 +57,14 @@ export async function requireAdmin(nextPath = "/admin/reviews") {
   }
 
   return { user, profile };
+}
+
+export async function getPendingProviderVerifications() {
+  await requireAdmin();
+
+  return supabaseAuthenticatedRest<PendingProviderVerification[]>(
+    "providers?verification_status=in.(unverified,pending)&select=id,display_name,provider_type,verification_status,created_at&order=created_at.asc",
+  );
 }
 
 export async function getPendingPropertyReviews() {
