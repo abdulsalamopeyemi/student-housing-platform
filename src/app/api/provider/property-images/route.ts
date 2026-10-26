@@ -22,7 +22,6 @@ const allowedMimeTypes = new Map([
 interface PendingUpload {
   file: File;
   extension: string;
-  bytes: Uint8Array;
 }
 
 async function validateImage(file: File): Promise<PendingUpload | null> {
@@ -36,7 +35,7 @@ async function validateImage(file: File): Promise<PendingUpload | null> {
     return null;
   }
 
-  const bytes = new Uint8Array(await file.arrayBuffer());
+  const bytes = new Uint8Array(await file.slice(0, 12).arrayBuffer());
   const isJpeg =
     bytes.length >= 3 &&
     bytes[0] === 0xff &&
@@ -62,7 +61,7 @@ async function validateImage(file: File): Promise<PendingUpload | null> {
     (extension === "png" && isPng) ||
     (extension === "webp" && isWebp);
 
-  return signatureMatches ? { file, extension, bytes } : null;
+  return signatureMatches ? { file, extension } : null;
 }
 
 async function storageRemove(accessToken: string, storagePaths: string[]) {
@@ -210,7 +209,7 @@ export async function POST(request: Request) {
             "cache-control": "3600",
             "x-upsert": "false",
           },
-          body: upload.bytes,
+          body: upload.file,
           cache: "no-store",
         },
       );
