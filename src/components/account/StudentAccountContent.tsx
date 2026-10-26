@@ -118,8 +118,8 @@ export default async function StudentAccountContent() {
 
           {inspections.length === 0 ? (
             <p className="mt-5 text-sm leading-6 text-[var(--muted)]">
-              You have no inspection requests yet. When inspection requests go
-              live, their status will appear here.
+              You have no inspection requests yet. Open a published property
+              and request an inspection when you are ready to visit it.
             </p>
           ) : (
             <div className="mt-5 divide-y divide-[var(--border)]">
@@ -139,6 +139,17 @@ export default async function StudentAccountContent() {
                       )}
                       <p className="mt-1 text-sm text-[var(--muted)]">
                         Preferred date: {new Date(item.preferred_date).toLocaleDateString("en-NG")}
+                      </p>
+                      <p className="mt-1 text-xs text-[var(--muted)]">
+                        {item.status === "requested"
+                          ? "Waiting for the provider to respond."
+                          : item.status === "confirmed"
+                            ? "The provider confirmed this inspection."
+                            : item.status === "completed"
+                              ? "This inspection has been marked complete."
+                              : item.status === "declined"
+                                ? "The provider declined this inspection request."
+                                : "This inspection request was cancelled."}
                       </p>
                     </div>
                     <span className="rounded-full bg-[var(--cream)] px-3 py-1 text-xs font-bold capitalize text-[var(--forest)]">
