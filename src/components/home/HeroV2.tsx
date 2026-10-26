@@ -3,6 +3,7 @@ import Link from "next/link";
 import {
   getUniversities,
   getUniversityBySlug,
+  type University,
 } from "@/lib/data/universities";
 
 const heroImageUrl =
@@ -16,7 +17,7 @@ const trustItems = [
 
 export default async function HeroV2() {
   let universityLabel = "KWASU · Malete";
-  let universities = [];
+  let universities: University[] = [];
 
   try {
     const [university, universityDirectory] = await Promise.all([
