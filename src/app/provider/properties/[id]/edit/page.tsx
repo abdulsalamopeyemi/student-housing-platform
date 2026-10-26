@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import SiteFooter from "@/components/layout/SiteFooter";
 import SiteHeader from "@/components/layout/SiteHeader";
@@ -21,7 +22,7 @@ interface EditPropertyPageProps {
   }>;
 }
 
-export default async function EditPropertyPage({
+async function EditPropertyContent({
   params,
   searchParams,
 }: EditPropertyPageProps) {
@@ -72,9 +73,6 @@ export default async function EditPropertyPage({
       : null;
 
   return (
-    <>
-      <SiteHeader />
-      <main className="min-h-[70vh] bg-[var(--paper)]">
         <div className="mx-auto max-w-6xl px-5 py-12 lg:px-8 lg:py-16">
           <Link
             href="/list-property"
@@ -146,6 +144,24 @@ export default async function EditPropertyPage({
             />
           </div>
         </div>
+  );
+}
+
+export default function EditPropertyPage(props: EditPropertyPageProps) {
+  return (
+    <>
+      <SiteHeader />
+      <main className="min-h-[70vh] bg-[var(--paper)]">
+        <Suspense
+          fallback={
+            <div className="mx-auto max-w-6xl px-5 py-16 lg:px-8">
+              <div className="h-12 max-w-xl animate-pulse rounded-2xl bg-[var(--cream)]" />
+              <div className="mt-8 h-96 animate-pulse rounded-3xl bg-white" />
+            </div>
+          }
+        >
+          <EditPropertyContent {...props} />
+        </Suspense>
       </main>
       <SiteFooter />
     </>
