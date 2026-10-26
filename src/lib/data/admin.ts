@@ -8,6 +8,20 @@ import type { Tables } from "@/types/database";
 
 type AdminProfile = Pick<Tables<"profiles">, "id" | "full_name" | "role">;
 
+export interface AdminPropertyReport {
+  id: string;
+  reason: string;
+  details: string | null;
+  status: "open" | "reviewing" | "resolved" | "dismissed";
+  created_at: string;
+  properties: {
+    id: string;
+    name: string;
+    slug: string;
+    area: string;
+  } | null;
+}
+
 export interface PendingProviderVerification {
   id: string;
   display_name: string | null;
@@ -63,6 +77,14 @@ export async function requireAdmin(nextPath = "/admin/reviews") {
   }
 
   return { user, profile };
+}
+
+export async function getAdminPropertyReports() {
+  await requireAdmin();
+
+  return supabaseAuthenticatedRest<AdminPropertyReport[]>(
+    "reports?status=in.(open,reviewing)&select=id,reason,details,status,created_at,properties(id,name,slug,area)&order=created_at.asc",
+  );
 }
 
 export async function getPendingProviderVerifications() {
