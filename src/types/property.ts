@@ -6,6 +6,13 @@ export interface PropertyFee {
   required: boolean;
 }
 
+export interface StudentPropertyImage {
+  id: string;
+  url: string;
+  altText: string;
+  sortOrder: number;
+}
+
 export interface StudentProperty {
   id: string;
   slug: string;
@@ -18,6 +25,7 @@ export interface StudentProperty {
   availableRooms: number;
   occupiedRooms: number;
   availability: PropertyAvailability;
+  images: StudentPropertyImage[];
   facilities: string[];
   description: string;
   distanceFromCampus: string;
