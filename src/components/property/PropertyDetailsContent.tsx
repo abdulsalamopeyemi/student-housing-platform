@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import InspectionRequestForm from "@/components/property/InspectionRequestForm";
+import ReportPropertyForm from "@/components/property/ReportPropertyForm";
 import SavePropertyButton from "@/components/property/SavePropertyButton";
 import { getCurrentAccount } from "@/lib/data/account";
 import { getPublishedPropertyBySlug } from "@/lib/data/public-properties";
@@ -279,6 +280,11 @@ export default async function PropertyDetailsContent({
                 before making a final decision.
               </p>
             </section>
+
+            <ReportPropertyForm
+              propertyId={property.id}
+              propertySlug={property.slug}
+            />
           </div>
 
           <aside>
