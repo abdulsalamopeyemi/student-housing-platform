@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -7,6 +8,13 @@ import {
 } from "@/app/account/inspection-actions";
 import { getCurrentAccount } from "@/lib/data/account";
 import { getStudentDashboardData } from "@/lib/data/student-dashboard";
+import { propertyImagePublicUrl } from "@/lib/property-images";
+
+const currencyFormatter = new Intl.NumberFormat("en-NG", {
+  style: "currency",
+  currency: "NGN",
+  maximumFractionDigits: 0,
+});
 
 function statusLabel(value: string) {
   return value.replaceAll("_", " ");
@@ -120,26 +128,114 @@ export default async function StudentAccountContent({
               save the homes you want to compare.
             </p>
           ) : (
-            <div className="mt-5 divide-y divide-[var(--border)]">
-              {savedHomes.map((item) => (
-                <div key={item.property_id} className="py-4 first:pt-0">
-                  {item.properties ? (
-                    <Link
-                      href={`/properties/${item.properties.slug}`}
-                      className="font-bold text-[var(--forest)]"
+            <div className="mt-5 grid gap-4">
+              {savedHomes.map((item) => {
+                const property = item.properties;
+                const room = property?.room_types[0];
+                const cover = property?.property_images
+                  .slice()
+                  .sort((a, b) => a.sort_order - b.sort_order)[0];
+
+                if (!property) {
+                  return (
+                    <div
+                      key={item.property_id}
+                      className="rounded-2xl border border-[var(--border)] p-4"
                     >
-                      {item.properties.name}
-                    </Link>
-                  ) : (
-                    <p className="font-bold text-[var(--forest)]">Saved property</p>
-                  )}
-                  {item.properties ? (
-                    <p className="mt-1 text-sm text-[var(--muted)]">
-                      {item.properties.area}
-                    </p>
-                  ) : null}
-                </div>
-              ))}
+                      <p className="font-bold text-[var(--forest)]">
+                        Saved property
+                      </p>
+                    </div>
+                  );
+                }
+
+                const availableRooms = room?.available_count ?? 0;
+                const totalRooms = room?.total_count ?? 0;
+
+                return (
+                  <article
+                    key={item.property_id}
+                    className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--paper)]"
+                  >
+                    <div className="grid sm:grid-cols-[150px_1fr]">
+                      <div className="relative min-h-36 bg-[var(--forest)]">
+                        {cover ? (
+                          <Image
+                            src={propertyImagePublicUrl(cover.storage_path)}
+                            alt={cover.alt_text || `${property.name} accommodation`}
+                            fill
+                            sizes="150px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full min-h-36 items-center justify-center px-4 text-center text-xs font-semibold text-white/70">
+                            Photo not available
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <Link
+                              href={`/properties/${property.slug}`}
+                              className="text-lg font-bold text-[var(--forest)]"
+                            >
+                              {property.name}
+                            </Link>
+                            <p className="mt-1 text-sm text-[var(--muted)]">
+                              {property.area}
+                              {property.universities?.name
+                                ? ` · ${property.universities.name}`
+                                : ""}
+                            </p>
+                          </div>
+
+                          {property.verification_status === "verified" ? (
+                            <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-800">
+                              Verified
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {room ? (
+                          <>
+                            <p className="mt-3 text-xl font-bold text-[var(--forest)]">
+                              {currencyFormatter.format(Number(room.annual_rent))}
+                              <span className="ml-1 text-xs font-medium text-[var(--muted)]">
+                                / year
+                              </span>
+                            </p>
+
+                            <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                              <span className="rounded-full bg-white px-3 py-1.5 font-semibold text-[var(--forest)]">
+                                {room.name}
+                              </span>
+                              <span className="rounded-full bg-white px-3 py-1.5 font-semibold text-[var(--forest)]">
+                                {availableRooms === 0
+                                  ? "Fully occupied"
+                                  : `${availableRooms} available`}
+                              </span>
+                              {totalRooms > 0 ? (
+                                <span className="rounded-full bg-white px-3 py-1.5 font-semibold text-[var(--muted)]">
+                                  {totalRooms} total rooms
+                                </span>
+                              ) : null}
+                            </div>
+                          </>
+                        ) : null}
+
+                        <Link
+                          href={`/properties/${property.slug}`}
+                          className="mt-4 inline-flex text-sm font-bold text-[var(--emerald)] underline underline-offset-4"
+                        >
+                          Review this home
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>
