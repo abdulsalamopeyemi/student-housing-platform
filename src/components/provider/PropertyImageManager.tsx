@@ -37,6 +37,7 @@ export default function PropertyImageManager({
     [...initialImages].sort((a, b) => a.sort_order - b.sort_order),
   );
   const [altText, setAltText] = useState("");
+  const [selectedFileCount, setSelectedFileCount] = useState(0);
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
@@ -61,15 +62,21 @@ export default function PropertyImageManager({
   async function uploadImage(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const file = fileInputRef.current?.files?.[0];
+    const files = Array.from(fileInputRef.current?.files ?? []);
 
-    if (!file) {
+    if (files.length === 0) {
       setIsError(true);
-      setMessage("Choose a photo first.");
+      setMessage("Choose at least one photo first.");
       return;
     }
 
-    if (file.size > MAX_PROPERTY_IMAGE_BYTES) {
+    if (files.length > remainingSlots) {
+      setIsError(true);
+      setMessage(`You can add only ${remainingSlots} more ${remainingSlots === 1 ? "photo" : "photos"}.`);
+      return;
+    }
+
+    if (files.some((file) => file.size > MAX_PROPERTY_IMAGE_BYTES)) {
       setIsError(true);
       setMessage("Each image must be 4 MB or smaller.");
       return;
@@ -81,7 +88,7 @@ export default function PropertyImageManager({
     const payload = new FormData();
     payload.set("propertyId", propertyId);
     payload.set("altText", altText);
-    payload.set("file", file);
+    files.forEach((file) => payload.append("files", file));
 
     try {
       const response = await fetch("/api/provider/property-images", {
@@ -90,33 +97,36 @@ export default function PropertyImageManager({
       });
 
       const result = (await response.json()) as {
-        image?: ManagedPropertyImage;
+        images?: ManagedPropertyImage[];
         error?: string;
       };
 
-      if (!response.ok || !result.image) {
-        throw new Error(result.error ?? "The photo could not be uploaded.");
+      if (!response.ok || !result.images?.length) {
+        throw new Error(result.error ?? "The photos could not be uploaded.");
       }
 
       setImages((current) =>
-        [...current, result.image!].sort((a, b) => a.sort_order - b.sort_order),
+        [...current, ...result.images!].sort(
+          (a, b) => a.sort_order - b.sort_order,
+        ),
       );
       setAltText("");
+      setSelectedFileCount(0);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
       setIsError(false);
       setMessage(
         images.length === 0
-          ? "Photo uploaded and set as the cover."
-          : "Photo uploaded.",
+          ? `${result.images.length} ${result.images.length === 1 ? "photo" : "photos"} uploaded. The first is now the cover.`
+          : `${result.images.length} ${result.images.length === 1 ? "photo" : "photos"} uploaded.`,
       );
     } catch (error) {
       setIsError(true);
       setMessage(
         error instanceof Error
           ? error.message
-          : "The photo could not be uploaded.",
+          : "The photos could not be uploaded.",
       );
     } finally {
       setIsBusy(false);
@@ -230,16 +240,25 @@ export default function PropertyImageManager({
         <form onSubmit={uploadImage} className="mt-6 space-y-4">
           <label className="block">
             <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-              Photo
+              Photos
             </span>
             <input
               ref={fileInputRef}
               required
+              multiple
               disabled={!canEdit || remainingSlots === 0 || isBusy}
               type="file"
               accept="image/jpeg,image/png,image/webp"
+              onChange={(event) =>
+                setSelectedFileCount(event.target.files?.length ?? 0)
+              }
               className="block w-full rounded-xl border border-[var(--border)] bg-white px-3 py-3 text-sm text-[var(--muted)] file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--cream)] file:px-3 file:py-2 file:font-semibold file:text-[var(--forest)]"
             />
+            {selectedFileCount > 0 ? (
+              <span className="mt-2 block text-xs font-semibold text-[var(--emerald)]">
+                {selectedFileCount} {selectedFileCount === 1 ? "photo" : "photos"} selected
+              </span>
+            ) : null}
           </label>
 
           <label className="block">
@@ -261,7 +280,11 @@ export default function PropertyImageManager({
             disabled={!canEdit || remainingSlots === 0 || isBusy}
             className="w-full rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-bold text-white transition hover:bg-[var(--emerald)] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isBusy ? "Working…" : "Upload photo"}
+            {isBusy
+              ? "Uploading…"
+              : selectedFileCount > 1
+                ? `Upload ${selectedFileCount} photos`
+                : "Upload photo"}
           </button>
         </form>
 
