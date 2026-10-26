@@ -3,9 +3,12 @@ import Link from "next/link";
 import ExploreFilters from "@/components/explore/ExploreFilters";
 import PropertyCard from "@/components/property/PropertyCard";
 import { getPublishedProperties } from "@/lib/data/public-properties";
+import { getUniversities } from "@/lib/data/universities";
 
 interface ExploreContentProps {
   searchParams: Promise<{
+    university?: string;
+    area?: string;
     location?: string;
     budget?: string;
     roomType?: string;
@@ -15,35 +18,46 @@ interface ExploreContentProps {
 export default async function ExploreContent({
   searchParams,
 }: ExploreContentProps) {
-  const [params, properties] = await Promise.all([
+  const [params, properties, universities] = await Promise.all([
     searchParams,
     getPublishedProperties(),
+    getUniversities(),
   ]);
 
-  const location = params.location?.trim() ?? "";
+  const legacyLocation = params.location?.trim() ?? "";
+  const university = params.university?.trim() ?? "";
+  const area = params.area?.trim() ?? "";
   const budget = params.budget ?? "";
   const roomType = params.roomType ?? "";
 
-  const normalizedLocation = location.toLowerCase();
-  const hasLocation = normalizedLocation.length > 0;
+  const normalizedUniversity = university.toLowerCase();
+  const normalizedArea = area.toLowerCase();
+  const normalizedLegacyLocation = legacyLocation.toLowerCase();
+  const hasStructuredUniversity = normalizedUniversity.length > 0;
   const maximumBudget = Number(budget) || Number.POSITIVE_INFINITY;
 
-  const filteredProperties = hasLocation
-    ? properties.filter((property) => {
-        const matchesLocation =
-          property.area.toLowerCase().includes(normalizedLocation) ||
-          property.university.toLowerCase().includes(normalizedLocation) ||
-          property.name.toLowerCase().includes(normalizedLocation);
+  const filteredProperties =
+    hasStructuredUniversity || normalizedLegacyLocation.length > 0
+      ? properties.filter((property) => {
+          const matchesUniversity = hasStructuredUniversity
+            ? property.university.toLowerCase() === normalizedUniversity
+            : property.university.toLowerCase().includes(normalizedLegacyLocation) ||
+              property.area.toLowerCase().includes(normalizedLegacyLocation) ||
+              property.name.toLowerCase().includes(normalizedLegacyLocation);
 
-        const matchesBudget = property.annualRent <= maximumBudget;
+          const matchesArea =
+            normalizedArea.length === 0 ||
+            property.area.toLowerCase().includes(normalizedArea);
 
-        const matchesRoomType =
-          roomType.length === 0 ||
-          property.roomType.toLowerCase().includes(roomType.toLowerCase());
+          const matchesBudget = property.annualRent <= maximumBudget;
 
-        return matchesLocation && matchesBudget && matchesRoomType;
-      })
-    : properties;
+          const matchesRoomType =
+            roomType.length === 0 ||
+            property.roomType.toLowerCase().includes(roomType.toLowerCase());
+
+          return matchesUniversity && matchesArea && matchesBudget && matchesRoomType;
+        })
+      : properties;
 
   return (
     <>
@@ -73,7 +87,9 @@ export default async function ExploreContent({
 
           <div className="mt-8">
             <ExploreFilters
-              location={location}
+              universities={universities}
+              university={university}
+              area={area}
               budget={budget}
               roomType={roomType}
             />
