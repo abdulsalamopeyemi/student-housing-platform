@@ -27,6 +27,8 @@ export default function ProviderCTA() {
                 List a property
               </Link>
 
+              {/* Native anchor keeps homepage hash navigation stable. */}
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a
                 href="/#how-it-works"
                 className="rounded-xl border border-[var(--border)] px-5 py-3 text-sm font-semibold text-[var(--forest)] transition hover:border-[var(--forest)]"
