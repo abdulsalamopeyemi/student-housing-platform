@@ -401,6 +401,7 @@ export default function PropertyDraftForm({
               University
             </label>
             <UniversitySearchSelect
+              key={selectedUniversityId || "university-empty"}
               universities={universities}
               name="universityId"
               value={selectedUniversityId}
