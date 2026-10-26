@@ -211,7 +211,11 @@ export default async function PropertyDetailsContent({
 
           <aside>
             <div className="lg:sticky lg:top-24">
-              <InspectionRequestForm propertyName={property.name} />
+              <InspectionRequestForm
+                propertyId={property.id}
+                propertySlug={property.slug}
+                propertyName={property.name}
+              />
             </div>
           </aside>
         </div>
