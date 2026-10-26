@@ -32,7 +32,7 @@ export default async function CheckEmailContent({
         Check your email
       </h1>
       <p className="mt-4 leading-7 text-[var(--muted)]">
-        We have requested a confirmation email for:
+        We have submitted a request to send a confirmation email to:
       </p>
 
       {email ? (
@@ -42,9 +42,9 @@ export default async function CheckEmailContent({
       ) : null}
 
       <p className="mt-4 leading-7 text-[var(--muted)]">
-        Open the message and select <strong>Confirm my email</strong>. We&apos;ll
-        verify your address, sign you in, and take you to the next step in your
-        Student Housing account.
+        When the message arrives, select <strong>Confirm email address</strong>.
+        We&apos;ll verify your address and take you to the next step in your
+        Student Housing account. Delivery can take a few minutes.
       </p>
 
       <div className="mt-6 rounded-2xl border border-[var(--border)] p-4">
@@ -54,7 +54,7 @@ export default async function CheckEmailContent({
         <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-[var(--muted)]">
           <li>Check your Spam, Promotions or Updates folder.</li>
           <li>Make sure the email address is correct.</li>
-          <li>Wait a minute before requesting another message.</li>
+          <li>Wait a few minutes before requesting another message. Repeated requests may be rate-limited.</li>
         </ul>
       </div>
 
