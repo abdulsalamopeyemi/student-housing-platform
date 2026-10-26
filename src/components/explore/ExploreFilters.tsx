@@ -2,19 +2,25 @@
 
 import { useState } from "react";
 
+import type { University } from "@/lib/data/universities";
+
 interface ExploreFiltersProps {
-  location: string;
+  universities: University[];
+  university: string;
+  area: string;
   budget: string;
   roomType: string;
 }
 
 export default function ExploreFilters({
-  location,
+  universities,
+  university,
+  area,
   budget,
   roomType,
 }: ExploreFiltersProps) {
-  const [locationValue, setLocationValue] = useState(location);
-  const hasLocation = locationValue.trim().length > 0;
+  const [universityValue, setUniversityValue] = useState(university);
+  const hasUniversity = universityValue.trim().length > 0;
 
   return (
     <form
@@ -22,27 +28,45 @@ export default function ExploreFilters({
       method="get"
       className="rounded-3xl border border-[var(--border)] bg-white p-5"
     >
-      <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr_1fr_auto]">
+      <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr_0.9fr_1fr_auto]">
         <label>
           <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-            University or area
+            University
           </span>
-          <input
+          <select
             required
-            type="text"
-            name="location"
-            value={locationValue}
-            onChange={(event) => setLocationValue(event.target.value)}
-            placeholder="e.g. KWASU, Malete"
-            aria-describedby="location-filter-help"
-            className="w-full rounded-xl border border-[var(--border)] px-4 py-3 outline-none transition focus:border-[var(--emerald)]"
-          />
+            name="university"
+            value={universityValue}
+            onChange={(event) => setUniversityValue(event.target.value)}
+            aria-describedby="university-filter-help"
+            className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none transition focus:border-[var(--emerald)]"
+          >
+            <option value="">Select a university</option>
+            {universities.map((item) => (
+              <option key={item.id} value={item.name}>
+                {item.name}
+              </option>
+            ))}
+          </select>
           <p
-            id="location-filter-help"
+            id="university-filter-help"
             className="mt-1.5 text-xs leading-5 text-[var(--muted)]"
           >
-            Enter a university or area first, then refine by budget or room type.
+            Choose the university first, then narrow the results if needed.
           </p>
+        </label>
+
+        <label>
+          <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+            Area / neighbourhood
+          </span>
+          <input
+            type="text"
+            name="area"
+            defaultValue={area}
+            placeholder="e.g. Malete"
+            className="w-full rounded-xl border border-[var(--border)] px-4 py-3 outline-none transition focus:border-[var(--emerald)]"
+          />
         </label>
 
         <label>
@@ -59,6 +83,8 @@ export default function ExploreFilters({
             <option value="250000">Up to ₦250,000</option>
             <option value="350000">Up to ₦350,000</option>
             <option value="500000">Up to ₦500,000</option>
+            <option value="750000">Up to ₦750,000</option>
+            <option value="1000000">Up to ₦1,000,000</option>
           </select>
         </label>
 
@@ -79,16 +105,16 @@ export default function ExploreFilters({
 
         <button
           type="submit"
-          disabled={!hasLocation}
+          disabled={!hasUniversity}
           className="self-end rounded-xl bg-[var(--forest)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--emerald)] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
         >
           Apply filters
         </button>
       </div>
 
-      {!hasLocation ? (
+      {!hasUniversity ? (
         <p className="mt-4 text-sm font-medium text-amber-800">
-          Enter a university or area to use the filters. You can still browse all approved homes below.
+          Select a university to use the filters. You can still browse all approved homes below.
         </p>
       ) : null}
     </form>
