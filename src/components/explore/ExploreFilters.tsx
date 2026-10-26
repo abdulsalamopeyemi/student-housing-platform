@@ -117,12 +117,14 @@ export default function ExploreFilters({
           </select>
         </label>
 
-        <button
-          type="submit"
-          className="self-end rounded-xl bg-[var(--forest)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--emerald)]"
-        >
-          Apply filters
-        </button>
+        <div className="lg:pt-[1.625rem]">
+          <button
+            type="submit"
+            className="w-full whitespace-nowrap rounded-xl bg-[var(--forest)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--emerald)] lg:w-auto"
+          >
+            Apply filters
+          </button>
+        </div>
       </div>
 
       {showUniversityError ? (
