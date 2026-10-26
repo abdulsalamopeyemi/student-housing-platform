@@ -1,6 +1,7 @@
 import "server-only";
 
 import { supabasePublicRest } from "@/lib/supabase/public-rest";
+import { propertyImagePublicUrl } from "@/lib/property-images";
 import type { StudentProperty } from "@/types/property";
 
 interface PublicPropertyRow {
@@ -26,6 +27,12 @@ interface PublicPropertyRow {
       amount: number;
       required: boolean;
     }>;
+  }>;
+  property_images: Array<{
+    id: string;
+    storage_path: string;
+    alt_text: string;
+    sort_order: number;
   }>;
   property_amenities: Array<{
     amenities: {
@@ -62,6 +69,14 @@ function mapProperty(row: PublicPropertyRow): StudentProperty | null {
         : roomType.available_count <= 3
           ? "limited"
           : "available",
+    images: [...row.property_images]
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((image) => ({
+        id: image.id,
+        url: propertyImagePublicUrl(image.storage_path),
+        altText: image.alt_text,
+        sortOrder: image.sort_order,
+      })),
     facilities,
     description: row.description,
     distanceFromCampus: row.distance_label ?? "Distance not provided",
@@ -84,7 +99,7 @@ function mapProperty(row: PublicPropertyRow): StudentProperty | null {
 }
 
 const PUBLIC_PROPERTY_SELECT =
-  "id,slug,name,area,description,distance_label,verification_status,universities(name),room_types(id,name,annual_rent,total_count,available_count,availability_updated_at,property_fees(label,amount,required)),property_amenities(amenities(name))";
+  "id,slug,name,area,description,distance_label,verification_status,universities(name),room_types(id,name,annual_rent,total_count,available_count,availability_updated_at,property_fees(label,amount,required)),property_images(id,storage_path,alt_text,sort_order),property_amenities(amenities(name))";
 
 export async function getPublishedProperties() {
   const rows = await supabasePublicRest<PublicPropertyRow[]>(
