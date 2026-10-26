@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Confirm your Student Housing account</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f4f0e6;font-family:Arial,Helvetica,sans-serif;color:#183b33;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+      Confirm your email to finish creating your Student Housing account.
+    </div>
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f4f0e6;padding:32px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;background:#ffffff;border:1px solid #e7e2d8;border-radius:20px;overflow:hidden;">
+            <tr>
+              <td style="padding:28px 32px;background:#153e35;">
+                <p style="margin:0;color:#ffffff;font-size:18px;font-weight:700;letter-spacing:.2px;">Student Housing</p>
+                <p style="margin:7px 0 0;color:#d9e7e1;font-size:13px;">Find a place you can trust.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:36px 32px 24px;">
+                <p style="margin:0 0 10px;color:#1f6b57;font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;">Welcome</p>
+                <h1 style="margin:0 0 18px;color:#153e35;font-size:28px;line-height:1.25;">Confirm your email address</h1>
+                <p style="margin:0 0 16px;color:#52645e;font-size:15px;line-height:1.7;">Hello {{ .Data.full_name }},</p>
+                <p style="margin:0 0 24px;color:#52645e;font-size:15px;line-height:1.7;">
+                  Thanks for creating a Student Housing account. Confirm that this email address belongs to you so you can securely access your account and continue setting it up.
+                </p>
+
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 24px;">
+                  <tr>
+                    <td align="center" bgcolor="#153e35" style="border-radius:10px;">
+                      <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:15px 24px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:10px;">Confirm my email</a>
+                    </td>
+                  </tr>
+                </table>
+
+                <p style="margin:0 0 12px;color:#52645e;font-size:13px;line-height:1.7;">
+                  This link is personal to you. Please do not forward it or share it with anyone.
+                </p>
+                <p style="margin:0;color:#52645e;font-size:13px;line-height:1.7;">
+                  If the button does not work, copy and paste this link into your browser:
+                  <br>
+                  <a href="{{ .ConfirmationURL }}" style="color:#1f6b57;word-break:break-all;">Confirm your email address</a>
+                </p>
+                <hr style="margin:28px 0;border:0;border-top:1px solid #e7e2d8;">
+                <p style="margin:0;color:#718079;font-size:13px;line-height:1.7;">
+                  If you did not create a Student Housing account, you can ignore this email. No account access will be granted unless the email address is confirmed.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:20px 32px;background:#faf9f6;">
+                <p style="margin:0;color:#718079;font-size:12px;line-height:1.6;">
+                  Student Housing · Student accommodation discovery and property management.
+                </p>
+                <p style="margin:6px 0 0;color:#9aa49f;font-size:11px;">This is an automated account message. Please do not reply to this email.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
