@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import {
+  cancelStudentInspection,
+  rescheduleStudentInspection,
+} from "@/app/account/inspection-actions";
 import { getCurrentAccount } from "@/lib/data/account";
 import { getStudentDashboardData } from "@/lib/data/student-dashboard";
 
@@ -8,8 +12,28 @@ function statusLabel(value: string) {
   return value.replaceAll("_", " ");
 }
 
-export default async function StudentAccountContent() {
-  const { user, profile } = await getCurrentAccount();
+interface StudentAccountContentProps {
+  searchParams: Promise<{
+    message?: string;
+  }>;
+}
+
+function lagosToday() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Lagos",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+export default async function StudentAccountContent({
+  searchParams,
+}: StudentAccountContentProps) {
+  const [{ user, profile }, query] = await Promise.all([
+    getCurrentAccount(),
+    searchParams,
+  ]);
 
   if (!user) {
     redirect("/login?next=/account");
@@ -47,6 +71,15 @@ export default async function StudentAccountContent() {
           Explore accommodation
         </Link>
       </div>
+
+      {query.message ? (
+        <div
+          role="status"
+          className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900"
+        >
+          {query.message}
+        </div>
+      ) : null}
 
       <div className="mt-8 grid gap-5 sm:grid-cols-2">
         <section className="rounded-3xl border border-[var(--border)] bg-white p-6">
@@ -161,6 +194,75 @@ export default async function StudentAccountContent() {
                       {statusLabel(item.status)}
                     </span>
                   </div>
+
+                  {item.status === "requested" || item.status === "confirmed" ? (
+                    <div className="mt-4 rounded-2xl bg-[var(--cream)] p-4">
+                      <details>
+                        <summary className="cursor-pointer text-sm font-bold text-[var(--forest)]">
+                          Change inspection details
+                        </summary>
+
+                        <form
+                          action={rescheduleStudentInspection}
+                          className="mt-4 grid gap-3 sm:grid-cols-[1fr_0.75fr_auto]"
+                        >
+                          <input type="hidden" name="requestId" value={item.id} />
+
+                          <label>
+                            <span className="mb-1 block text-xs font-semibold text-[var(--muted)]">
+                              New preferred date
+                            </span>
+                            <input
+                              required
+                              min={lagosToday()}
+                              type="date"
+                              name="preferredDate"
+                              defaultValue={item.preferred_date}
+                              className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2.5 text-sm"
+                            />
+                          </label>
+
+                          <label>
+                            <span className="mb-1 block text-xs font-semibold text-[var(--muted)]">
+                              People staying
+                            </span>
+                            <select
+                              required
+                              name="occupantGroupSize"
+                              defaultValue={item.occupant_group_size}
+                              className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2.5 text-sm"
+                            >
+                              <option value="1">1 person</option>
+                              <option value="2">2 people</option>
+                              <option value="3">3 people</option>
+                              <option value="4+">4+ people</option>
+                            </select>
+                          </label>
+
+                          <button className="self-end rounded-xl bg-[var(--forest)] px-4 py-2.5 text-sm font-bold text-white">
+                            Reschedule
+                          </button>
+                        </form>
+
+                        {item.status === "confirmed" ? (
+                          <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
+                            Changing a confirmed date sends the request back to
+                            requested so the provider can confirm the new date.
+                          </p>
+                        ) : null}
+                      </details>
+
+                      <form
+                        action={cancelStudentInspection}
+                        className="mt-4 border-t border-[var(--border)] pt-4"
+                      >
+                        <input type="hidden" name="requestId" value={item.id} />
+                        <button className="text-sm font-semibold text-red-700 underline underline-offset-4">
+                          Cancel inspection request
+                        </button>
+                      </form>
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>
