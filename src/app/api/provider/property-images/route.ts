@@ -19,6 +19,74 @@ const allowedMimeTypes = new Map([
   ["image/webp", "webp"],
 ]);
 
+interface PendingUpload {
+  file: File;
+  extension: string;
+  bytes: Uint8Array;
+}
+
+async function validateImage(file: File): Promise<PendingUpload | null> {
+  const extension = allowedMimeTypes.get(file.type);
+
+  if (
+    !extension ||
+    file.size <= 0 ||
+    file.size > MAX_PROPERTY_IMAGE_BYTES
+  ) {
+    return null;
+  }
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const isJpeg =
+    bytes.length >= 3 &&
+    bytes[0] === 0xff &&
+    bytes[1] === 0xd8 &&
+    bytes[2] === 0xff;
+  const isPng =
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47 &&
+    bytes[4] === 0x0d &&
+    bytes[5] === 0x0a &&
+    bytes[6] === 0x1a &&
+    bytes[7] === 0x0a;
+  const isWebp =
+    bytes.length >= 12 &&
+    String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" &&
+    String.fromCharCode(...bytes.slice(8, 12)) === "WEBP";
+
+  const signatureMatches =
+    (extension === "jpg" && isJpeg) ||
+    (extension === "png" && isPng) ||
+    (extension === "webp" && isWebp);
+
+  return signatureMatches ? { file, extension, bytes } : null;
+}
+
+async function storageRemove(accessToken: string, storagePaths: string[]) {
+  if (storagePaths.length === 0) {
+    return true;
+  }
+
+  const response = await fetch(
+    `${supabasePublicConfig.url}/storage/v1/object/${PROPERTY_IMAGE_BUCKET}`,
+    {
+      method: "DELETE",
+      headers: {
+        apikey: supabasePublicConfig.publishableKey,
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ prefixes: storagePaths }),
+      cache: "no-store",
+    },
+  );
+
+  return response.ok;
+}
+
 async function getEditableProperty(propertyId: string, providerId: string) {
   const rows = await supabaseAuthenticatedRest<
     Array<{
@@ -36,31 +104,11 @@ async function getEditableProperty(propertyId: string, providerId: string) {
 
   const property = rows[0];
 
-  if (!property) {
-    return null;
-  }
-
-  if (!["draft", "rejected"].includes(property.publication_status)) {
+  if (!property || !["draft", "rejected"].includes(property.publication_status)) {
     return null;
   }
 
   return property;
-}
-
-async function storageRemove(accessToken: string, storagePath: string) {
-  return fetch(
-    `${supabasePublicConfig.url}/storage/v1/object/${PROPERTY_IMAGE_BUCKET}`,
-    {
-      method: "DELETE",
-      headers: {
-        apikey: supabasePublicConfig.publishableKey,
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ prefixes: [storagePath] }),
-      cache: "no-store",
-    },
-  );
 }
 
 export async function POST(request: Request) {
@@ -86,11 +134,14 @@ export async function POST(request: Request) {
   const formData = await request.formData();
   const propertyId = String(formData.get("propertyId") ?? "").trim();
   const altText = String(formData.get("altText") ?? "").trim();
-  const file = formData.get("file");
+  const files = [
+    ...formData.getAll("files"),
+    ...formData.getAll("file"),
+  ].filter((item): item is File => item instanceof File && item.size > 0);
 
-  if (!propertyId || !(file instanceof File)) {
+  if (!propertyId || files.length === 0) {
     return NextResponse.json(
-      { error: "Choose an image to upload." },
+      { error: "Choose at least one photo to upload." },
       { status: 400 },
     );
   }
@@ -107,22 +158,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const extension = allowedMimeTypes.get(file.type);
-
-  if (!extension) {
-    return NextResponse.json(
-      { error: "Use a JPEG, PNG, or WebP image." },
-      { status: 400 },
-    );
-  }
-
-  if (file.size <= 0 || file.size > MAX_PROPERTY_IMAGE_BYTES) {
-    return NextResponse.json(
-      { error: "Each image must be 4 MB or smaller." },
-      { status: 400 },
-    );
-  }
-
   const existing = await supabaseAuthenticatedRest<
     Array<{ id: string; sort_order: number }>
   >(
@@ -131,46 +166,70 @@ export async function POST(request: Request) {
     )}&select=id,sort_order&order=sort_order.asc`,
   );
 
-  if (existing.length >= MAX_PROPERTY_IMAGES) {
+  const remainingSlots = MAX_PROPERTY_IMAGES - existing.length;
+
+  if (files.length > remainingSlots) {
     return NextResponse.json(
-      { error: `You can upload up to ${MAX_PROPERTY_IMAGES} property images.` },
+      {
+        error: `You can add ${remainingSlots} more ${remainingSlots === 1 ? "photo" : "photos"} to this property.`,
+      },
       { status: 400 },
     );
   }
 
-  const storagePath = `${propertyId}/${randomUUID()}.${extension}`;
-  const uploadResponse = await fetch(
-    `${supabasePublicConfig.url}/storage/v1/object/${PROPERTY_IMAGE_BUCKET}/${storagePath}`,
-    {
-      method: "POST",
-      headers: {
-        apikey: supabasePublicConfig.publishableKey,
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": file.type,
-        "cache-control": "3600",
-        "x-upsert": "false",
-      },
-      body: new Uint8Array(await file.arrayBuffer()),
-      cache: "no-store",
-    },
-  );
+  const pendingUploads = await Promise.all(files.map(validateImage));
 
-  if (!uploadResponse.ok) {
+  if (pendingUploads.some((upload) => upload === null)) {
     return NextResponse.json(
       {
-        error: "The image could not be uploaded. Please try another image.",
+        error:
+          "Every photo must be a valid JPEG, PNG or WebP image no larger than 4 MB.",
       },
-      { status: uploadResponse.status },
+      { status: 400 },
     );
   }
 
+  const validUploads = pendingUploads as PendingUpload[];
+  const storagePaths: string[] = [];
   const nextSortOrder =
     existing.length === 0
       ? 0
       : Math.max(...existing.map((image) => image.sort_order)) + 1;
 
   try {
-    const rows = await supabaseAuthenticatedRest<
+    for (const [index, upload] of validUploads.entries()) {
+      const storagePath = `${propertyId}/${randomUUID()}.${upload.extension}`;
+      const response = await fetch(
+        `${supabasePublicConfig.url}/storage/v1/object/${PROPERTY_IMAGE_BUCKET}/${storagePath}`,
+        {
+          method: "POST",
+          headers: {
+            apikey: supabasePublicConfig.publishableKey,
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": upload.file.type,
+            "cache-control": "3600",
+            "x-upsert": "false",
+          },
+          body: upload.bytes,
+          cache: "no-store",
+        },
+      );
+
+      if (!response.ok) {
+        await storageRemove(accessToken, storagePaths);
+        return NextResponse.json(
+          {
+            error:
+              "One of the photos could not be uploaded. Check your connection and try again.",
+          },
+          { status: response.status },
+        );
+      }
+
+      storagePaths.push(storagePath);
+    }
+
+    const metadata = await supabaseAuthenticatedRest<
       Array<{
         id: string;
         storage_path: string;
@@ -181,36 +240,36 @@ export async function POST(request: Request) {
     >("property_images?select=id,storage_path,alt_text,sort_order,created_at", {
       method: "POST",
       prefer: "return=representation",
-      body: JSON.stringify({
-        property_id: propertyId,
-        storage_path: storagePath,
-        alt_text:
-          altText || `${property.name} accommodation photo`,
-        sort_order: nextSortOrder,
-      }),
+      body: JSON.stringify(
+        storagePaths.map((storagePath, index) => ({
+          property_id: propertyId,
+          storage_path: storagePath,
+          alt_text:
+            altText || `${property.name} accommodation photo ${index + 1}`,
+          sort_order: nextSortOrder + index,
+        })),
+      ),
     });
 
-    const image = rows[0];
-
-    if (!image) {
-      await storageRemove(accessToken, storagePath);
+    if (metadata.length !== storagePaths.length) {
+      await storageRemove(accessToken, storagePaths);
       return NextResponse.json(
-        { error: "The photo metadata could not be saved." },
+        { error: "The photo details could not be saved. Please try again." },
         { status: 500 },
       );
     }
 
     return NextResponse.json({
-      image: {
+      images: metadata.map((image) => ({
         ...image,
         url: propertyImagePublicUrl(image.storage_path),
-      },
+      })),
     });
   } catch {
-    await storageRemove(accessToken, storagePath);
+    await storageRemove(accessToken, storagePaths);
 
     return NextResponse.json(
-      { error: "The photo metadata could not be saved." },
+      { error: "The photos could not be saved. Please try again." },
       { status: 500 },
     );
   }
@@ -273,9 +332,9 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Image not found." }, { status: 404 });
   }
 
-  const removeResponse = await storageRemove(accessToken, image.storage_path);
+  const removed = await storageRemove(accessToken, [image.storage_path]);
 
-  if (!removeResponse.ok) {
+  if (!removed) {
     return NextResponse.json(
       { error: "The stored image could not be removed." },
       { status: 500 },
