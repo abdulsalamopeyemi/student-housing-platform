@@ -126,6 +126,32 @@ export default function InspectionRequestForm({
         </label>
       </div>
 
+      <fieldset className="mt-4">
+        <legend className="mb-2 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+          How many people plan to stay?
+        </legend>
+        <div className="grid grid-cols-4 gap-2">
+          {["1", "2", "3", "4+"].map((size) => (
+            <label
+              key={size}
+              className="flex cursor-pointer items-center justify-center rounded-xl border border-[var(--border)] px-3 py-3 text-sm font-semibold text-[var(--forest)] has-[:checked]:border-[var(--forest)] has-[:checked]:bg-[var(--cream)]"
+            >
+              <input
+                required
+                type="radio"
+                name="occupantGroupSize"
+                value={size}
+                className="sr-only"
+              />
+              {size}
+            </label>
+          ))}
+        </div>
+        <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+          This helps the provider understand your accommodation needs. We do not ask for photos or unnecessary identity documents.
+        </p>
+      </fieldset>
+
       <label className="mt-4 block">
         <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
           Note (optional)
