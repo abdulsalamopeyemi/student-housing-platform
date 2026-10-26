@@ -66,6 +66,8 @@ export default function MobileMenu({
               Explore homes
             </Link>
 
+            {/* Native anchor avoids a stale Next.js route tree on hash navigation. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a
               href="/#how-it-works"
               onClick={closeMenu}
