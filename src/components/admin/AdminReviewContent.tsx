@@ -5,7 +5,10 @@ import {
   rejectProperty,
   verifyProvider,
 } from "@/app/admin/reviews/actions";
-import { getPendingPropertyReviews } from "@/lib/data/admin";
+import {
+  getPendingPropertyReviews,
+  getPendingProviderVerifications,
+} from "@/lib/data/admin";
 
 interface AdminReviewContentProps {
   searchParams: Promise<{
@@ -20,8 +23,9 @@ function providerTypeLabel(value: string) {
 export default async function AdminReviewContent({
   searchParams,
 }: AdminReviewContentProps) {
-  const [properties, params] = await Promise.all([
+  const [properties, providersToVerify, params] = await Promise.all([
     getPendingPropertyReviews(),
+    getPendingProviderVerifications(),
     searchParams,
   ]);
 
@@ -41,11 +45,19 @@ export default async function AdminReviewContent({
           </p>
         </div>
 
-        <div className="rounded-2xl bg-[var(--cream)] px-5 py-4 text-sm">
-          <span className="font-bold text-[var(--forest)]">
-            {properties.length}
-          </span>{" "}
-          {properties.length === 1 ? "property" : "properties"} awaiting review
+        <div className="grid gap-2 text-sm sm:grid-cols-2">
+          <div className="rounded-2xl bg-[var(--cream)] px-5 py-4">
+            <span className="font-bold text-[var(--forest)]">
+              {providersToVerify.length}
+            </span>{" "}
+            {providersToVerify.length === 1 ? "provider" : "providers"} awaiting verification
+          </div>
+          <div className="rounded-2xl bg-[var(--cream)] px-5 py-4">
+            <span className="font-bold text-[var(--forest)]">
+              {properties.length}
+            </span>{" "}
+            {properties.length === 1 ? "property" : "properties"} awaiting review
+          </div>
         </div>
       </div>
 
@@ -57,6 +69,78 @@ export default async function AdminReviewContent({
           {params.message}
         </div>
       ) : null}
+
+      <section className="mt-10">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-wide text-[var(--emerald)]">
+            Provider verification
+          </p>
+          <h2 className="mt-2 text-3xl font-bold text-[var(--forest)]">
+            Registered landlords, agents and managers
+          </h2>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">
+            Agents must be verified here before a property owner can assign them
+            to manage student enquiries or room availability.
+          </p>
+        </div>
+
+        {providersToVerify.length === 0 ? (
+          <div className="mt-6 rounded-3xl border border-dashed border-[var(--border)] bg-white px-6 py-10 text-center">
+            <p className="text-sm text-[var(--muted)]">
+              No provider accounts are waiting for verification.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {providersToVerify.map((provider) => (
+              <article
+                key={provider.id}
+                className="rounded-3xl border border-[var(--border)] bg-white p-6"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+                      {providerTypeLabel(provider.provider_type)}
+                    </p>
+                    <h3 className="mt-2 text-xl font-bold text-[var(--forest)]">
+                      {provider.display_name ?? "Unnamed provider"}
+                    </h3>
+                    <p className="mt-2 text-xs capitalize text-[var(--muted)]">
+                      Status: {provider.verification_status}
+                    </p>
+                  </div>
+                </div>
+
+                <form action={verifyProvider} className="mt-5 space-y-3">
+                  <input type="hidden" name="providerId" value={provider.id} />
+                  <textarea
+                    name="notes"
+                    rows={2}
+                    placeholder="Optional verification note"
+                    className="w-full resize-y rounded-xl border border-[var(--border)] px-4 py-3 text-sm outline-none focus:border-[var(--emerald)]"
+                  />
+                  <button
+                    type="submit"
+                    className="w-full rounded-xl bg-[var(--forest)] px-4 py-3 text-sm font-bold text-white"
+                  >
+                    Verify {provider.provider_type === "agent" ? "agent" : "provider"}
+                  </button>
+                </form>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="mt-12">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-wide text-[var(--emerald)]">
+            Property review
+          </p>
+          <h2 className="mt-2 text-3xl font-bold text-[var(--forest)]">
+            Accommodation awaiting publication
+          </h2>
+        </div>
 
       {properties.length === 0 ? (
         <section className="mt-10 rounded-3xl border border-dashed border-[var(--border)] bg-white px-6 py-14 text-center">
@@ -234,6 +318,7 @@ export default async function AdminReviewContent({
           })}
         </div>
       )}
+      </section>
     </div>
   );
 }
