@@ -14,9 +14,11 @@ const currencyFormatter = new Intl.NumberFormat("en-NG", {
 
 export default function PropertyCard({ property }: PropertyCardProps) {
   const availabilityLabel =
-    property.availability === "limited"
-      ? `${property.availableRooms} rooms left`
-      : `${property.availableRooms} rooms available`;
+    property.availability === "occupied"
+      ? "Fully occupied"
+      : property.availability === "limited"
+        ? `${property.availableRooms} rooms left`
+        : `${property.availableRooms} rooms available`;
 
   return (
     <article className="overflow-hidden rounded-3xl border border-[var(--border)] bg-white shadow-sm shadow-black/5">
@@ -49,6 +51,21 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-[var(--emerald)]">
             {availabilityLabel}
           </span>
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-2 rounded-2xl bg-[var(--cream)] p-3 text-center">
+          <div>
+            <p className="text-lg font-bold text-[var(--forest)]">{property.totalRooms}</p>
+            <p className="text-[11px] font-medium text-[var(--muted)]">Total</p>
+          </div>
+          <div>
+            <p className="text-lg font-bold text-[var(--forest)]">{property.availableRooms}</p>
+            <p className="text-[11px] font-medium text-[var(--muted)]">Available</p>
+          </div>
+          <div>
+            <p className="text-lg font-bold text-[var(--forest)]">{property.occupiedRooms}</p>
+            <p className="text-[11px] font-medium text-[var(--muted)]">Occupied</p>
+          </div>
         </div>
 
         {property.distanceFromCampus !== "Distance not provided" ? (
