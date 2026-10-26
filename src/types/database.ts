@@ -449,8 +449,12 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          ownership: string | null
           slug: string
+          source_checked_at: string | null
+          source_name: string | null
           state: string
+          year_established: number | null
         }
         Insert: {
           city: string
@@ -458,8 +462,12 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          ownership?: string | null
           slug: string
+          source_checked_at?: string | null
+          source_name?: string | null
           state: string
+          year_established?: number | null
         }
         Update: {
           city?: string
@@ -467,8 +475,12 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          ownership?: string | null
           slug?: string
+          source_checked_at?: string | null
+          source_name?: string | null
           state?: string
+          year_established?: number | null
         }
         Relationships: []
       }
