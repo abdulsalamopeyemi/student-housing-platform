@@ -2,7 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { signOut } from "@/app/auth/actions";
+import { updateInspectionStatus } from "@/app/provider/inspections/actions";
 import { submitPropertyForReview } from "@/app/provider/properties/actions";
+import { getProviderInspectionRequests } from "@/lib/data/provider-inspections";
 import { getProviderProperties } from "@/lib/data/provider-properties";
 import { getCurrentProvider } from "@/lib/data/providers";
 
@@ -52,7 +54,15 @@ export default async function ProviderWorkspaceContent({
     redirect("/provider/onboarding");
   }
 
-  const properties = await getProviderProperties(provider.id);
+  const [properties, inspectionRequests] = await Promise.all([
+    getProviderProperties(provider.id),
+    getProviderInspectionRequests(),
+  ]);
+
+  const activeInspectionCount = inspectionRequests.filter(
+    (request) =>
+      request.status === "requested" || request.status === "confirmed",
+  ).length;
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-14 lg:px-8 lg:py-20">
@@ -95,7 +105,7 @@ export default async function ProviderWorkspaceContent({
         </div>
       </div>
 
-      <div className="mt-8 grid gap-6 md:grid-cols-3">
+      <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-3xl border border-[var(--border)] bg-white p-6">
           <p className="text-sm font-bold text-[var(--forest)]">
             1. Provider profile
@@ -116,13 +126,151 @@ export default async function ProviderWorkspaceContent({
 
         <div className="rounded-3xl border border-[var(--border)] bg-white p-6">
           <p className="text-sm font-bold text-[var(--forest)]">
-            3. Review and publish
+            3. Inspection requests
+          </p>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            {activeInspectionCount > 0
+              ? `${activeInspectionCount} active ${activeInspectionCount === 1 ? "request" : "requests"}`
+              : "No active inspection requests"}
+          </p>
+        </div>
+
+        <div className="rounded-3xl border border-[var(--border)] bg-white p-6">
+          <p className="text-sm font-bold text-[var(--forest)]">
+            4. Review and publish
           </p>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
             Submit a complete draft for platform review
           </p>
         </div>
       </div>
+
+      <section className="mt-10">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-wide text-[var(--emerald)]">
+            Student enquiries
+          </p>
+          <h2 className="mt-2 text-3xl font-bold text-[var(--forest)]">
+            Inspection requests
+          </h2>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">
+            Students who request an inspection for one of your published
+            properties appear here. Confirm or decline new requests, then mark
+            confirmed inspections complete after they happen.
+          </p>
+        </div>
+
+        {inspectionRequests.length === 0 ? (
+          <div className="mt-6 rounded-3xl border border-dashed border-[var(--border)] bg-white px-6 py-10 text-center">
+            <h3 className="text-xl font-bold text-[var(--forest)]">
+              No inspection requests yet.
+            </h3>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[var(--muted)]">
+              When a student requests an inspection from a published listing,
+              the request will appear here automatically.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 grid gap-4">
+            {inspectionRequests.map((request) => (
+              <article
+                key={request.id}
+                className="rounded-3xl border border-[var(--border)] bg-white p-6"
+              >
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-[var(--cream)] px-3 py-1 text-xs font-bold capitalize text-[var(--forest)]">
+                        {statusLabel(request.status)}
+                      </span>
+                      <span className="text-xs text-[var(--muted)]">
+                        Requested {new Date(request.created_at).toLocaleDateString("en-NG")}
+                      </span>
+                    </div>
+
+                    <h3 className="mt-3 text-xl font-bold text-[var(--forest)]">
+                      {request.properties?.name ?? "Property inspection"}
+                    </h3>
+
+                    <div className="mt-3 grid gap-2 text-sm text-[var(--muted)] sm:grid-cols-2">
+                      <p>
+                        <span className="font-semibold text-[var(--forest)]">
+                          Preferred date:
+                        </span>{" "}
+                        {new Date(request.preferred_date).toLocaleDateString("en-NG")}
+                      </p>
+                      <p>
+                        <span className="font-semibold text-[var(--forest)]">
+                          Student phone:
+                        </span>{" "}
+                        <a
+                          href={`tel:${request.contact_phone}`}
+                          className="underline underline-offset-4"
+                        >
+                          {request.contact_phone}
+                        </a>
+                      </p>
+                    </div>
+
+                    {request.note ? (
+                      <p className="mt-3 max-w-2xl rounded-2xl bg-[var(--cream)] px-4 py-3 text-sm leading-6 text-[var(--muted)]">
+                        {request.note}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {request.properties ? (
+                      <Link
+                        href={`/properties/${request.properties.slug}`}
+                        className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--forest)]"
+                      >
+                        View property
+                      </Link>
+                    ) : null}
+
+                    {request.status === "requested" ? (
+                      <>
+                        <form action={updateInspectionStatus}>
+                          <input type="hidden" name="requestId" value={request.id} />
+                          <input type="hidden" name="status" value="confirmed" />
+                          <button className="rounded-xl bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold text-white">
+                            Confirm
+                          </button>
+                        </form>
+                        <form action={updateInspectionStatus}>
+                          <input type="hidden" name="requestId" value={request.id} />
+                          <input type="hidden" name="status" value="declined" />
+                          <button className="rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700">
+                            Decline
+                          </button>
+                        </form>
+                      </>
+                    ) : request.status === "confirmed" ? (
+                      <>
+                        <form action={updateInspectionStatus}>
+                          <input type="hidden" name="requestId" value={request.id} />
+                          <input type="hidden" name="status" value="completed" />
+                          <button className="rounded-xl bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold text-white">
+                            Mark completed
+                          </button>
+                        </form>
+                        <form action={updateInspectionStatus}>
+                          <input type="hidden" name="requestId" value={request.id} />
+                          <input type="hidden" name="status" value="declined" />
+                          <button className="rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700">
+                            Decline
+                          </button>
+                        </form>
+                      </>
+                    ) : null}
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="mt-10">
         <div className="flex flex-wrap items-end justify-between gap-4">
