@@ -85,6 +85,15 @@ export default async function AdminReviewContent({
         </div>
       </div>
 
+      <div className="mt-6">
+        <Link
+          href="/admin/payments"
+          className="inline-flex rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-bold text-[var(--forest)]"
+        >
+          Open payment setup
+        </Link>
+      </div>
+
       {params.message ? (
         <div
           role="status"
