@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import SavePropertyButton from "@/components/property/SavePropertyButton";
 import type { StudentProperty } from "@/types/property";
 
 interface PropertyCardProps {
@@ -79,15 +78,13 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           </p>
         )}
 
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
+        <div className="mt-6 border-t border-[var(--border)] pt-4">
           <Link
             href={`/properties/${property.slug}`}
-            className="rounded-xl bg-[var(--forest)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--emerald)]"
+            className="inline-flex rounded-xl bg-[var(--forest)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--emerald)]"
           >
             View details
           </Link>
-
-          <SavePropertyButton propertyName={property.name} />
         </div>
 
         <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
