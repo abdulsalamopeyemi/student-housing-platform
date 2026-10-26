@@ -1,0 +1,141 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+import { getCurrentAccount } from "@/lib/data/account";
+import { supabaseAuthenticatedRest } from "@/lib/supabase/authenticated-rest";
+
+export interface InspectionActionState {
+  status: "idle" | "success" | "error";
+  message: string;
+}
+
+const initialInspectionActionState: InspectionActionState = {
+  status: "idle",
+  message: "",
+};
+
+export { initialInspectionActionState };
+
+function safePropertyPath(slug: string) {
+  return /^[a-z0-9-]+$/i.test(slug)
+    ? `/properties/${slug}`
+    : "/explore";
+}
+
+export async function requestInspection(
+  _previousState: InspectionActionState,
+  formData: FormData,
+): Promise<InspectionActionState> {
+  const propertyId = String(formData.get("propertyId") ?? "").trim();
+  const propertySlug = String(formData.get("propertySlug") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+  const preferredDate = String(formData.get("preferredDate") ?? "").trim();
+  const note = String(formData.get("note") ?? "").trim();
+
+  const propertyPath = safePropertyPath(propertySlug);
+  const { user, profile } = await getCurrentAccount();
+
+  if (!user) {
+    redirect(`/login?next=${encodeURIComponent(propertyPath)}`);
+  }
+
+  if (profile?.role !== "student") {
+    return {
+      status: "error",
+      message:
+        "Inspection requests are available from student accounts. Provider and admin accounts use their own workspaces.",
+    };
+  }
+
+  if (!propertyId) {
+    return {
+      status: "error",
+      message: "We could not identify this property. Refresh the page and try again.",
+    };
+  }
+
+  if (phone.length < 7 || phone.length > 30) {
+    return {
+      status: "error",
+      message: "Enter a valid phone number we can use for the inspection.",
+    };
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(preferredDate)) {
+    return {
+      status: "error",
+      message: "Choose a valid preferred inspection date.",
+    };
+  }
+
+  const today = new Date();
+  const todayString = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, "0"),
+    String(today.getDate()).padStart(2, "0"),
+  ].join("-");
+
+  if (preferredDate < todayString) {
+    return {
+      status: "error",
+      message: "Choose today or a future date for the inspection.",
+    };
+  }
+
+  if (note.length > 1000) {
+    return {
+      status: "error",
+      message: "Keep the inspection note under 1,000 characters.",
+    };
+  }
+
+  try {
+    const existing = await supabaseAuthenticatedRest<
+      Array<{ id: string; status: string }>
+    >(
+      `inspection_requests?property_id=eq.${encodeURIComponent(
+        propertyId,
+      )}&student_user_id=eq.${encodeURIComponent(
+        user.id,
+      )}&status=in.(requested,confirmed)&select=id,status&limit=1`,
+    );
+
+    if (existing.length > 0) {
+      return {
+        status: "error",
+        message:
+          "You already have an active inspection request for this property. Check My Account for its status.",
+      };
+    }
+
+    await supabaseAuthenticatedRest("inspection_requests", {
+      method: "POST",
+      prefer: "return=representation",
+      body: JSON.stringify({
+        student_user_id: user.id,
+        property_id: propertyId,
+        preferred_date: preferredDate,
+        contact_phone: phone,
+        note: note || null,
+        status: "requested",
+      }),
+    });
+  } catch {
+    return {
+      status: "error",
+      message:
+        "We could not send the inspection request. The listing may no longer be available, or there may be a temporary connection problem.",
+    };
+  }
+
+  revalidatePath("/account");
+  revalidatePath("/list-property");
+
+  return {
+    status: "success",
+    message:
+      "Inspection request sent. You can track its status from My Account.",
+  };
+}
