@@ -9,6 +9,7 @@ import {
 import { updateInspectionStatus } from "@/app/provider/inspections/actions";
 import { submitPropertyForReview } from "@/app/provider/properties/actions";
 import { updateRoomAvailability } from "@/app/provider/rooms/actions";
+import { getAvailabilityFreshness } from "@/lib/availability";
 import {
   getAssignedAgentProperties,
   getVerifiedAgents,
@@ -369,6 +370,9 @@ export default async function ProviderWorkspaceContent({
               const occupiedRooms = room
                 ? Math.max(0, room.total_count - room.available_count)
                 : 0;
+              const availabilityFreshness = room
+                ? getAvailabilityFreshness(room.availability_updated_at)
+                : null;
               const assignment = assignmentsByProperty.get(property.id);
 
               return (
@@ -455,6 +459,29 @@ export default async function ProviderWorkspaceContent({
 
                   {room ? (
                     <div className="mt-6 rounded-2xl bg-[var(--cream)] p-4">
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs font-bold uppercase tracking-wide text-[var(--forest)]">
+                          Room availability
+                        </p>
+                        {availabilityFreshness ? (
+                          <span
+                            className={[
+                              "text-xs font-semibold",
+                              availabilityFreshness.isStale
+                                ? "text-amber-700"
+                                : "text-[var(--muted)]",
+                            ].join(" ")}
+                          >
+                            {availabilityFreshness.label}
+                          </span>
+                        ) : null}
+                      </div>
+                      {availabilityFreshness?.isStale ? (
+                        <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+                          This availability is more than a week old. Please
+                          confirm the room count before students rely on it.
+                        </p>
+                      ) : null}
                       <div className="grid grid-cols-3 gap-3 text-center">
                         <div>
                           <p className="text-xl font-bold text-[var(--forest)]">
