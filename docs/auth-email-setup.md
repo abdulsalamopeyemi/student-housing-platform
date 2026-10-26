@@ -40,9 +40,9 @@ To send to arbitrary users:
 1. Create an account with an SMTP email provider (for example, Resend, Brevo, Postmark or another SMTP service).
 2. Verify a sending domain that you own with that provider.
 3. Obtain the SMTP host, port, username and password from that provider.
-4. In Supabase Dashboard, open **Project Settings → Authentication → SMTP Settings** (the dashboard label may vary) and enter those SMTP details.
+4. In Supabase Dashboard, open **Authentication → SMTP Settings** (or the Authentication settings page) and enter those SMTP details.
 5. Choose a sender name such as `Student Housing` and a sender address on the verified domain, for example `accounts@your-domain.com`.
-6. Save the settings and test with an email address that is not part of the Supabase organisation team.
+6. Save the settings, configure the provider's SPF/DKIM records for your sending domain, and test with an email address that is not part of the Supabase organisation team.
 
 Do not put SMTP credentials in the Next.js frontend, a `NEXT_PUBLIC_` variable, or Git. SMTP credentials belong only in the Supabase Dashboard/provider configuration.
 
