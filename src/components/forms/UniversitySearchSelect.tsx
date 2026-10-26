@@ -48,7 +48,7 @@ export default function UniversitySearchSelect({
   const [query, setQuery] = useState(selectedUniversity?.name ?? "");
   const [selectedValue, setSelectedValue] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(-1);
 
   const matches = useMemo(() => {
     const normalizedQuery = normalizeSearch(query);
@@ -85,14 +85,14 @@ export default function UniversitySearchSelect({
     setQuery(university.name);
     setSelectedValue(nextValue);
     setIsOpen(false);
-    setActiveIndex(0);
+    setActiveIndex(-1);
     onValueChange?.(nextValue);
   }
 
   function handleQueryChange(nextQuery: string) {
     setQuery(nextQuery);
     setSelectedValue("");
-    setActiveIndex(0);
+    setActiveIndex(-1);
     setIsOpen(true);
     onValueChange?.("");
   }
@@ -102,7 +102,11 @@ export default function UniversitySearchSelect({
       event.preventDefault();
       setIsOpen(true);
       setActiveIndex((current) =>
-        matches.length === 0 ? 0 : Math.min(current + 1, matches.length - 1),
+        matches.length === 0
+          ? -1
+          : current < 0
+            ? 0
+            : Math.min(current + 1, matches.length - 1),
       );
       return;
     }
@@ -110,11 +114,17 @@ export default function UniversitySearchSelect({
     if (event.key === "ArrowUp") {
       event.preventDefault();
       setIsOpen(true);
-      setActiveIndex((current) => Math.max(current - 1, 0));
+      setActiveIndex((current) =>
+        matches.length === 0
+          ? -1
+          : current < 0
+            ? matches.length - 1
+            : Math.max(current - 1, 0),
+      );
       return;
     }
 
-    if (event.key === "Enter" && isOpen && matches[activeIndex]) {
+    if (event.key === "Enter" && isOpen && activeIndex >= 0 && matches[activeIndex]) {
       event.preventDefault();
       selectUniversity(matches[activeIndex]);
       return;
@@ -142,7 +152,7 @@ export default function UniversitySearchSelect({
         aria-expanded={isOpen}
         aria-controls={listId}
         aria-activedescendant={
-          isOpen && matches[activeIndex]
+          isOpen && activeIndex >= 0 && matches[activeIndex]
             ? `${listId}-option-${activeIndex}`
             : undefined
         }
@@ -150,7 +160,7 @@ export default function UniversitySearchSelect({
         aria-required={required}
         onFocus={() => {
           setIsOpen(true);
-          setActiveIndex(0);
+          setActiveIndex(-1);
         }}
         onChange={(event) => handleQueryChange(event.target.value)}
         onKeyDown={handleKeyDown}

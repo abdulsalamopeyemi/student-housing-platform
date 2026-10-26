@@ -59,7 +59,7 @@ export default async function ExploreContent({
 
           const matchesRoomType =
             roomType.length === 0 ||
-            property.roomType.toLowerCase() === roomType.toLowerCase();
+            property.roomType.toLowerCase().includes(roomType.toLowerCase());
 
           return matchesUniversity && matchesArea && matchesBudget && matchesRoomType;
         })
