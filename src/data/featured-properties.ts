@@ -9,7 +9,9 @@ export const featuredProperties: StudentProperty[] = [
     area: "Malete",
     roomType: "Self-contained room",
     annualRent: 250000,
+    totalRooms: 12,
     availableRooms: 2,
+    occupiedRooms: 10,
     availability: "limited",
     facilities: ["Water supply", "Private bathroom", "Near campus"],
     description:
@@ -30,7 +32,9 @@ export const featuredProperties: StudentProperty[] = [
     area: "Malete",
     roomType: "Single room",
     annualRent: 180000,
+    totalRooms: 16,
     availableRooms: 6,
+    occupiedRooms: 10,
     availability: "available",
     facilities: ["Water supply", "Security", "Study-friendly area"],
     description:
@@ -51,8 +55,10 @@ export const featuredProperties: StudentProperty[] = [
     area: "Malete",
     roomType: "Self-contained room",
     annualRent: 320000,
+    totalRooms: 10,
     availableRooms: 3,
-    availability: "available",
+    occupiedRooms: 7,
+    availability: "limited",
     facilities: ["Private bathroom", "Kitchen space", "Fenced compound"],
     description:
       "A sample higher-budget self-contained listing used to test richer facility and price-breakdown presentation.",
