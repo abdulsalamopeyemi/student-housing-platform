@@ -30,6 +30,12 @@ export async function createPropertyDraft(formData: FormData) {
     redirect("/provider/onboarding");
   }
 
+  if (provider.provider_type === "agent") {
+    redirect(
+      "/list-property?message=Agents+manage+properties+assigned+by+owners+and+cannot+create+owner+listings.",
+    );
+  }
+
   const name = String(formData.get("name") ?? "").trim();
   const universityId = String(formData.get("universityId") ?? "");
   const area = String(formData.get("area") ?? "").trim();
