@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 interface ExploreFiltersProps {
   location: string;
   budget: string;
@@ -9,6 +13,9 @@ export default function ExploreFilters({
   budget,
   roomType,
 }: ExploreFiltersProps) {
+  const [locationValue, setLocationValue] = useState(location);
+  const hasLocation = locationValue.trim().length > 0;
+
   return (
     <form
       action="/explore"
@@ -21,12 +28,21 @@ export default function ExploreFilters({
             University or area
           </span>
           <input
+            required
             type="text"
             name="location"
-            defaultValue={location}
+            value={locationValue}
+            onChange={(event) => setLocationValue(event.target.value)}
             placeholder="e.g. KWASU, Malete"
+            aria-describedby="location-filter-help"
             className="w-full rounded-xl border border-[var(--border)] px-4 py-3 outline-none transition focus:border-[var(--emerald)]"
           />
+          <p
+            id="location-filter-help"
+            className="mt-1.5 text-xs leading-5 text-[var(--muted)]"
+          >
+            Enter a university or area first, then refine by budget or room type.
+          </p>
         </label>
 
         <label>
@@ -63,11 +79,18 @@ export default function ExploreFilters({
 
         <button
           type="submit"
-          className="self-end rounded-xl bg-[var(--forest)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--emerald)]"
+          disabled={!hasLocation}
+          className="self-end rounded-xl bg-[var(--forest)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--emerald)] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
         >
           Apply filters
         </button>
       </div>
+
+      {!hasLocation ? (
+        <p className="mt-4 text-sm font-medium text-amber-800">
+          Enter a university or area to use the filters. You can still browse all approved homes below.
+        </p>
+      ) : null}
     </form>
   );
 }
