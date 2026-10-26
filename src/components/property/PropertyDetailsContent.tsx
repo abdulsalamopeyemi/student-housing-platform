@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 
 import InspectionRequestForm from "@/components/property/InspectionRequestForm";
 import SavePropertyButton from "@/components/property/SavePropertyButton";
+import { getCurrentAccount } from "@/lib/data/account";
 import { getPublishedPropertyBySlug } from "@/lib/data/public-properties";
+import { isPropertySaved } from "@/lib/data/student-saved-properties";
 
 const currencyFormatter = new Intl.NumberFormat("en-NG", {
   style: "currency",
@@ -21,11 +23,19 @@ export default async function PropertyDetailsContent({
   params,
 }: PropertyDetailsContentProps) {
   const { slug } = await params;
-  const property = await getPublishedPropertyBySlug(slug);
+  const [property, account] = await Promise.all([
+    getPublishedPropertyBySlug(slug),
+    getCurrentAccount(),
+  ]);
 
   if (!property) {
     notFound();
   }
+
+  const initiallySaved =
+    account.profile?.role === "student"
+      ? await isPropertySaved(property.id)
+      : false;
 
   const totalRequiredFees = property.fees
     .filter((fee) => fee.required)
@@ -94,7 +104,12 @@ export default async function PropertyDetailsContent({
               </p>
 
               <div className="mt-6">
-                <SavePropertyButton propertyName={property.name} />
+                <SavePropertyButton
+                  propertyId={property.id}
+                  propertySlug={property.slug}
+                  propertyName={property.name}
+                  initiallySaved={initiallySaved}
+                />
               </div>
             </div>
           </div>
