@@ -14,12 +14,19 @@ export interface ProviderProperty {
   universities: {
     name: string;
   } | null;
+  room_types: Array<{
+    id: string;
+    name: string;
+    total_count: number;
+    available_count: number;
+    annual_rent: number;
+  }>;
 }
 
 export async function getProviderProperties(providerId: string) {
   return supabaseAuthenticatedRest<ProviderProperty[]>(
     `properties?provider_id=eq.${encodeURIComponent(
       providerId,
-    )}&select=id,name,slug,area,distance_label,publication_status,verification_status,updated_at,universities(name)&order=updated_at.desc`,
+    )}&select=id,name,slug,area,distance_label,publication_status,verification_status,updated_at,universities(name),room_types(id,name,total_count,available_count,annual_rent)&order=updated_at.desc`,
   );
 }
