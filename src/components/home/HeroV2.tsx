@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import UniversitySearchSelect from "@/components/forms/UniversitySearchSelect";
 import {
   getUniversities,
   getUniversityBySlug,
@@ -86,25 +87,20 @@ export default async function HeroV2() {
             className="mt-8 grid gap-3 rounded-2xl border border-white/15 bg-black/20 p-3 backdrop-blur-md sm:grid-cols-[1.2fr_0.8fr_auto]"
             aria-label="Search student accommodation"
           >
-            <label>
-              <span className="mb-1.5 block px-1 text-[11px] font-bold uppercase tracking-wide text-white/65">
+            <div>
+              <label className="mb-1.5 block px-1 text-[11px] font-bold uppercase tracking-wide text-white/65">
                 University
-              </span>
+              </label>
 
-              <select
-                required
+              <UniversitySearchSelect
+                universities={universities}
                 name="university"
-                defaultValue=""
-                className="w-full rounded-xl border border-white/10 bg-white px-4 py-3 text-sm text-[var(--ink)] outline-none"
-              >
-                <option value="">Select a university</option>
-                {universities.map((university) => (
-                  <option key={university.id} value={university.name}>
-                    {university.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+                valueMode="name"
+                required
+                placeholder="Type a university name..."
+                inputClassName="w-full rounded-xl border border-white/10 bg-white px-4 py-3 text-sm text-[var(--ink)] outline-none placeholder:text-[var(--muted)]"
+              />
+            </div>
 
             <label>
               <span className="mb-1.5 block px-1 text-[11px] font-bold uppercase tracking-wide text-white/65">
