@@ -1,4 +1,4 @@
-export type PropertyAvailability = "available" | "limited";
+export type PropertyAvailability = "available" | "limited" | "occupied";
 
 export interface PropertyFee {
   label: string;
@@ -14,7 +14,9 @@ export interface StudentProperty {
   area: string;
   roomType: string;
   annualRent: number;
+  totalRooms: number;
   availableRooms: number;
+  occupiedRooms: number;
   availability: PropertyAvailability;
   facilities: string[];
   description: string;
