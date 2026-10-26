@@ -1,11 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import SavePropertyButton from "@/components/property/SavePropertyButton";
 import { getAvailabilityFreshness } from "@/lib/availability";
 import type { StudentProperty } from "@/types/property";
 
 interface PropertyCardProps {
   property: StudentProperty;
+  showSaveButton?: boolean;
+  initiallySaved?: boolean;
 }
 
 const currencyFormatter = new Intl.NumberFormat("en-NG", {
@@ -14,7 +17,11 @@ const currencyFormatter = new Intl.NumberFormat("en-NG", {
   maximumFractionDigits: 0,
 });
 
-export default function PropertyCard({ property }: PropertyCardProps) {
+export default function PropertyCard({
+  property,
+  showSaveButton = false,
+  initiallySaved = false,
+}: PropertyCardProps) {
   const coverImage = property.images[0] ?? null;
   const freshness = getAvailabilityFreshness(property.availabilityUpdatedAt);
   const availabilityLabel =
@@ -120,13 +127,23 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           </p>
         )}
 
-        <div className="mt-6 border-t border-[var(--border)] pt-4">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
           <Link
             href={`/properties/${property.slug}`}
             className="inline-flex rounded-xl bg-[var(--forest)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--emerald)]"
           >
             View details
           </Link>
+
+          {showSaveButton ? (
+            <SavePropertyButton
+              propertyId={property.id}
+              propertySlug={property.slug}
+              propertyName={property.name}
+              initiallySaved={initiallySaved}
+              variant="light"
+            />
+          ) : null}
         </div>
 
         <p className="mt-3 text-xs leading-5 text-[var(--muted)]">
