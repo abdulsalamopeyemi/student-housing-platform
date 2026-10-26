@@ -1,5 +1,7 @@
 import "server-only";
 
+import { createHmac, timingSafeEqual } from "node:crypto";
+
 const PAYSTACK_API_URL = "https://api.paystack.co";
 
 function paystackSecretKey() {
@@ -120,14 +122,16 @@ export function paystackWebhookIsValid(
     return false;
   }
 
-  const crypto = require("node:crypto") as typeof import("node:crypto");
-  const expected = crypto
-    .createHmac("sha512", paystackSecretKey())
+  const expected = createHmac("sha512", paystackSecretKey())
     .update(rawBody)
     .digest("hex");
 
-  return crypto.timingSafeEqual(
-    Buffer.from(expected, "utf8"),
-    Buffer.from(providedSignature, "utf8"),
-  );
+  const expectedBuffer = Buffer.from(expected, "utf8");
+  const providedBuffer = Buffer.from(providedSignature, "utf8");
+
+  if (expectedBuffer.length !== providedBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(expectedBuffer, providedBuffer);
 }
