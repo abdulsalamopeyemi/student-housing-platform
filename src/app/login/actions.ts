@@ -29,6 +29,24 @@ function loginRedirectUrl(
   return `/login?${params.toString()}`;
 }
 
+function checkEmailRedirectUrl(
+  email: string,
+  nextPath: string,
+  type?: "error" | "message",
+  message?: string,
+) {
+  const params = new URLSearchParams({
+    email,
+    next: nextPath,
+  });
+
+  if (type && message) {
+    params.set(type, message);
+  }
+
+  return `/auth/check-email?${params.toString()}`;
+}
+
 function dashboardForRole(role: "student" | "provider" | "admin" | null) {
   if (role === "admin") {
     return "/admin/reviews";
@@ -243,13 +261,7 @@ export async function signup(formData: FormData) {
     redirect(nextPath);
   }
 
-  redirect(
-    loginRedirectUrl(
-      "message",
-      "Account created. We sent a confirmation email. Confirm your address before signing in. If it does not arrive, use the resend option below.",
-      nextPath,
-    ),
-  );
+  redirect(checkEmailRedirectUrl(email, nextPath));
 }
 
 export async function resendConfirmation(formData: FormData) {
@@ -261,23 +273,26 @@ export async function resendConfirmation(formData: FormData) {
     redirect(loginRedirectUrl("error", emailError, nextPath));
   }
 
-  const { error } = await resendSignupConfirmation(email);
+  const emailRedirectTo = await confirmationRedirectUrl(nextPath);
+  const { error } = await resendSignupConfirmation(email, emailRedirectTo);
 
   if (error) {
     redirect(
-      loginRedirectUrl(
+      checkEmailRedirectUrl(
+        email,
+        nextPath,
         "error",
         friendlyAuthError(error, "resend"),
-        nextPath,
       ),
     );
   }
 
   redirect(
-    loginRedirectUrl(
-      "message",
-      "If an unconfirmed account exists for that email, a new confirmation message has been sent. Check Inbox, Spam, Promotions, and Updates.",
+    checkEmailRedirectUrl(
+      email,
       nextPath,
+      "message",
+      "If an unconfirmed account exists for that address, a new confirmation email has been requested. Check your inbox and spam folder.",
     ),
   );
 }
