@@ -30,10 +30,15 @@ export default async function ExploreContent({
 
   const canSaveProperties =
     !account.user || account.profile?.role === "student";
-  const savedPropertyIds =
-    account.profile?.role === "student"
-      ? await getStudentSavedPropertyIds()
-      : new Set<string>();
+  let savedPropertyIds = new Set<string>();
+
+  if (account.profile?.role === "student") {
+    try {
+      savedPropertyIds = await getStudentSavedPropertyIds();
+    } catch {
+      // Keep public browsing available if saved-home data is temporarily unavailable.
+    }
+  }
 
   const legacyLocation = params.location?.trim() ?? "";
   const university = params.university?.trim() ?? "";
