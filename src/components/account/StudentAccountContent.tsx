@@ -6,6 +6,8 @@ import {
   cancelStudentInspection,
   rescheduleStudentInspection,
 } from "@/app/account/inspection-actions";
+import { startAccommodationPayment } from "@/app/payments/actions";
+import { getStudentPayments } from "@/lib/data/accommodation-payments";
 import { getCurrentAccount } from "@/lib/data/account";
 import { getStudentDashboardData } from "@/lib/data/student-dashboard";
 import { propertyImagePublicUrl } from "@/lib/property-images";
@@ -55,7 +57,10 @@ export default async function StudentAccountContent({
     redirect("/list-property");
   }
 
-  const { savedHomes, inspections } = await getStudentDashboardData();
+  const [{ savedHomes, inspections }, payments] = await Promise.all([
+    getStudentDashboardData(),
+    getStudentPayments(),
+  ]);
   const displayName =
     profile?.full_name ?? user.user_metadata?.full_name ?? "Student";
 
@@ -89,7 +94,7 @@ export default async function StudentAccountContent({
         </div>
       ) : null}
 
-      <div className="mt-8 grid gap-5 sm:grid-cols-2">
+      <div className="mt-8 grid gap-5 sm:grid-cols-3">
         <section className="rounded-3xl border border-[var(--border)] bg-white p-6">
           <p className="text-sm font-bold text-[var(--forest)]">Saved homes</p>
           <p className="mt-2 text-3xl font-bold text-[var(--forest)]">
@@ -109,6 +114,18 @@ export default async function StudentAccountContent({
           </p>
           <p className="mt-2 text-sm text-[var(--muted)]">
             Requests and their latest status.
+          </p>
+        </section>
+
+        <section className="rounded-3xl border border-[var(--border)] bg-white p-6">
+          <p className="text-sm font-bold text-[var(--forest)]">
+            Accommodation payments
+          </p>
+          <p className="mt-2 text-3xl font-bold text-[var(--forest)]">
+            {payments.filter((payment) => payment.status === "paid").length}
+          </p>
+          <p className="mt-2 text-sm text-[var(--muted)]">
+            Verified payments completed through the platform.
           </p>
         </section>
       </div>
@@ -262,7 +279,30 @@ export default async function StudentAccountContent({
             </p>
           ) : (
             <div className="mt-5 divide-y divide-[var(--border)]">
-              {inspections.map((item) => (
+              {inspections.map((item) => {
+                const room =
+                  item.properties?.room_types.find(
+                    (candidate) => candidate.id === item.room_type_id,
+                  ) ??
+                  item.properties?.room_types[0] ??
+                  null;
+                const quotedAmount = room
+                  ? Number(room.annual_rent) +
+                    room.property_fees
+                      .filter((fee) => fee.required)
+                      .reduce((total, fee) => total + Number(fee.amount), 0)
+                  : null;
+                const relatedPayments = payments.filter(
+                  (payment) => payment.inspection_request_id === item.id,
+                );
+                const paidPayment = relatedPayments.find(
+                  (payment) => payment.status === "paid",
+                );
+                const pendingPayment = relatedPayments.find(
+                  (payment) => payment.status === "pending",
+                );
+
+                return (
                 <div key={item.id} className="py-4 first:pt-0">
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -300,6 +340,69 @@ export default async function StudentAccountContent({
                       {statusLabel(item.status)}
                     </span>
                   </div>
+
+                  {item.status === "completed" ? (
+                    <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+                      {paidPayment ? (
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-bold text-[var(--forest)]">
+                              Accommodation payment verified
+                            </p>
+                            <p className="mt-1 text-xs text-[var(--muted)]">
+                              {currencyFormatter.format(
+                                paidPayment.amount_kobo / 100,
+                              )}{" "}
+                              · {paidPayment.reference}
+                            </p>
+                          </div>
+                          <Link
+                            href={`/payments/verify?reference=${encodeURIComponent(
+                              paidPayment.reference,
+                            )}`}
+                            className="rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-[var(--forest)]"
+                          >
+                            View receipt
+                          </Link>
+                        </div>
+                      ) : quotedAmount ? (
+                        <div>
+                          <p className="text-sm font-bold text-[var(--forest)]">
+                            Ready for secure payment
+                          </p>
+                          <p className="mt-1 text-sm text-[var(--muted)]">
+                            Total required amount:{" "}
+                            <span className="font-bold text-[var(--forest)]">
+                              {currencyFormatter.format(quotedAmount)}
+                            </span>
+                          </p>
+                          <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+                            The server checks the room availability and exact
+                            amount again before opening Paystack checkout.
+                          </p>
+                          <form
+                            action={startAccommodationPayment}
+                            className="mt-4"
+                          >
+                            <input
+                              type="hidden"
+                              name="inspectionRequestId"
+                              value={item.id}
+                            />
+                            <button className="rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-bold text-white">
+                              {pendingPayment
+                                ? "Continue secure payment"
+                                : "Pay accommodation securely"}
+                            </button>
+                          </form>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-[var(--muted)]">
+                          Payment details are not available for this room yet.
+                        </p>
+                      )}
+                    </div>
+                  ) : null}
 
                   {item.status === "requested" || item.status === "confirmed" ? (
                     <div className="mt-4 rounded-2xl bg-[var(--cream)] p-4">
@@ -370,11 +473,67 @@ export default async function StudentAccountContent({
                     </div>
                   ) : null}
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
       </div>
+
+      <section className="mt-8 rounded-3xl border border-[var(--border)] bg-white p-6">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-wide text-[var(--emerald)]">
+              Payments
+            </p>
+            <h2 className="mt-2 text-2xl font-bold text-[var(--forest)]">
+              Payment history and receipts
+            </h2>
+          </div>
+          <p className="text-xs leading-5 text-[var(--muted)]">
+            Card and bank details are handled by Paystack, not stored by this platform.
+          </p>
+        </div>
+
+        {payments.length === 0 ? (
+          <p className="mt-5 text-sm leading-6 text-[var(--muted)]">
+            You have not made any accommodation payments through the platform yet.
+            Payment becomes available after a completed inspection.
+          </p>
+        ) : (
+          <div className="mt-5 divide-y divide-[var(--border)]">
+            {payments.map((payment) => (
+              <div
+                key={payment.id}
+                className="flex flex-col gap-4 py-4 first:pt-0 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <p className="font-bold text-[var(--forest)]">
+                    {payment.properties?.name ?? "Accommodation payment"}
+                  </p>
+                  <p className="mt-1 text-sm text-[var(--muted)]">
+                    {currencyFormatter.format(payment.amount_kobo / 100)}
+                    {" · "}
+                    <span className="capitalize">{payment.status}</span>
+                  </p>
+                  <p className="mt-1 break-all font-mono text-xs text-[var(--muted)]">
+                    {payment.reference}
+                  </p>
+                </div>
+
+                <Link
+                  href={`/payments/verify?reference=${encodeURIComponent(
+                    payment.reference,
+                  )}`}
+                  className="self-start rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-bold text-[var(--forest)]"
+                >
+                  {payment.status === "paid" ? "View receipt" : "Check status"}
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
