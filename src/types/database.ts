@@ -38,6 +38,7 @@ export type Database = {
           created_at: string
           id: string
           note: string | null
+          occupant_group_size: string
           preferred_date: string
           property_id: string
           room_type_id: string | null
@@ -50,6 +51,7 @@ export type Database = {
           created_at?: string
           id?: string
           note?: string | null
+          occupant_group_size?: string
           preferred_date: string
           property_id: string
           room_type_id?: string | null
@@ -62,6 +64,7 @@ export type Database = {
           created_at?: string
           id?: string
           note?: string | null
+          occupant_group_size?: string
           preferred_date?: string
           property_id?: string
           room_type_id?: string | null
@@ -189,6 +192,52 @@ export type Database = {
             columns: ["university_id"]
             isOneToOne: false
             referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_agent_assignments: {
+        Row: {
+          agent_provider_id: string
+          assigned_by_provider_id: string
+          created_at: string
+          property_id: string
+          updated_at: string
+        }
+        Insert: {
+          agent_provider_id: string
+          assigned_by_provider_id: string
+          created_at?: string
+          property_id: string
+          updated_at?: string
+        }
+        Update: {
+          agent_provider_id?: string
+          assigned_by_provider_id?: string
+          created_at?: string
+          property_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_agent_assignments_agent_provider_id_fkey"
+            columns: ["agent_provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_agent_assignments_assigned_by_provider_id_fkey"
+            columns: ["assigned_by_provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_agent_assignments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: true
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]
@@ -382,6 +431,7 @@ export type Database = {
           id: string
           name: string
           property_id: string
+          total_count: number
           updated_at: string
         }
         Insert: {
@@ -393,6 +443,7 @@ export type Database = {
           id?: string
           name: string
           property_id: string
+          total_count?: number
           updated_at?: string
         }
         Update: {
@@ -404,6 +455,7 @@ export type Database = {
           id?: string
           name?: string
           property_id?: string
+          total_count?: number
           updated_at?: string
         }
         Relationships: [
@@ -546,6 +598,7 @@ export type Database = {
           p_name: string
           p_room_type_name: string
           p_slug: string
+          p_total_count: number
           p_university_id: string
         }
         Returns: Json
