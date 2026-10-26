@@ -31,6 +31,12 @@ export default async function NewPropertyContent({
     redirect("/provider/onboarding");
   }
 
+  if (provider.provider_type === "agent") {
+    redirect(
+      "/list-property?message=Agents+manage+properties+assigned+by+owners+and+cannot+create+owner+listings.",
+    );
+  }
+
   return (
     <div className="mx-auto max-w-6xl px-5 py-12 lg:px-8 lg:py-16">
       <Link
