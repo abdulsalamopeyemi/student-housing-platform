@@ -115,11 +115,21 @@ export default async function StudentAccountContent({
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section className="rounded-3xl border border-[var(--border)] bg-white p-6">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <h2 className="text-xl font-bold text-[var(--forest)]">Saved homes</h2>
-            <Link href="/explore" className="text-sm font-bold text-[var(--emerald)]">
-              Browse homes
-            </Link>
+            <div className="flex flex-wrap gap-3">
+              {savedHomes.length >= 2 ? (
+                <Link
+                  href="/account/compare"
+                  className="text-sm font-bold text-[var(--forest)] underline decoration-[var(--gold)] decoration-2 underline-offset-4"
+                >
+                  Compare saved
+                </Link>
+              ) : null}
+              <Link href="/explore" className="text-sm font-bold text-[var(--emerald)]">
+                Browse homes
+              </Link>
+            </div>
           </div>
 
           {savedHomes.length === 0 ? (
