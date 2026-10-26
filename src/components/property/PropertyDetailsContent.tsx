@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -115,6 +116,46 @@ export default async function PropertyDetailsContent({
               </div>
             </div>
           </div>
+
+          {property.images.length > 0 ? (
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {property.images.slice(0, 5).map((image, index) => (
+                <div
+                  key={image.id}
+                  className={[
+                    "relative overflow-hidden rounded-2xl border border-white/30 bg-white",
+                    index === 0
+                      ? "aspect-[16/10] sm:col-span-2 lg:row-span-2 lg:aspect-auto lg:min-h-[420px]"
+                      : "aspect-[4/3]",
+                  ].join(" ")}
+                >
+                  <Image
+                    src={image.url}
+                    alt={image.altText || `${property.name} photo ${index + 1}`}
+                    fill
+                    priority={index === 0}
+                    sizes={
+                      index === 0
+                        ? "(min-width: 1024px) 50vw, 100vw"
+                        : "(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                    }
+                    className="object-cover"
+                  />
+                  {index === 0 ? (
+                    <span className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-[var(--forest)]">
+                      Cover photo
+                    </span>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-8 rounded-3xl border border-dashed border-[var(--border)] bg-white/60 px-6 py-10 text-center">
+              <p className="text-sm font-semibold text-[var(--muted)]">
+                Property photos have not been added yet.
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
