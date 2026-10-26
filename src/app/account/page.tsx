@@ -4,7 +4,13 @@ import StudentAccountContent from "@/components/account/StudentAccountContent";
 import SiteFooter from "@/components/layout/SiteFooter";
 import SiteHeader from "@/components/layout/SiteHeader";
 
-export default function AccountPage() {
+interface AccountPageProps {
+  searchParams: Promise<{
+    message?: string;
+  }>;
+}
+
+export default function AccountPage({ searchParams }: AccountPageProps) {
   return (
     <>
       <SiteHeader />
@@ -16,7 +22,7 @@ export default function AccountPage() {
             </div>
           }
         >
-          <StudentAccountContent />
+          <StudentAccountContent searchParams={searchParams} />
         </Suspense>
       </main>
       <SiteFooter />
