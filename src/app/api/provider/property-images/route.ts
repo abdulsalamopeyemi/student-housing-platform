@@ -197,7 +197,7 @@ export async function POST(request: Request) {
       : Math.max(...existing.map((image) => image.sort_order)) + 1;
 
   try {
-    for (const [index, upload] of validUploads.entries()) {
+    for (const upload of validUploads) {
       const storagePath = `${propertyId}/${randomUUID()}.${upload.extension}`;
       const response = await fetch(
         `${supabasePublicConfig.url}/storage/v1/object/${PROPERTY_IMAGE_BUCKET}/${storagePath}`,
