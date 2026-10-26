@@ -65,7 +65,7 @@ export default async function ProviderOnboardingContent({
 
         <div className="mt-8 space-y-4 text-sm leading-6 text-[var(--muted)]">
           <p>• Landlords can manage properties they own.</p>
-          <p>• Agents should only list properties they are authorized to represent.</p>
+          <p>• Agents manage properties that a property owner assigns to their verified account.</p>
           <p>• Property managers can manage accommodation on behalf of owners.</p>
         </div>
       </div>
