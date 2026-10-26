@@ -1,6 +1,9 @@
 import Link from "next/link";
 
-import { getUniversityBySlug } from "@/lib/data/universities";
+import {
+  getUniversities,
+  getUniversityBySlug,
+} from "@/lib/data/universities";
 
 const heroImageUrl =
   "https://images.unsplash.com/photo-1751239837215-c21ca4571663?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=80&w=2400";
@@ -13,9 +16,15 @@ const trustItems = [
 
 export default async function HeroV2() {
   let universityLabel = "KWASU · Malete";
+  let universities = [];
 
   try {
-    const university = await getUniversityBySlug("kwasu");
+    const [university, universityDirectory] = await Promise.all([
+      getUniversityBySlug("kwasu"),
+      getUniversities(),
+    ]);
+
+    universities = universityDirectory;
 
     if (university) {
       universityLabel = `${university.name} · ${university.city}`;
@@ -78,15 +87,22 @@ export default async function HeroV2() {
           >
             <label>
               <span className="mb-1.5 block px-1 text-[11px] font-bold uppercase tracking-wide text-white/65">
-                University or area
+                University
               </span>
 
-              <input
-                type="text"
-                name="location"
-                placeholder="e.g. KWASU, Malete"
-                className="w-full rounded-xl border border-white/10 bg-white px-4 py-3 text-sm text-[var(--ink)] outline-none placeholder:text-[var(--muted)]"
-              />
+              <select
+                required
+                name="university"
+                defaultValue=""
+                className="w-full rounded-xl border border-white/10 bg-white px-4 py-3 text-sm text-[var(--ink)] outline-none"
+              >
+                <option value="">Select a university</option>
+                {universities.map((university) => (
+                  <option key={university.id} value={university.name}>
+                    {university.name}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <label>
