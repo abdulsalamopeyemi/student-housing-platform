@@ -6,6 +6,7 @@ export interface ProviderInspectionRequest {
   id: string;
   preferred_date: string;
   contact_phone: string;
+  occupant_group_size: "1" | "2" | "3" | "4+";
   note: string | null;
   status: "requested" | "confirmed" | "completed" | "cancelled" | "declined";
   created_at: string;
@@ -18,6 +19,6 @@ export interface ProviderInspectionRequest {
 
 export async function getProviderInspectionRequests() {
   return supabaseAuthenticatedRest<ProviderInspectionRequest[]>(
-    "inspection_requests?select=id,preferred_date,contact_phone,note,status,created_at,properties(id,name,slug)&order=created_at.desc",
+    "inspection_requests?select=id,preferred_date,contact_phone,occupant_group_size,note,status,created_at,properties(id,name,slug)&order=created_at.desc",
   );
 }
