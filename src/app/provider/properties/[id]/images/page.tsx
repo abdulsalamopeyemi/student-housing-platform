@@ -14,14 +14,19 @@ interface ProviderPropertyImagesPageProps {
   params: Promise<{
     id: string;
   }>;
+  searchParams: Promise<{
+    message?: string;
+  }>;
 }
 
 export default async function ProviderPropertyImagesPage({
   params,
+  searchParams,
 }: ProviderPropertyImagesPageProps) {
-  const [{ id }, { user, provider }] = await Promise.all([
+  const [{ id }, { user, provider }, query] = await Promise.all([
     params,
     getCurrentProvider(),
+    searchParams,
   ]);
 
   if (!user) {
@@ -61,6 +66,12 @@ export default async function ProviderPropertyImagesPage({
           >
             ← Back to provider workspace
           </Link>
+
+          {query.message ? (
+            <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
+              {query.message}
+            </div>
+          ) : null}
 
           <div className="mt-6">
             <PropertyImageManager
