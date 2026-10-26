@@ -24,6 +24,7 @@ interface SavedGuestDraft {
   description: string;
   roomType: string;
   annualRent: string;
+  totalCount: string;
   availableCount: string;
   feeLabels: string[];
   feeAmounts: string[];
@@ -37,6 +38,7 @@ type PropertyField =
   | "description"
   | "roomType"
   | "annualRent"
+  | "totalCount"
   | "availableCount";
 
 type FieldErrors = Partial<Record<PropertyField, string>>;
@@ -135,6 +137,7 @@ export default function PropertyDraftForm({
     setSingleValue("description", savedDraft.description ?? "");
     setSingleValue("roomType", savedDraft.roomType ?? "");
     setSingleValue("annualRent", savedDraft.annualRent ?? "");
+    setSingleValue("totalCount", savedDraft.totalCount ?? savedDraft.availableCount ?? "1");
     setSingleValue("availableCount", savedDraft.availableCount ?? "1");
 
     form
@@ -217,6 +220,7 @@ export default function PropertyDraftForm({
     const description = inputValue(form, "description").trim();
     const roomType = inputValue(form, "roomType").trim();
     const annualRent = Number(inputValue(form, "annualRent"));
+    const totalRooms = Number(inputValue(form, "totalCount"));
     const availableRooms = Number(inputValue(form, "availableCount"));
 
     if (name.length < 3) {
@@ -244,8 +248,14 @@ export default function PropertyDraftForm({
       errors.annualRent = "Enter a valid annual rent greater than ₦0.";
     }
 
+    if (!Number.isInteger(totalRooms) || totalRooms < 1) {
+      errors.totalCount = "Total rooms must be a whole number of at least 1.";
+    }
+
     if (!Number.isInteger(availableRooms) || availableRooms < 0) {
       errors.availableCount = "Available rooms must be a whole number from 0 upward.";
+    } else if (Number.isInteger(totalRooms) && availableRooms > totalRooms) {
+      errors.availableCount = "Available rooms cannot be greater than total rooms.";
     }
 
     return errors;
@@ -335,6 +345,7 @@ export default function PropertyDraftForm({
       description: inputValue(form, "description"),
       roomType: inputValue(form, "roomType"),
       annualRent: inputValue(form, "annualRent"),
+      totalCount: inputValue(form, "totalCount"),
       availableCount: inputValue(form, "availableCount"),
       feeLabels: data.getAll("feeLabel").map(String),
       feeAmounts: data.getAll("feeAmount").map(String),
@@ -481,7 +492,7 @@ export default function PropertyDraftForm({
           First room type
         </p>
 
-        <div className="mt-6 grid gap-5 sm:grid-cols-3">
+        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <label>
             <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
               Room type
@@ -516,6 +527,25 @@ export default function PropertyDraftForm({
               }`}
             />
             <ErrorMessage message={fieldErrors.annualRent} />
+          </label>
+
+          <label>
+            <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+              Total rooms
+            </span>
+            <input
+              required
+              min="1"
+              step="1"
+              name="totalCount"
+              type="number"
+              defaultValue="1"
+              aria-invalid={Boolean(fieldErrors.totalCount)}
+              className={`w-full rounded-xl border px-4 py-3 outline-none focus:border-[var(--emerald)] ${
+                fieldErrors.totalCount ? "border-red-400 bg-red-50/40" : "border-[var(--border)]"
+              }`}
+            />
+            <ErrorMessage message={fieldErrors.totalCount} />
           </label>
 
           <label>
