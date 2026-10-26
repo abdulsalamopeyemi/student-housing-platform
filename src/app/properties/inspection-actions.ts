@@ -25,6 +25,7 @@ export async function requestInspection(
   const propertySlug = String(formData.get("propertySlug") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const preferredDate = String(formData.get("preferredDate") ?? "").trim();
+  const occupantGroupSize = String(formData.get("occupantGroupSize") ?? "").trim();
   const note = String(formData.get("note") ?? "").trim();
 
   const propertyPath = safePropertyPath(propertySlug);
@@ -77,6 +78,13 @@ export async function requestInspection(
     };
   }
 
+  if (!["1", "2", "3", "4+"].includes(occupantGroupSize)) {
+    return {
+      status: "error",
+      message: "Choose how many people plan to stay in the accommodation.",
+    };
+  }
+
   if (note.length > 1000) {
     return {
       status: "error",
@@ -111,6 +119,7 @@ export async function requestInspection(
         property_id: propertyId,
         preferred_date: preferredDate,
         contact_phone: phone,
+        occupant_group_size: occupantGroupSize,
         note: note || null,
         status: "requested",
       }),
