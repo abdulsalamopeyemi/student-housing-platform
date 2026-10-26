@@ -231,7 +231,10 @@ export async function signUpWithPassword(
   return { session: null, user, error: null };
 }
 
-export async function resendSignupConfirmation(email: string) {
+export async function resendSignupConfirmation(
+  email: string,
+  emailRedirectTo?: string,
+) {
   const response = await fetch(`${supabasePublicConfig.url}/auth/v1/resend`, {
     method: "POST",
     headers: {
@@ -241,6 +244,9 @@ export async function resendSignupConfirmation(email: string) {
     body: JSON.stringify({
       type: "signup",
       email,
+      ...(emailRedirectTo
+        ? { options: { emailRedirectTo } }
+        : {}),
     }),
     cache: "no-store",
   });
