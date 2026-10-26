@@ -21,12 +21,31 @@ export default function ExploreFilters({
   roomType,
 }: ExploreFiltersProps) {
   const [universityValue, setUniversityValue] = useState(university);
+  const [showUniversityError, setShowUniversityError] = useState(false);
   const hasUniversity = universityValue.trim().length > 0;
+
+  function handleUniversityChange(value: string) {
+    setUniversityValue(value);
+
+    if (value.trim()) {
+      setShowUniversityError(false);
+    }
+  }
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    if (hasUniversity) {
+      return;
+    }
+
+    event.preventDefault();
+    setShowUniversityError(true);
+  }
 
   return (
     <form
       action="/explore"
       method="get"
+      onSubmit={handleSubmit}
       className="rounded-3xl border border-[var(--border)] bg-white p-5"
     >
       <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr_0.9fr_1fr_auto]">
@@ -39,8 +58,7 @@ export default function ExploreFilters({
             name="university"
             value={universityValue}
             valueMode="name"
-            required
-            onValueChange={setUniversityValue}
+            onValueChange={handleUniversityChange}
             placeholder="Type a university name..."
             inputClassName="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none transition focus:border-[var(--emerald)]"
           />
@@ -101,16 +119,15 @@ export default function ExploreFilters({
 
         <button
           type="submit"
-          disabled={!hasUniversity}
-          className="self-end rounded-xl bg-[var(--forest)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--emerald)] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
+          className="self-end rounded-xl bg-[var(--forest)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--emerald)]"
         >
           Apply filters
         </button>
       </div>
 
-      {!hasUniversity ? (
-        <p className="mt-4 text-sm font-medium text-amber-800">
-          Select a university to use the filters. You can still browse all approved homes below.
+      {showUniversityError ? (
+        <p role="alert" className="mt-4 text-sm font-medium text-amber-800">
+          Select a university before applying filters. You can still browse all approved homes below.
         </p>
       ) : null}
     </form>
