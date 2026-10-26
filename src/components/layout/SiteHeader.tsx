@@ -33,6 +33,8 @@ export default function SiteHeader() {
             Explore homes
           </Link>
 
+          {/* Native anchor intentionally reloads the homepage before hash scrolling. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a
             href="/#how-it-works"
             className="text-sm font-medium text-[var(--muted)] transition hover:text-[var(--forest)]"
