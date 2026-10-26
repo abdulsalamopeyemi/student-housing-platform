@@ -15,3 +15,11 @@ export async function isPropertySaved(propertyId: string) {
     return false;
   }
 }
+
+export async function getStudentSavedPropertyIds() {
+  const rows = await supabaseAuthenticatedRest<Array<{ property_id: string }>>(
+    "saved_properties?select=property_id",
+  );
+
+  return new Set(rows.map((row) => row.property_id));
+}
