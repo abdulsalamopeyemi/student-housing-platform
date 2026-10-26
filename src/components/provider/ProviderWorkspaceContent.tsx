@@ -406,6 +406,17 @@ export default async function ProviderWorkspaceContent({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
+                      {!isAgent &&
+                      (property.publication_status === "draft" ||
+                        property.publication_status === "rejected") ? (
+                        <Link
+                          href={`/provider/properties/${property.id}/images`}
+                          className="rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-bold text-[var(--forest)]"
+                        >
+                          Manage photos
+                        </Link>
+                      ) : null}
+
                       {property.publication_status === "published" ? (
                         <Link
                           href={`/properties/${property.slug}`}
