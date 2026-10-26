@@ -2,8 +2,18 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { signOut } from "@/app/auth/actions";
+import {
+  assignAgentToProperty,
+  removeAgentFromProperty,
+} from "@/app/provider/agents/actions";
 import { updateInspectionStatus } from "@/app/provider/inspections/actions";
 import { submitPropertyForReview } from "@/app/provider/properties/actions";
+import { updateRoomAvailability } from "@/app/provider/rooms/actions";
+import {
+  getAssignedAgentProperties,
+  getVerifiedAgents,
+  getVisibleAgentAssignments,
+} from "@/lib/data/provider-agents";
 import { getProviderInspectionRequests } from "@/lib/data/provider-inspections";
 import { getProviderProperties } from "@/lib/data/provider-properties";
 import { getCurrentProvider } from "@/lib/data/providers";
@@ -38,6 +48,14 @@ function statusMessage(value: string) {
   return statusLabel(value);
 }
 
+function peopleLabel(value: "1" | "2" | "3" | "4+") {
+  if (value === "4+") {
+    return "4+ people";
+  }
+
+  return `${value} ${value === "1" ? "person" : "people"}`;
+}
+
 export default async function ProviderWorkspaceContent({
   searchParams,
 }: ProviderWorkspaceContentProps) {
@@ -54,10 +72,21 @@ export default async function ProviderWorkspaceContent({
     redirect("/provider/onboarding");
   }
 
-  const [properties, inspectionRequests] = await Promise.all([
-    getProviderProperties(provider.id),
-    getProviderInspectionRequests(),
-  ]);
+  const isAgent = provider.provider_type === "agent";
+
+  const [properties, inspectionRequests, verifiedAgents, assignments] =
+    await Promise.all([
+      isAgent
+        ? getAssignedAgentProperties(provider.id)
+        : getProviderProperties(provider.id),
+      getProviderInspectionRequests(),
+      isAgent ? Promise.resolve([]) : getVerifiedAgents(),
+      getVisibleAgentAssignments(),
+    ]);
+
+  const assignmentsByProperty = new Map(
+    assignments.map((assignment) => [assignment.property_id, assignment]),
+  );
 
   const activeInspectionCount = inspectionRequests.filter(
     (request) =>
@@ -75,52 +104,61 @@ export default async function ProviderWorkspaceContent({
       <div className="flex flex-col gap-6 rounded-3xl border border-[var(--border)] bg-white p-6 sm:p-8 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-sm font-bold uppercase tracking-wide text-[var(--emerald)]">
-            Provider workspace
+            {isAgent ? "Agent workspace" : "Provider workspace"}
           </p>
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-[var(--forest)]">
-            {provider.display_name ?? "Your property workspace"}
+            {provider.display_name ?? (isAgent ? "Your agent workspace" : "Your property workspace")}
           </h1>
           <p className="mt-4 max-w-2xl leading-7 text-[var(--muted)]">
-            Create property drafts, keep their pricing and availability clear,
-            and submit complete listings for review before they become public.
+            {isAgent
+              ? "Manage only the properties owners have assigned to you. Handle student inspection requests and keep room availability accurate without taking ownership of the listing."
+              : "Manage your properties, assign a verified platform agent when you need help with day-to-day student enquiries, and keep availability current."}
           </p>
         </div>
 
         <div className="flex flex-col gap-3">
           <div className="rounded-2xl bg-[var(--cream)] px-5 py-4">
             <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-              Provider verification
+              {isAgent ? "Agent verification" : "Provider verification"}
             </p>
             <p className="mt-1 font-bold capitalize text-[var(--forest)]">
               {provider.verification_status}
             </p>
           </div>
 
-          <Link
-            href="/provider/properties/new"
-            className="rounded-xl bg-[var(--forest)] px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-[var(--emerald)]"
-          >
-            + Add property
-          </Link>
+          {!isAgent ? (
+            <Link
+              href="/provider/properties/new"
+              className="rounded-xl bg-[var(--forest)] px-5 py-3 text-center text-sm font-semibold text-white transition hover:bg-[var(--emerald)]"
+            >
+              + Add property
+            </Link>
+          ) : null}
         </div>
       </div>
 
       <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-3xl border border-[var(--border)] bg-white p-6">
           <p className="text-sm font-bold text-[var(--forest)]">
-            1. Provider profile
+            1. {isAgent ? "Agent profile" : "Provider profile"}
           </p>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Complete</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            {provider.verification_status === "verified"
+              ? "Verified"
+              : statusLabel(provider.verification_status)}
+          </p>
         </div>
 
         <div className="rounded-3xl border border-[var(--border)] bg-white p-6">
           <p className="text-sm font-bold text-[var(--forest)]">
-            2. Property details
+            2. {isAgent ? "Assigned properties" : "Property details"}
           </p>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
             {properties.length > 0
-              ? `${properties.length} saved ${properties.length === 1 ? "property" : "properties"}`
-              : "Create your first property draft"}
+              ? `${properties.length} ${isAgent ? "assigned" : "saved"} ${properties.length === 1 ? "property" : "properties"}`
+              : isAgent
+                ? "No property assigned yet"
+                : "Create your first property draft"}
           </p>
         </div>
 
@@ -137,10 +175,12 @@ export default async function ProviderWorkspaceContent({
 
         <div className="rounded-3xl border border-[var(--border)] bg-white p-6">
           <p className="text-sm font-bold text-[var(--forest)]">
-            4. Review and publish
+            4. {isAgent ? "Availability" : "Review and publish"}
           </p>
           <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            Submit a complete draft for platform review
+            {isAgent
+              ? "Keep assigned property availability accurate"
+              : "Submit complete drafts for platform review"}
           </p>
         </div>
       </div>
@@ -154,9 +194,9 @@ export default async function ProviderWorkspaceContent({
             Inspection requests
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-            Students who request an inspection for one of your published
-            properties appear here. Confirm or decline new requests, then mark
-            confirmed inspections complete after they happen.
+            {isAgent
+              ? "You can only see student requests for properties currently assigned to you."
+              : "You can see student requests for your properties even when a registered agent is helping you manage them."}
           </p>
         </div>
 
@@ -166,8 +206,8 @@ export default async function ProviderWorkspaceContent({
               No inspection requests yet.
             </h3>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[var(--muted)]">
-              When a student requests an inspection from a published listing,
-              the request will appear here automatically.
+              When a student requests an inspection for a property you can
+              manage, the request will appear here automatically.
             </p>
           </div>
         ) : (
@@ -203,9 +243,7 @@ export default async function ProviderWorkspaceContent({
                         <span className="font-semibold text-[var(--forest)]">
                           Planning to stay:
                         </span>{" "}
-                        {request.occupant_group_size === "4+"
-                          ? "4+ people"
-                          : `${request.occupant_group_size} ${request.occupant_group_size === "1" ? "person" : "people"}`}
+                        {peopleLabel(request.occupant_group_size)}
                       </p>
                       <p>
                         <span className="font-semibold text-[var(--forest)]">
@@ -284,50 +322,61 @@ export default async function ProviderWorkspaceContent({
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-bold uppercase tracking-wide text-[var(--emerald)]">
-              Your properties
+              {isAgent ? "Assigned accommodation" : "Your properties"}
             </p>
             <h2 className="mt-2 text-3xl font-bold text-[var(--forest)]">
-              Drafts and review status
+              {isAgent ? "Properties you manage" : "Properties and management"}
             </h2>
           </div>
 
-          <Link
-            href="/provider/properties/new"
-            className="text-sm font-bold text-[var(--forest)] underline decoration-[var(--gold)] decoration-2 underline-offset-4"
-          >
-            Add another property
-          </Link>
+          {!isAgent ? (
+            <Link
+              href="/provider/properties/new"
+              className="text-sm font-bold text-[var(--forest)] underline decoration-[var(--gold)] decoration-2 underline-offset-4"
+            >
+              Add another property
+            </Link>
+          ) : null}
         </div>
 
         {properties.length === 0 ? (
           <div className="mt-6 rounded-3xl border border-dashed border-[var(--border)] bg-white px-6 py-12 text-center">
             <h3 className="text-xl font-bold text-[var(--forest)]">
-              No property drafts yet.
+              {isAgent ? "No properties assigned yet." : "No property drafts yet."}
             </h3>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[var(--muted)]">
-              Create your first listing with room information, rent, mandatory
-              fees, availability, and amenities.
+              {isAgent
+                ? "A landlord or property owner must assign a property to your verified agent account before you can manage its student enquiries."
+                : "Create your first listing with room information, rent, mandatory fees, availability, and amenities."}
             </p>
-            <Link
-              href="/provider/properties/new"
-              className="mt-6 inline-flex rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-semibold text-white"
-            >
-              Create first property
-            </Link>
+            {!isAgent ? (
+              <Link
+                href="/provider/properties/new"
+                className="mt-6 inline-flex rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-semibold text-white"
+              >
+                Create first property
+              </Link>
+            ) : null}
           </div>
         ) : (
           <div className="mt-6 grid gap-5">
             {properties.map((property) => {
               const canSubmit =
-                property.publication_status === "draft" ||
-                property.publication_status === "rejected";
+                !isAgent &&
+                (property.publication_status === "draft" ||
+                  property.publication_status === "rejected");
+              const room = property.room_types[0];
+              const occupiedRooms = room
+                ? Math.max(0, room.total_count - room.available_count)
+                : 0;
+              const assignment = assignmentsByProperty.get(property.id);
 
               return (
                 <article
                   key={property.id}
                   className="rounded-3xl border border-[var(--border)] bg-white p-6"
                 >
-                  <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                  <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
                     <div>
                       <div className="flex flex-wrap gap-2">
                         <span className="rounded-full bg-[var(--cream)] px-3 py-1 text-xs font-bold capitalize text-[var(--forest)]">
@@ -384,6 +433,138 @@ export default async function ProviderWorkspaceContent({
                       )}
                     </div>
                   </div>
+
+                  {room ? (
+                    <div className="mt-6 rounded-2xl bg-[var(--cream)] p-4">
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div>
+                          <p className="text-xl font-bold text-[var(--forest)]">
+                            {room.total_count}
+                          </p>
+                          <p className="mt-1 text-xs text-[var(--muted)]">
+                            Total rooms
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xl font-bold text-[var(--forest)]">
+                            {room.available_count}
+                          </p>
+                          <p className="mt-1 text-xs text-[var(--muted)]">
+                            Available
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xl font-bold text-[var(--forest)]">
+                            {occupiedRooms}
+                          </p>
+                          <p className="mt-1 text-xs text-[var(--muted)]">
+                            Occupied
+                          </p>
+                        </div>
+                      </div>
+
+                      <form
+                        action={updateRoomAvailability}
+                        className="mt-4 grid gap-3 border-t border-[var(--border)] pt-4 sm:grid-cols-[1fr_1fr_auto]"
+                      >
+                        <input type="hidden" name="roomTypeId" value={room.id} />
+                        <label>
+                          <span className="mb-1 block text-xs font-semibold text-[var(--muted)]">
+                            Total rooms
+                          </span>
+                          <input
+                            required
+                            min="1"
+                            step="1"
+                            type="number"
+                            name="totalCount"
+                            defaultValue={room.total_count}
+                            className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm"
+                          />
+                        </label>
+                        <label>
+                          <span className="mb-1 block text-xs font-semibold text-[var(--muted)]">
+                            Available now
+                          </span>
+                          <input
+                            required
+                            min="0"
+                            step="1"
+                            type="number"
+                            name="availableCount"
+                            defaultValue={room.available_count}
+                            className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm"
+                          />
+                        </label>
+                        <button className="self-end rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-[var(--forest)]">
+                          Update availability
+                        </button>
+                      </form>
+                    </div>
+                  ) : null}
+
+                  {!isAgent ? (
+                    <div className="mt-6 border-t border-[var(--border)] pt-5">
+                      <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+                        Agent management
+                      </p>
+
+                      {assignment ? (
+                        <div className="mt-3 flex flex-col gap-3 rounded-2xl bg-[var(--cream)] p-4 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="text-sm font-bold text-[var(--forest)]">
+                              {assignment.providers?.display_name ?? "Assigned platform agent"}
+                            </p>
+                            <p className="mt-1 text-xs text-[var(--muted)]">
+                              This agent can view inspection requests for this property and update room availability.
+                            </p>
+                          </div>
+                          <form action={removeAgentFromProperty}>
+                            <input type="hidden" name="propertyId" value={property.id} />
+                            <button className="rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-700">
+                              Remove agent
+                            </button>
+                          </form>
+                        </div>
+                      ) : verifiedAgents.length > 0 ? (
+                        <form
+                          action={assignAgentToProperty}
+                          className="mt-3 grid gap-3 rounded-2xl bg-[var(--cream)] p-4 sm:grid-cols-[1fr_auto]"
+                        >
+                          <input type="hidden" name="propertyId" value={property.id} />
+                          <label>
+                            <span className="mb-1 block text-xs font-semibold text-[var(--muted)]">
+                              Assign a verified platform agent
+                            </span>
+                            <select
+                              required
+                              name="agentProviderId"
+                              defaultValue=""
+                              className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-sm"
+                            >
+                              <option value="" disabled>
+                                Choose an agent
+                              </option>
+                              {verifiedAgents.map((agent) => (
+                                <option key={agent.id} value={agent.id}>
+                                  {agent.display_name ?? "Verified agent"}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <button className="self-end rounded-xl bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold text-white">
+                            Assign agent
+                          </button>
+                        </form>
+                      ) : (
+                        <p className="mt-3 rounded-2xl bg-[var(--cream)] px-4 py-3 text-sm leading-6 text-[var(--muted)]">
+                          No verified agents are available yet. Agents can register
+                          through provider onboarding, but an admin must verify
+                          them before a property owner can assign them.
+                        </p>
+                      )}
+                    </div>
+                  ) : null}
                 </article>
               );
             })}
