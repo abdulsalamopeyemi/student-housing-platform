@@ -18,6 +18,7 @@ interface PublicPropertyRow {
     id: string;
     name: string;
     annual_rent: number;
+    total_count: number;
     available_count: number;
     availability_updated_at: string;
     property_fees: Array<{
@@ -52,8 +53,15 @@ function mapProperty(row: PublicPropertyRow): StudentProperty | null {
     area: row.area,
     roomType: roomType.name,
     annualRent: Number(roomType.annual_rent),
+    totalRooms: roomType.total_count,
     availableRooms: roomType.available_count,
-    availability: roomType.available_count <= 3 ? "limited" : "available",
+    occupiedRooms: Math.max(0, roomType.total_count - roomType.available_count),
+    availability:
+      roomType.available_count === 0
+        ? "occupied"
+        : roomType.available_count <= 3
+          ? "limited"
+          : "available",
     facilities,
     description: row.description,
     distanceFromCampus: row.distance_label ?? "Distance not provided",
@@ -76,7 +84,7 @@ function mapProperty(row: PublicPropertyRow): StudentProperty | null {
 }
 
 const PUBLIC_PROPERTY_SELECT =
-  "id,slug,name,area,description,distance_label,verification_status,universities(name),room_types(id,name,annual_rent,available_count,availability_updated_at,property_fees(label,amount,required)),property_amenities(amenities(name))";
+  "id,slug,name,area,description,distance_label,verification_status,universities(name),room_types(id,name,annual_rent,total_count,available_count,availability_updated_at,property_fees(label,amount,required)),property_amenities(amenities(name))";
 
 export async function getPublishedProperties() {
   const rows = await supabasePublicRest<PublicPropertyRow[]>(
