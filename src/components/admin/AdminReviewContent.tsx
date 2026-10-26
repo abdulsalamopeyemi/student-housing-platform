@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import {
@@ -9,6 +10,7 @@ import {
   getPendingPropertyReviews,
   getPendingProviderVerifications,
 } from "@/lib/data/admin";
+import { propertyImagePublicUrl } from "@/lib/property-images";
 
 interface AdminReviewContentProps {
   searchParams: Promise<{
@@ -217,6 +219,41 @@ export default async function AdminReviewContent({
                       {property.description}
                     </p>
                   </div>
+
+                  {property.property_images.length > 0 ? (
+                    <div className="mt-6">
+                      <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+                        Submitted property photos
+                      </p>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        {[...property.property_images]
+                          .sort((a, b) => a.sort_order - b.sort_order)
+                          .map((image, index) => (
+                            <div
+                              key={image.id}
+                              className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--cream)]"
+                            >
+                              <div className="relative aspect-[4/3]">
+                                <Image
+                                  src={propertyImagePublicUrl(image.storage_path)}
+                                  alt={image.alt_text || `${property.name} photo ${index + 1}`}
+                                  fill
+                                  sizes="(min-width: 1024px) 22vw, (min-width: 640px) 50vw, 100vw"
+                                  className="object-cover"
+                                />
+                              </div>
+                              <p className="px-3 py-2 text-xs text-[var(--muted)]">
+                                {index === 0 ? "Cover photo" : `Photo ${index + 1}`}
+                              </p>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
+                      No property photos were submitted with this listing.
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-2">
