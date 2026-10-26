@@ -102,8 +102,14 @@ export async function createPropertyDraft(formData: FormData) {
   const baseSlug = slugify(name) || "property";
   const slug = `${baseSlug}-${randomUUID().slice(0, 8)}`;
 
+  let createdPropertyId = "";
+
   try {
-    await supabaseAuthenticatedRest("rpc/create_property_draft", {
+    const created = await supabaseAuthenticatedRest<{
+      property_id: string;
+      room_type_id: string;
+      slug: string;
+    }>("rpc/create_property_draft", {
       method: "POST",
       body: JSON.stringify({
         p_university_id: universityId,
@@ -120,6 +126,8 @@ export async function createPropertyDraft(formData: FormData) {
         p_amenity_ids: amenityIds,
       }),
     });
+
+    createdPropertyId = created.property_id;
   } catch {
     redirect(
       errorUrl(
@@ -128,5 +136,9 @@ export async function createPropertyDraft(formData: FormData) {
     );
   }
 
-  redirect("/list-property?message=Property+draft+created.");
+  if (!createdPropertyId) {
+    redirect("/list-property?message=Property+draft+created.");
+  }
+
+  redirect(`/provider/properties/${createdPropertyId}/images`);
 }
