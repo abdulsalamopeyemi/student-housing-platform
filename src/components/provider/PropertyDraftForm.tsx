@@ -129,7 +129,7 @@ export default function PropertyDraftForm({
     setSingleValue("name", savedDraft.name ?? "");
     setSingleValue(
       "universityId",
-      savedDraft.universityId || universities[0]?.id || "",
+      savedDraft.universityId || "",
     );
     setSingleValue("area", savedDraft.area ?? "");
     setSingleValue("distanceLabel", savedDraft.distanceLabel ?? "");
@@ -394,12 +394,13 @@ export default function PropertyDraftForm({
             <select
               required
               name="universityId"
-              defaultValue={universities[0]?.id ?? ""}
+              defaultValue=""
               aria-invalid={Boolean(fieldErrors.universityId)}
               className={`w-full rounded-xl border bg-white px-4 py-3 outline-none focus:border-[var(--emerald)] ${
                 fieldErrors.universityId ? "border-red-400" : "border-[var(--border)]"
               }`}
             >
+              <option value="">Select a university</option>
               {universities.map((university) => (
                 <option key={university.id} value={university.id}>
                   {university.name}
