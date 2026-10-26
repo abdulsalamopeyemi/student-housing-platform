@@ -4,9 +4,14 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import {
-  initialInspectionActionState,
   requestInspection,
+  type InspectionActionState,
 } from "@/app/properties/inspection-actions";
+
+const initialInspectionActionState: InspectionActionState = {
+  status: "idle",
+  message: "",
+};
 
 interface InspectionRequestFormProps {
   propertyId: string;
