@@ -23,6 +23,22 @@ export async function submitPropertyForReview(formData: FormData) {
   }
 
   try {
+    const images = await supabaseAuthenticatedRest<Array<{ id: string }>>(
+      `property_images?property_id=eq.${encodeURIComponent(
+        propertyId,
+      )}&select=id&limit=1`,
+    );
+
+    if (images.length === 0) {
+      redirect(
+        `/provider/properties/${encodeURIComponent(
+          propertyId,
+        )}/images?message=${encodeURIComponent(
+          "Add at least one real property photo before submitting for review.",
+        )}`,
+      );
+    }
+
     const rows = await supabaseAuthenticatedRest<Array<{ id: string }>>(
       `properties?id=eq.${encodeURIComponent(
         propertyId,
