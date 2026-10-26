@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import UniversitySearchSelect from "@/components/forms/UniversitySearchSelect";
 import type { University } from "@/lib/data/universities";
 
 interface ExploreFiltersProps {
@@ -29,32 +30,27 @@ export default function ExploreFilters({
       className="rounded-3xl border border-[var(--border)] bg-white p-5"
     >
       <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr_0.9fr_1fr_auto]">
-        <label>
-          <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+        <div>
+          <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
             University
-          </span>
-          <select
-            required
+          </label>
+          <UniversitySearchSelect
+            universities={universities}
             name="university"
             value={universityValue}
-            onChange={(event) => setUniversityValue(event.target.value)}
-            aria-describedby="university-filter-help"
-            className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none transition focus:border-[var(--emerald)]"
-          >
-            <option value="">Select a university</option>
-            {universities.map((item) => (
-              <option key={item.id} value={item.name}>
-                {item.name}
-              </option>
-            ))}
-          </select>
+            valueMode="name"
+            required
+            onValueChange={setUniversityValue}
+            placeholder="Type a university name..."
+            inputClassName="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none transition focus:border-[var(--emerald)]"
+          />
           <p
             id="university-filter-help"
             className="mt-1.5 text-xs leading-5 text-[var(--muted)]"
           >
-            Choose the university first, then narrow the results if needed.
+            Start typing a university name, then select the correct result.
           </p>
-        </label>
+        </div>
 
         <label>
           <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
