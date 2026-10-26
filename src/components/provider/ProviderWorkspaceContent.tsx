@@ -409,12 +409,20 @@ export default async function ProviderWorkspaceContent({
                       {!isAgent &&
                       (property.publication_status === "draft" ||
                         property.publication_status === "rejected") ? (
-                        <Link
-                          href={`/provider/properties/${property.id}/images`}
-                          className="rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-bold text-[var(--forest)]"
-                        >
-                          Manage photos
-                        </Link>
+                        <>
+                          <Link
+                            href={`/provider/properties/${property.id}/edit`}
+                            className="rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-bold text-[var(--forest)]"
+                          >
+                            Edit details
+                          </Link>
+                          <Link
+                            href={`/provider/properties/${property.id}/images`}
+                            className="rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-bold text-[var(--forest)]"
+                          >
+                            Manage photos
+                          </Link>
+                        </>
                       ) : null}
 
                       {property.publication_status === "published" ? (
