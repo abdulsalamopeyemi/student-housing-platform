@@ -13,6 +13,7 @@ export const featuredProperties: StudentProperty[] = [
     availableRooms: 2,
     occupiedRooms: 10,
     availability: "limited",
+    images: [],
     facilities: ["Water supply", "Private bathroom", "Near campus"],
     description:
       "A sample self-contained student room used to design how students compare price, facilities, location context, and availability before requesting an inspection.",
@@ -36,6 +37,7 @@ export const featuredProperties: StudentProperty[] = [
     availableRooms: 6,
     occupiedRooms: 10,
     availability: "available",
+    images: [],
     facilities: ["Water supply", "Security", "Study-friendly area"],
     description:
       "A sample single-room listing for testing a lower-budget accommodation option and the information students need before deciding to inspect.",
@@ -59,6 +61,7 @@ export const featuredProperties: StudentProperty[] = [
     availableRooms: 3,
     occupiedRooms: 7,
     availability: "limited",
+    images: [],
     facilities: ["Private bathroom", "Kitchen space", "Fenced compound"],
     description:
       "A sample higher-budget self-contained listing used to test richer facility and price-breakdown presentation.",
