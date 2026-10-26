@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 
 import type { University } from "@/lib/data/universities";
 
@@ -35,15 +35,6 @@ export default function UniversitySearchSelect({
   const [query, setQuery] = useState(selectedUniversity?.name ?? "");
   const [selectedValue, setSelectedValue] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    const nextUniversity = universities.find((university) =>
-      valueMode === "id" ? university.id === value : university.name === value,
-    );
-
-    setSelectedValue(value);
-    setQuery(nextUniversity?.name ?? "");
-  }, [universities, value, valueMode]);
 
   const matches = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
