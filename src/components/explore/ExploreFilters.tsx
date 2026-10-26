@@ -1,28 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import UniversitySearchSelect from "@/components/forms/UniversitySearchSelect";
 import type { University } from "@/lib/data/universities";
 
 interface ExploreFiltersProps {
   universities: University[];
+  roomTypes: string[];
   university: string;
   area: string;
   budget: string;
   roomType: string;
+  sort: string;
 }
 
 export default function ExploreFilters({
   universities,
+  roomTypes,
   university,
   area,
   budget,
   roomType,
+  sort,
 }: ExploreFiltersProps) {
   const [universityValue, setUniversityValue] = useState(university);
   const [showUniversityError, setShowUniversityError] = useState(false);
   const hasUniversity = universityValue.trim().length > 0;
+
+  const availableRoomTypes = useMemo(
+    () =>
+      Array.from(new Set([...roomTypes, ...(roomType ? [roomType] : [])]))
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b)),
+    [roomTypes, roomType],
+  );
 
   function handleUniversityChange(value: string) {
     setUniversityValue(value);
@@ -48,7 +60,7 @@ export default function ExploreFilters({
       onSubmit={handleSubmit}
       className="rounded-3xl border border-[var(--border)] bg-white p-5"
     >
-      <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr_0.9fr_1fr_auto]">
+      <div className="grid gap-4 lg:grid-cols-3 xl:grid-cols-[1.4fr_1fr_0.9fr_1fr_1fr_auto]">
         <div>
           <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
             University
@@ -62,11 +74,8 @@ export default function ExploreFilters({
             placeholder="Type a university name..."
             inputClassName="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none transition focus:border-[var(--emerald)]"
           />
-          <p
-            id="university-filter-help"
-            className="mt-1.5 text-xs leading-5 text-[var(--muted)]"
-          >
-            Start typing a university name, then select the correct result.
+          <p className="mt-1.5 text-xs leading-5 text-[var(--muted)]">
+            Search by university name or state.
           </p>
         </div>
 
@@ -112,15 +121,34 @@ export default function ExploreFilters({
             className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none transition focus:border-[var(--emerald)]"
           >
             <option value="">Any room type</option>
-            <option value="single">Single room</option>
-            <option value="self-contained">Self-contained room</option>
+            {availableRoomTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
           </select>
         </label>
 
-        <div className="lg:pt-[1.625rem]">
+        <label>
+          <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+            Sort by
+          </span>
+          <select
+            name="sort"
+            defaultValue={sort}
+            className="w-full rounded-xl border border-[var(--border)] bg-white px-4 py-3 outline-none transition focus:border-[var(--emerald)]"
+          >
+            <option value="recent">Recently added</option>
+            <option value="rent-low">Rent: low to high</option>
+            <option value="rent-high">Rent: high to low</option>
+            <option value="availability">Most rooms available</option>
+          </select>
+        </label>
+
+        <div className="lg:col-span-3 xl:col-span-1 xl:pt-[1.625rem]">
           <button
             type="submit"
-            className="w-full whitespace-nowrap rounded-xl bg-[var(--forest)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--emerald)] lg:w-auto"
+            className="w-full whitespace-nowrap rounded-xl bg-[var(--forest)] px-6 py-3 font-semibold text-white transition hover:bg-[var(--emerald)]"
           >
             Apply filters
           </button>
