@@ -1,4 +1,6 @@
+const uni = async () => await fetch("http://localhost:3000/api/universities");
 export default function Hero() {
+  console.log("hello NEXT");
   return (
     <section className="relative overflow-hidden bg-[var(--cream)]">
       <div className="mx-auto grid max-w-7xl gap-12 px-5 py-20 lg:grid-cols-2 lg:px-8 lg:py-28">
@@ -68,7 +70,10 @@ export default function Hero() {
           </p>
         </div>
 
-        <div className="relative min-h-[420px]" aria-label="Example property preview">
+        <div
+          className="relative min-h-[420px]"
+          aria-label="Example property preview"
+        >
           <div className="absolute inset-0 rounded-[2rem] bg-[var(--forest)]" />
 
           <div className="absolute left-6 right-6 top-6 rounded-2xl border border-white/10 bg-white/10 p-6 backdrop-blur">
@@ -76,13 +81,11 @@ export default function Hero() {
               Example property
             </p>
 
-            <h2 className="mt-2 text-2xl font-bold text-white">
-              Victory Lodge
+            <h2 className="mt-2 text-2xl font-bold text-white capitalize">
+              De crown cottage
             </h2>
 
-            <p className="mt-2 text-sm text-white/70">
-              Malete · Near KWASU
-            </p>
+            <p className="mt-2 text-sm text-white/70">Malete · Near KWASU</p>
 
             <div className="mt-6 rounded-2xl bg-white p-5">
               <div className="flex items-start justify-between gap-4">
