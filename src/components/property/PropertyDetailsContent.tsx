@@ -1,0 +1,328 @@
+import Image from "next/image";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import InspectionRequestForm from "@/components/property/InspectionRequestForm";
+import ReportPropertyForm from "@/components/property/ReportPropertyForm";
+import SavePropertyButton from "@/components/property/SavePropertyButton";
+import { getAvailabilityFreshness } from "@/lib/availability";
+import { getCurrentAccount } from "@/lib/data/account";
+import { getPublishedPropertyBySlug } from "@/lib/data/public-properties";
+import { isPropertySaved } from "@/lib/data/student-saved-properties";
+
+const currencyFormatter = new Intl.NumberFormat("en-NG", {
+  style: "currency",
+  currency: "NGN",
+  maximumFractionDigits: 0,
+});
+
+interface PropertyDetailsContentProps {
+  params: Promise<{
+    slug: string;
+  }>;
+}
+
+export default async function PropertyDetailsContent({
+  params,
+}: PropertyDetailsContentProps) {
+  const { slug } = await params;
+  const [property, account] = await Promise.all([
+    getPublishedPropertyBySlug(slug),
+    getCurrentAccount(),
+  ]);
+
+  if (!property) {
+    notFound();
+  }
+
+  const initiallySaved =
+    account.profile?.role === "student"
+      ? await isPropertySaved(property.id)
+      : false;
+
+  const totalRequiredFees = property.fees
+    .filter((fee) => fee.required)
+    .reduce((total, fee) => total + fee.amount, 0);
+
+  const availabilityLabel =
+    property.availability === "occupied"
+      ? "Fully occupied"
+      : property.availability === "limited"
+        ? `${property.availableRooms} rooms left`
+        : `${property.availableRooms} rooms available`;
+
+  const availabilityFreshness = getAvailabilityFreshness(
+    property.availabilityUpdatedAt,
+  );
+  const facilityItems = [...new Set([...property.facilities, ...property.utilities])];
+
+  return (
+    <>
+      <section className="bg-[var(--cream)] py-10 sm:py-14">
+        <div className="mx-auto max-w-7xl px-5 lg:px-8">
+          <Link
+            href="/explore"
+            className="text-sm font-semibold text-[var(--emerald)]"
+          >
+            ← Back to explore
+          </Link>
+
+          <div className="mt-6 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+            <div>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[var(--forest)]">
+                  {property.verified ? "Verified listing" : "Listing"}
+                </span>
+
+                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-[var(--emerald)]">
+                  {availabilityLabel}
+                </span>
+              </div>
+
+              <h1 className="mt-4 text-4xl font-bold tracking-tight text-[var(--forest)] sm:text-5xl">
+                {property.name}
+              </h1>
+
+              <div className="mt-4 border-l-2 border-[var(--gold)] pl-4">
+                <p className="text-sm font-semibold text-[var(--forest)]">
+                  {property.area} · {property.university}
+                </p>
+                {property.distanceFromCampus !== "Distance not provided" ? (
+                  <p className="mt-1 text-sm text-[var(--muted)]">
+                    {property.distanceFromCampus}
+                  </p>
+                ) : null}
+              </div>
+
+              <p className="mt-6 max-w-3xl text-base leading-7 text-[var(--muted)]">
+                {property.description}
+              </p>
+            </div>
+
+            <div className="rounded-3xl bg-[var(--forest)] p-6 text-white">
+              <p className="text-sm font-semibold text-white/70">
+                Annual rent
+              </p>
+              <p className="mt-2 text-4xl font-bold">
+                {currencyFormatter.format(property.annualRent)}
+              </p>
+              <p className="mt-3 text-sm text-white/65">
+                Review the full required-fee breakdown below before making any
+                payment decision.
+              </p>
+
+              <div className="mt-6">
+                <SavePropertyButton
+                  propertyId={property.id}
+                  propertySlug={property.slug}
+                  propertyName={property.name}
+                  initiallySaved={initiallySaved}
+                />
+              </div>
+            </div>
+          </div>
+
+          {property.images.length > 0 ? (
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {property.images.slice(0, 5).map((image, index) => (
+                <div
+                  key={image.id}
+                  className={[
+                    "relative overflow-hidden rounded-2xl border border-white/30 bg-white",
+                    index === 0
+                      ? "aspect-[16/10] sm:col-span-2 lg:row-span-2 lg:aspect-auto lg:min-h-[420px]"
+                      : "aspect-[4/3]",
+                  ].join(" ")}
+                >
+                  <Image
+                    src={image.url}
+                    alt={image.altText || `${property.name} photo ${index + 1}`}
+                    fill
+                    priority={index === 0}
+                    sizes={
+                      index === 0
+                        ? "(min-width: 1024px) 50vw, 100vw"
+                        : "(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                    }
+                    className="object-cover"
+                  />
+                  {index === 0 ? (
+                    <span className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-[var(--forest)]">
+                      Cover photo
+                    </span>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-8 rounded-3xl border border-dashed border-[var(--border)] bg-white/60 px-6 py-10 text-center">
+              <p className="text-sm font-semibold text-[var(--muted)]">
+                Property photos have not been added yet.
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="bg-[var(--paper)] py-14">
+        <div className="mx-auto grid max-w-7xl gap-8 px-5 lg:grid-cols-[1.15fr_0.85fr] lg:px-8">
+          <div className="space-y-8">
+            <section className="rounded-3xl border border-[var(--border)] bg-white p-6">
+              <p className="text-sm font-bold uppercase tracking-wide text-[var(--emerald)]">
+                Property overview
+              </p>
+
+              <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                <div className="sm:col-span-2 grid grid-cols-3 gap-3 rounded-2xl bg-[var(--cream)] p-4 text-center">
+                  <div>
+                    <p className="text-2xl font-bold text-[var(--forest)]">{property.totalRooms}</p>
+                    <p className="mt-1 text-xs font-medium text-[var(--muted)]">Total rooms</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-[var(--forest)]">{property.availableRooms}</p>
+                    <p className="mt-1 text-xs font-medium text-[var(--muted)]">Available</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-[var(--forest)]">{property.occupiedRooms}</p>
+                    <p className="mt-1 text-xs font-medium text-[var(--muted)]">Occupied</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+                    Room type
+                  </p>
+                  <p className="mt-2 font-semibold capitalize text-[var(--forest)]">
+                    {property.roomType}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+                    Availability last updated
+                  </p>
+                  <p
+                    className={[
+                      "mt-2 font-semibold",
+                      availabilityFreshness.isStale
+                        ? "text-amber-700"
+                        : "text-[var(--forest)]",
+                    ].join(" ")}
+                  >
+                    {availabilityFreshness.label}
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    {availabilityFreshness.dateLabel}
+                  </p>
+                  {availabilityFreshness.isStale ? (
+                    <p className="mt-2 text-xs leading-5 text-amber-700">
+                      Availability has not been updated recently. Confirm with
+                      the property contact before making plans or payments.
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+                      Room availability can change. Confirm it again before
+                      making a payment.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-[var(--border)] bg-white p-6">
+              <p className="text-sm font-bold uppercase tracking-wide text-[var(--emerald)]">
+                Facilities and utilities
+              </p>
+
+              {facilityItems.length > 0 ? (
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {facilityItems.map((item) => (
+                    <div
+                      key={item}
+                      className="rounded-2xl bg-[var(--cream)] px-4 py-3 text-sm font-semibold text-[var(--forest)]"
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-4 text-sm text-[var(--muted)]">
+                  No facilities have been added to this listing yet.
+                </p>
+              )}
+            </section>
+
+            <section className="rounded-3xl border border-[var(--border)] bg-white p-6">
+              <p className="text-sm font-bold uppercase tracking-wide text-[var(--emerald)]">
+                Required cost breakdown
+              </p>
+
+              <div className="mt-6 divide-y divide-[var(--border)]">
+                {property.fees.map((fee) => (
+                  <div
+                    key={`${fee.label}-${fee.amount}`}
+                    className="flex items-center justify-between gap-4 py-4 first:pt-0"
+                  >
+                    <div>
+                      <p className="font-semibold text-[var(--forest)]">
+                        {fee.label}
+                      </p>
+                      <p className="mt-1 text-xs text-[var(--muted)]">
+                        {fee.required ? "Required" : "Optional"}
+                      </p>
+                    </div>
+
+                    <p className="font-bold text-[var(--forest)]">
+                      {currencyFormatter.format(fee.amount)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 flex items-center justify-between rounded-2xl bg-[var(--cream)] p-4">
+                <p className="font-bold text-[var(--forest)]">
+                  Total required amount
+                </p>
+                <p className="text-xl font-bold text-[var(--forest)]">
+                  {currencyFormatter.format(totalRequiredFees)}
+                </p>
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-[var(--border)] bg-white p-6">
+              <p className="text-sm font-bold uppercase tracking-wide text-[var(--emerald)]">
+                Trust status
+              </p>
+
+              <h2 className="mt-3 text-2xl font-bold text-[var(--forest)]">
+                {property.verified
+                  ? "This listing has passed platform review."
+                  : "Verification is pending."}
+              </h2>
+
+              <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
+                Verification reflects the platform review status. Students
+                should still inspect accommodation and confirm payment details
+                before making a final decision.
+              </p>
+            </section>
+
+            <ReportPropertyForm
+              propertyId={property.id}
+              propertySlug={property.slug}
+            />
+          </div>
+
+          <aside>
+            <div className="lg:sticky lg:top-24">
+              <InspectionRequestForm
+                propertyId={property.id}
+                propertySlug={property.slug}
+                propertyName={property.name}
+              />
+            </div>
+          </aside>
+        </div>
+      </section>
+    </>
+  );
+}
