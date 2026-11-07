@@ -711,7 +711,7 @@ export type Database = {
       verification_events: {
         Row: {
           action: string
-          admin_user_id: string
+          admin_user_id: string | null
           created_at: string
           id: string
           notes: string | null
@@ -720,7 +720,7 @@ export type Database = {
         }
         Insert: {
           action: string
-          admin_user_id: string
+          admin_user_id?: string | null
           created_at?: string
           id?: string
           notes?: string | null
@@ -729,7 +729,7 @@ export type Database = {
         }
         Update: {
           action?: string
-          admin_user_id?: string
+          admin_user_id?: string | null
           created_at?: string
           id?: string
           notes?: string | null

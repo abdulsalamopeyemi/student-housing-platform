@@ -69,7 +69,7 @@ export default function ConfirmEmailPage() {
         if (!response.ok) {
           setState("error");
           setMessage(
-            "Your email may be confirmed, but we could not finish signing you in. Please return to sign in with your email and password.",
+            "We could not verify your email confirmation. The link may have expired, or your email address is not confirmed. Request a new link and try again.",
           );
           return;
         }

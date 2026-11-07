@@ -1,46 +1,26 @@
 import Link from "next/link";
 
-import { signOut } from "@/app/auth/actions";
+import AccountMenu from "@/components/layout/AccountMenu";
 import MobileMenu from "@/components/layout/MobileMenu";
 import { getCurrentAccount } from "@/lib/data/account";
 
-function accountDestination(role: "student" | "provider" | "admin" | null) {
-  if (role === "admin") {
-    return { href: "/admin/reviews", label: "Admin dashboard" };
-  }
-
-  if (role === "provider") {
-    return { href: "/list-property", label: "Provider dashboard" };
-  }
-
-  return { href: "/account", label: "My account" };
-}
-
 export default async function HeaderAccountControls() {
   const { user, profile } = await getCurrentAccount();
-  const destination = accountDestination(profile?.role ?? null);
+  const name =
+    profile?.full_name?.trim() || user?.user_metadata?.full_name || "";
+  const email = user?.email ?? "";
+  const role =
+    profile?.role === "admin" || profile?.role === "provider"
+      ? profile.role
+      : user?.user_metadata?.account_type === "provider"
+        ? "provider"
+        : profile?.role ?? null;
 
   return (
     <>
       <div className="hidden items-center gap-3 md:flex">
         {user ? (
-          <>
-            <Link
-              href={destination.href}
-              className="rounded-xl bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--emerald)]"
-            >
-              {destination.label}
-            </Link>
-
-            <form action={signOut}>
-              <button
-                type="submit"
-                className="px-2 py-2 text-sm font-semibold text-[var(--forest)] underline underline-offset-4"
-              >
-                Sign out
-              </button>
-            </form>
-          </>
+          <AccountMenu email={email} name={name} role={role} />
         ) : (
           <>
             <Link
@@ -62,7 +42,9 @@ export default async function HeaderAccountControls() {
 
       <MobileMenu
         isAuthenticated={Boolean(user)}
-        role={profile?.role ?? null}
+        email={email}
+        name={name}
+        role={role}
       />
     </>
   );
@@ -72,22 +54,16 @@ export function HeaderAccountFallback() {
   return (
     <>
       <div className="hidden items-center gap-3 md:flex">
-        <Link
-          href="/login"
-          className="text-sm font-semibold text-[var(--forest)]"
-        >
-          Sign in
-        </Link>
-
-        <Link
-          href="/signup"
-          className="rounded-xl bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold text-white"
-        >
-          Create account
-        </Link>
+        <span
+          aria-hidden="true"
+          className="size-10 animate-pulse rounded-full bg-[var(--cream)] motion-reduce:animate-none"
+        />
       </div>
 
-      <MobileMenu isAuthenticated={false} role={null} />
+      <div className="flex items-center gap-2 md:hidden" aria-hidden="true">
+        <span className="size-9 animate-pulse rounded-full bg-[var(--cream)] motion-reduce:animate-none" />
+        <span className="size-11 animate-pulse rounded-xl bg-[var(--cream)] motion-reduce:animate-none" />
+      </div>
     </>
   );
 }

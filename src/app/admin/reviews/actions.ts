@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { requireAdmin } from "@/lib/data/admin";
-import { supabaseAuthenticatedRest } from "@/lib/supabase/authenticated-rest";
+import { supabaseSecretRest } from "@/lib/supabase/secret-rest";
 
 function adminRedirect(message: string, result: "message" | "error" = "message") {
   redirect(`/admin/reviews?${result}=${encodeURIComponent(message)}`);
@@ -14,13 +14,13 @@ function adminError(message: string) {
 }
 
 async function recordVerificationEvent(input: {
-  adminUserId: string;
+  adminUserId: null;
   action: string;
   notes?: string | null;
   propertyId?: string | null;
   providerId?: string | null;
 }) {
-  await supabaseAuthenticatedRest<Array<{ id: string }>>(
+  await supabaseSecretRest<Array<{ id: string }>>(
     "verification_events?select=id",
     {
       method: "POST",
@@ -37,7 +37,7 @@ async function recordVerificationEvent(input: {
 }
 
 export async function verifyProvider(formData: FormData) {
-  const { user } = await requireAdmin();
+  await requireAdmin();
   const providerId = String(formData.get("providerId") ?? "");
   const notes = String(formData.get("notes") ?? "").trim();
 
@@ -45,7 +45,7 @@ export async function verifyProvider(formData: FormData) {
     adminError("Provider could not be verified.");
   }
 
-  const rows = await supabaseAuthenticatedRest<Array<{ id: string }>>(
+  const rows = await supabaseSecretRest<Array<{ id: string }>>(
     `providers?id=eq.${encodeURIComponent(providerId)}&select=id`,
     {
       method: "PATCH",
@@ -59,7 +59,7 @@ export async function verifyProvider(formData: FormData) {
   }
 
   await recordVerificationEvent({
-    adminUserId: user.id,
+    adminUserId: null,
     action: "provider_verified",
     notes,
     providerId,
@@ -69,7 +69,7 @@ export async function verifyProvider(formData: FormData) {
 }
 
 export async function approveProperty(formData: FormData) {
-  const { user } = await requireAdmin();
+  await requireAdmin();
   const propertyId = String(formData.get("propertyId") ?? "");
   const notes = String(formData.get("notes") ?? "").trim();
 
@@ -77,7 +77,7 @@ export async function approveProperty(formData: FormData) {
     adminError("Property could not be approved.");
   }
 
-  const properties = await supabaseAuthenticatedRest<
+  const properties = await supabaseSecretRest<
     Array<{ id: string; provider_id: string; publication_status: string }>
   >(
     `properties?id=eq.${encodeURIComponent(propertyId)}&select=id,provider_id,publication_status&limit=1`,
@@ -89,7 +89,7 @@ export async function approveProperty(formData: FormData) {
     adminError("This property is no longer awaiting review.");
   }
 
-  const providers = await supabaseAuthenticatedRest<
+  const providers = await supabaseSecretRest<
     Array<{ id: string; verification_status: string }>
   >(
     `providers?id=eq.${encodeURIComponent(property.provider_id)}&select=id,verification_status&limit=1`,
@@ -99,7 +99,7 @@ export async function approveProperty(formData: FormData) {
     adminError("Verify the provider before publishing this property.");
   }
 
-  const rows = await supabaseAuthenticatedRest<Array<{ id: string }>>(
+  const rows = await supabaseSecretRest<Array<{ id: string }>>(
     `properties?id=eq.${encodeURIComponent(propertyId)}&publication_status=eq.pending_review&select=id`,
     {
       method: "PATCH",
@@ -117,7 +117,7 @@ export async function approveProperty(formData: FormData) {
   }
 
   await recordVerificationEvent({
-    adminUserId: user.id,
+    adminUserId: null,
     action: "property_published",
     notes,
     propertyId,
@@ -127,7 +127,7 @@ export async function approveProperty(formData: FormData) {
 }
 
 export async function rejectProperty(formData: FormData) {
-  const { user } = await requireAdmin();
+  await requireAdmin();
   const propertyId = String(formData.get("propertyId") ?? "");
   const notes = String(formData.get("notes") ?? "").trim();
 
@@ -139,7 +139,7 @@ export async function rejectProperty(formData: FormData) {
     adminError("Add a short reason before rejecting the property.");
   }
 
-  const rows = await supabaseAuthenticatedRest<Array<{ id: string }>>(
+  const rows = await supabaseSecretRest<Array<{ id: string }>>(
     `properties?id=eq.${encodeURIComponent(propertyId)}&publication_status=eq.pending_review&select=id`,
     {
       method: "PATCH",
@@ -157,7 +157,7 @@ export async function rejectProperty(formData: FormData) {
   }
 
   await recordVerificationEvent({
-    adminUserId: user.id,
+    adminUserId: null,
     action: "property_rejected",
     notes,
     propertyId,
@@ -184,7 +184,7 @@ export async function updatePropertyReportStatus(formData: FormData) {
     adminError("Report status could not be updated.");
   }
 
-  const reports = await supabaseAuthenticatedRest<
+  const reports = await supabaseSecretRest<
     Array<{ id: string; status: "open" | "reviewing" | "resolved" | "dismissed" }>
   >(
     `reports?id=eq.${encodeURIComponent(
@@ -198,7 +198,7 @@ export async function updatePropertyReportStatus(formData: FormData) {
     adminError("This report is no longer active.");
   }
 
-  const rows = await supabaseAuthenticatedRest<Array<{ id: string }>>(
+  const rows = await supabaseSecretRest<Array<{ id: string }>>(
     `reports?id=eq.${encodeURIComponent(reportId)}&select=id`,
     {
       method: "PATCH",
@@ -240,7 +240,7 @@ export async function updateSupportRequestStatus(formData: FormData) {
     adminError("Support request could not be updated.");
   }
 
-  const requests = await supabaseAuthenticatedRest<
+  const requests = await supabaseSecretRest<
     Array<{ id: string; status: "open" | "in_progress" | "resolved" | "dismissed" }>
   >(
     `support_requests?id=eq.${encodeURIComponent(
@@ -258,7 +258,7 @@ export async function updateSupportRequestStatus(formData: FormData) {
     adminError("This support request is no longer active.");
   }
 
-  const updated = await supabaseAuthenticatedRest<Array<{ id: string }>>(
+  const updated = await supabaseSecretRest<Array<{ id: string }>>(
     `support_requests?id=eq.${encodeURIComponent(
       requestId,
     )}&status=eq.${request.status}&select=id`,

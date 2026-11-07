@@ -10,6 +10,13 @@ The application already sends signup confirmation links to `/auth/confirm`, adop
 
 In the Supabase Dashboard, open **Authentication → URL Configuration**.
 
+Then open **Authentication → Sign In / Providers → Email** and make sure
+**Confirm email** is enabled. The application does not create an authenticated
+session during signup and accepts a login session only when Supabase reports a
+confirmed email address. If confirmation is disabled, Supabase may mark new
+addresses as confirmed automatically, bypassing the verification email. The
+signup flow displays a setup error in this case.
+
 For local development, use:
 
 - Site URL: `http://localhost:3000`
@@ -49,8 +56,10 @@ Do not put SMTP credentials in the Next.js frontend, a `NEXT_PUBLIC_` variable, 
 ## 4. Expected signup experience
 
 1. User submits the signup form.
-2. Supabase creates the account and sends the confirmation email.
-3. The app shows `/auth/check-email` with the address used.
+2. Supabase creates the account and sends the confirmation email. The app does
+   not store any session returned during signup.
+3. The app shows `/auth/check-email` with the address used and blocks sign-in
+   until Supabase confirms the email.
 4. User selects **Confirm my email** in the message.
 5. Supabase verifies the address and redirects to `/auth/confirm`.
 6. The app adopts the verified session and sends the user to the correct destination (student account or provider onboarding).

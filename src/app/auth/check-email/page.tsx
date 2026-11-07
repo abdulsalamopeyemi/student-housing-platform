@@ -10,6 +10,7 @@ interface CheckEmailPageProps {
     next?: string;
     error?: string;
     message?: string;
+    setup?: string;
   }>;
 }
 

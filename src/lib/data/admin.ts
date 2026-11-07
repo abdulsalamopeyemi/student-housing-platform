@@ -2,11 +2,8 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 
-import { getCurrentUser } from "@/lib/supabase/auth-server";
-import { supabaseAuthenticatedRest } from "@/lib/supabase/authenticated-rest";
-import type { Tables } from "@/types/database";
-
-type AdminProfile = Pick<Tables<"profiles">, "id" | "full_name" | "role">;
+import { getAdminSession } from "@/lib/admin/admin-session";
+import { supabaseSecretRest } from "@/lib/supabase/secret-rest";
 
 export interface AdminPropertyReport {
   id: string;
@@ -70,29 +67,17 @@ export interface PendingPropertyReview {
 }
 
 export async function requireAdmin(nextPath = "/admin/reviews") {
-  const user = await getCurrentUser();
+  const session = await getAdminSession();
 
-  if (!user) {
-    redirect(`/login?next=${encodeURIComponent(nextPath)}`);
+  if (!session) {
+    redirect(`/admin/sign-in?next=${encodeURIComponent(nextPath)}`);
   }
-
-  const profiles = await supabaseAuthenticatedRest<AdminProfile[]>(
-    `profiles?id=eq.${encodeURIComponent(user.id)}&select=id,full_name,role&limit=1`,
-  );
-
-  const profile = profiles[0] ?? null;
-
-  if (!profile || profile.role !== "admin") {
-    redirect("/explore");
-  }
-
-  return { user, profile };
 }
 
 export async function getAdminPropertyReports() {
   await requireAdmin();
 
-  return supabaseAuthenticatedRest<AdminPropertyReport[]>(
+  return supabaseSecretRest<AdminPropertyReport[]>(
     "reports?status=in.(open,reviewing)&select=id,reason,details,status,created_at,properties(id,name,slug,area)&order=created_at.asc",
   );
 }
@@ -100,7 +85,7 @@ export async function getAdminPropertyReports() {
 export async function getAdminSupportRequests() {
   await requireAdmin();
 
-  return supabaseAuthenticatedRest<AdminSupportRequest[]>(
+  return supabaseSecretRest<AdminSupportRequest[]>(
     "support_requests?status=in.(open,in_progress)&select=id,contact_email,category,subject,message,status,created_at&order=created_at.asc",
   );
 }
@@ -108,7 +93,7 @@ export async function getAdminSupportRequests() {
 export async function getPendingProviderVerifications() {
   await requireAdmin();
 
-  return supabaseAuthenticatedRest<PendingProviderVerification[]>(
+  return supabaseSecretRest<PendingProviderVerification[]>(
     "providers?verification_status=in.(unverified,pending)&select=id,display_name,provider_type,verification_status,created_at&order=created_at.asc",
   );
 }
@@ -116,7 +101,7 @@ export async function getPendingProviderVerifications() {
 export async function getPendingPropertyReviews() {
   await requireAdmin();
 
-  return supabaseAuthenticatedRest<PendingPropertyReview[]>(
+  return supabaseSecretRest<PendingPropertyReview[]>(
     "properties?publication_status=eq.pending_review&select=id,name,slug,description,area,distance_label,publication_status,verification_status,created_at,updated_at,providers(id,display_name,provider_type,verification_status),universities(id,name),property_images(id,storage_path,alt_text,sort_order)&order=updated_at.asc",
   );
 }

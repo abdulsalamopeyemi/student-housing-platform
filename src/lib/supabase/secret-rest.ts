@@ -18,6 +18,10 @@ function getSupabaseSecretKey() {
   return key;
 }
 
+export function isSupabaseSecretKeyConfigured() {
+  return Boolean(process.env.SUPABASE_SECRET_KEY?.trim());
+}
+
 export async function supabaseSecretRest<T>(
   path: string,
   options: SecretRestOptions = {},

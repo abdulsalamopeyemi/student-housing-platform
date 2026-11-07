@@ -1,34 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 
 import { createPropertyDraft } from "@/app/provider/properties/new/actions";
 import UniversitySearchSelect from "@/components/forms/UniversitySearchSelect";
 import type { Amenity } from "@/lib/data/amenities";
 import type { University } from "@/lib/data/universities";
 
-const GUEST_DRAFT_KEY = "student-housing-guest-property-draft";
-
 interface PropertyDraftFormProps {
   universities: University[];
   amenities: Amenity[];
-  mode?: "guest" | "provider";
-}
-
-interface SavedGuestDraft {
-  name: string;
-  universityId: string;
-  area: string;
-  distanceLabel: string;
-  description: string;
-  roomType: string;
-  annualRent: string;
-  totalCount: string;
-  availableCount: string;
-  feeLabels: string[];
-  feeAmounts: string[];
-  amenityIds: string[];
 }
 
 type PropertyField =
@@ -58,7 +39,11 @@ function ErrorMessage({ message }: { message?: string }) {
 function inputValue(form: HTMLFormElement, name: string) {
   const field = form.elements.namedItem(name);
 
-  if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement || field instanceof HTMLSelectElement) {
+  if (
+    field instanceof HTMLInputElement ||
+    field instanceof HTMLTextAreaElement ||
+    field instanceof HTMLSelectElement
+  ) {
     return field.value;
   }
 
@@ -68,104 +53,12 @@ function inputValue(form: HTMLFormElement, name: string) {
 export default function PropertyDraftForm({
   universities,
   amenities,
-  mode = "provider",
 }: PropertyDraftFormProps) {
-  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [feeRows, setFeeRows] = useState([0]);
-  const [savedDraft, setSavedDraft] = useState<SavedGuestDraft | null>(null);
   const [allAmenitiesSelected, setAllAmenitiesSelected] = useState(false);
   const [selectedUniversityId, setSelectedUniversityId] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-
-  useEffect(() => {
-    let cancelled = false;
-
-    queueMicrotask(() => {
-      if (cancelled) {
-        return;
-      }
-
-      try {
-        const rawDraft = window.localStorage.getItem(GUEST_DRAFT_KEY);
-
-        if (!rawDraft) {
-          return;
-        }
-
-        const draft = JSON.parse(rawDraft) as SavedGuestDraft;
-        setSavedDraft(draft);
-        setFeeRows(
-          Array.from(
-            { length: Math.max(1, draft.feeLabels?.length ?? 0) },
-            (_, index) => index,
-          ),
-        );
-      } catch {
-        window.localStorage.removeItem(GUEST_DRAFT_KEY);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    const form = formRef.current;
-
-    if (!form || !savedDraft) {
-      return;
-    }
-
-    const setSingleValue = (name: string, value: string) => {
-      const field = form.elements.namedItem(name);
-
-      if (
-        field instanceof HTMLInputElement ||
-        field instanceof HTMLTextAreaElement ||
-        field instanceof HTMLSelectElement
-      ) {
-        field.value = value;
-      }
-    };
-
-    setSingleValue("name", savedDraft.name ?? "");
-    setSelectedUniversityId(savedDraft.universityId || "");
-    setSingleValue("area", savedDraft.area ?? "");
-    setSingleValue("distanceLabel", savedDraft.distanceLabel ?? "");
-    setSingleValue("description", savedDraft.description ?? "");
-    setSingleValue("roomType", savedDraft.roomType ?? "");
-    setSingleValue("annualRent", savedDraft.annualRent ?? "");
-    setSingleValue("totalCount", savedDraft.totalCount ?? savedDraft.availableCount ?? "1");
-    setSingleValue("availableCount", savedDraft.availableCount ?? "1");
-
-    form
-      .querySelectorAll<HTMLInputElement>('input[name="feeLabel"]')
-      .forEach((field, index) => {
-        field.value = savedDraft.feeLabels?.[index] ?? "";
-      });
-
-    form
-      .querySelectorAll<HTMLInputElement>('input[name="feeAmount"]')
-      .forEach((field, index) => {
-        field.value = savedDraft.feeAmounts?.[index] ?? "";
-      });
-
-    const selectedAmenities = new Set(savedDraft.amenityIds ?? []);
-
-    const amenityFields = Array.from(
-      form.querySelectorAll<HTMLInputElement>('input[name="amenities"]'),
-    );
-
-    amenityFields.forEach((field) => {
-      field.checked = selectedAmenities.has(field.value);
-    });
-
-    setAllAmenitiesSelected(
-      amenityFields.length > 0 && amenityFields.every((field) => field.checked),
-    );
-  }, [savedDraft, feeRows.length, universities]);
 
   function addFeeRow() {
     setFeeRows((rows) => {
@@ -329,48 +222,17 @@ export default function PropertyDraftForm({
 
     setFieldErrors({});
 
-    if (mode !== "guest") {
-      return;
-    }
-
-    event.preventDefault();
-
-    const data = new FormData(form);
-
-    const draft: SavedGuestDraft = {
-      name: inputValue(form, "name"),
-      universityId: inputValue(form, "universityId"),
-      area: inputValue(form, "area"),
-      distanceLabel: inputValue(form, "distanceLabel"),
-      description: inputValue(form, "description"),
-      roomType: inputValue(form, "roomType"),
-      annualRent: inputValue(form, "annualRent"),
-      totalCount: inputValue(form, "totalCount"),
-      availableCount: inputValue(form, "availableCount"),
-      feeLabels: data.getAll("feeLabel").map(String),
-      feeAmounts: data.getAll("feeAmount").map(String),
-      amenityIds: data.getAll("amenities").map(String),
-    };
-
-    window.localStorage.setItem(GUEST_DRAFT_KEY, JSON.stringify(draft));
-    router.push("/login?next=%2Flist-property%2Fstart");
   }
 
   return (
     <form
       ref={formRef}
-      action={mode === "provider" ? createPropertyDraft : undefined}
+      action={createPropertyDraft}
       onSubmit={handleSubmit}
       onInput={handleFormInput}
       noValidate
       className="space-y-8"
     >
-      {savedDraft ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
-          Your saved browser draft has been restored.
-        </div>
-      ) : null}
-
       {Object.keys(fieldErrors).length > 0 ? (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4" role="alert">
           <p className="font-bold text-red-800">
@@ -672,12 +534,10 @@ export default function PropertyDraftForm({
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-[var(--forest)] p-6 text-white">
         <div>
           <p className="font-bold">
-            {mode === "guest" ? "Continue with your listing" : "Save as a draft"}
+            Save as a draft
           </p>
           <p className="mt-1 text-sm text-white/65">
-            {mode === "guest"
-              ? "We will keep these details in this browser, then ask you to sign in before saving them to the platform."
-              : "This does not publish or verify the property."}
+            This does not publish or verify the property.
           </p>
         </div>
 
@@ -685,7 +545,7 @@ export default function PropertyDraftForm({
           type="submit"
           className="rounded-xl bg-[var(--gold)] px-5 py-3 font-bold text-[var(--ink)]"
         >
-          {mode === "guest" ? "Continue to sign in" : "Save property draft"}
+          Save property draft
         </button>
       </div>
     </form>

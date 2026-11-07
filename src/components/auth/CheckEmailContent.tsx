@@ -9,6 +9,7 @@ interface CheckEmailContentProps {
     next?: string;
     error?: string;
     message?: string;
+    setup?: string;
   }>;
 }
 
@@ -18,6 +19,7 @@ export default async function CheckEmailContent({
   const params = await searchParams;
   const email = (params.email ?? "").trim().slice(0, 254);
   const nextPath = safeNextPath(params.next);
+  const setupRequired = params.setup === "required";
 
   return (
     <section className="mx-auto w-full max-w-xl rounded-3xl border border-[var(--border)] bg-white p-7 shadow-sm sm:p-10">
@@ -26,13 +28,15 @@ export default async function CheckEmailContent({
       </div>
 
       <p className="mt-7 text-sm font-bold uppercase tracking-wider text-[var(--emerald)]">
-        One quick step left
+        Account verification
       </p>
       <h1 className="mt-3 text-3xl font-bold tracking-tight text-[var(--forest)] sm:text-4xl">
-        Check your email
+        Verify your email
       </h1>
       <p className="mt-4 leading-7 text-[var(--muted)]">
-        We have submitted a request to send a confirmation email to:
+        {setupRequired
+          ? "Your account was created, but email verification is not configured for this application."
+          : "We sent a verification link to this email address:"}
       </p>
 
       {email ? (
@@ -42,21 +46,33 @@ export default async function CheckEmailContent({
       ) : null}
 
       <p className="mt-4 leading-7 text-[var(--muted)]">
-        When the message arrives, select <strong>Confirm email address</strong>.
-        We&apos;ll verify your address and take you to the next step in your
-        Student Housing account. Delivery can take a few minutes.
+        {setupRequired
+          ? "The site administrator must enable email confirmations in the Supabase project before you can sign in. Contact support once this is configured."
+          : (
+              <>
+                Open the message and select{" "}
+                <strong>Confirm email address</strong>. We&apos;ll verify your
+                address and take you to the next step in your Student Housing
+                account. Delivery can take a few minutes.
+              </>
+            )}
       </p>
 
-      <div className="mt-6 rounded-2xl border border-[var(--border)] p-4">
-        <p className="font-semibold text-[var(--forest)]">
-          Don&apos;t see the message?
-        </p>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-[var(--muted)]">
-          <li>Check your Spam, Promotions or Updates folder.</li>
-          <li>Make sure the email address is correct.</li>
-          <li>Wait a few minutes before requesting another message. Repeated requests may be rate-limited.</li>
-        </ul>
-      </div>
+      {!setupRequired ? (
+        <div className="mt-6 rounded-2xl border border-[var(--border)] p-4">
+          <p className="font-semibold text-[var(--forest)]">
+            Don&apos;t see the message?
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-[var(--muted)]">
+            <li>Check your Spam, Promotions or Updates folder.</li>
+            <li>Make sure the email address is correct.</li>
+            <li>
+              Wait a few minutes before requesting another message. Repeated
+              requests may be rate-limited.
+            </li>
+          </ul>
+        </div>
+      ) : null}
 
       {params.error ? (
         <p
@@ -76,7 +92,7 @@ export default async function CheckEmailContent({
         </p>
       ) : null}
 
-      {email ? (
+      {email && !setupRequired ? (
         <form action={resendConfirmation} className="mt-6">
           <input type="hidden" name="resendEmail" value={email} />
           <input type="hidden" name="next" value={nextPath} />
@@ -90,7 +106,9 @@ export default async function CheckEmailContent({
       ) : null}
 
       <p className="mt-6 text-center text-sm text-[var(--muted)]">
-        Already confirmed?{" "}
+        {setupRequired
+          ? "Once verification is configured, "
+          : "Already verified? "}
         <Link
           href={`/login?next=${encodeURIComponent(nextPath)}`}
           className="font-semibold text-[var(--forest)] underline underline-offset-4"

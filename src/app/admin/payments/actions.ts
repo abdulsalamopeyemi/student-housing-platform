@@ -4,14 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireAdmin } from "@/lib/data/admin";
-import { supabaseAuthenticatedRest } from "@/lib/supabase/authenticated-rest";
+import { supabaseSecretRest } from "@/lib/supabase/secret-rest";
 
 function paymentsMessage(message: string) {
   return `/admin/payments?message=${encodeURIComponent(message)}`;
 }
 
 export async function configureProviderPaystackAccount(formData: FormData) {
-  const { user } = await requireAdmin("/admin/payments");
+  await requireAdmin("/admin/payments");
   const providerId = String(formData.get("providerId") ?? "").trim();
   const subaccountCode = String(
     formData.get("subaccountCode") ?? "",
@@ -34,7 +34,7 @@ export async function configureProviderPaystackAccount(formData: FormData) {
     redirect(paymentsMessage("Choose a valid payment-account status."));
   }
 
-  const providers = await supabaseAuthenticatedRest<
+  const providers = await supabaseSecretRest<
     Array<{ id: string; provider_type: string; verification_status: string }>
   >(
     `providers?id=eq.${encodeURIComponent(
@@ -50,7 +50,7 @@ export async function configureProviderPaystackAccount(formData: FormData) {
     );
   }
 
-  const existing = await supabaseAuthenticatedRest<
+  const existing = await supabaseSecretRest<
     Array<{ provider_id: string }>
   >(
     `provider_payment_accounts?provider_id=eq.${encodeURIComponent(
@@ -60,7 +60,7 @@ export async function configureProviderPaystackAccount(formData: FormData) {
 
   try {
     if (existing.length > 0) {
-      await supabaseAuthenticatedRest(
+      await supabaseSecretRest(
         `provider_payment_accounts?provider_id=eq.${encodeURIComponent(
           providerId,
         )}`,
@@ -75,7 +75,7 @@ export async function configureProviderPaystackAccount(formData: FormData) {
         },
       );
     } else {
-      await supabaseAuthenticatedRest("provider_payment_accounts", {
+      await supabaseSecretRest("provider_payment_accounts", {
         method: "POST",
         prefer: "return=representation",
         body: JSON.stringify({
@@ -83,7 +83,7 @@ export async function configureProviderPaystackAccount(formData: FormData) {
           processor: "paystack",
           subaccount_code: subaccountCode,
           status,
-          created_by_admin_user_id: user.id,
+          created_by_admin_user_id: null,
         }),
       });
     }

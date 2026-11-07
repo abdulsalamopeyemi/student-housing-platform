@@ -21,9 +21,9 @@ export default function ProviderEntryContent({
             Put a property in front of students with clearer information.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--muted)]">
-            Start with the property details, pricing, room availability and
-            facilities. A property is not public until it is attached to a
-            provider account and approved through platform review.
+            Create one landlord login, finish its profile, and then add your
+            property details, pricing, room availability and facilities.
+            Listings stay private until approved through platform review.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -34,30 +34,28 @@ export default function ProviderEntryContent({
               >
                 Open admin review dashboard
               </Link>
-            ) : (
+            ) : isGuest ? (
               <Link
-                href="/list-property/start"
+                href="/signup?accountType=provider&next=/list-property/start"
                 className="rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-semibold text-white"
               >
-                Start a property listing
+                Create a landlord account
+              </Link>
+            ) : (
+              <Link
+                href="/provider/onboarding?next=/list-property/start"
+                className="rounded-xl bg-[var(--forest)] px-5 py-3 text-sm font-semibold text-white"
+              >
+                Set up your landlord profile
               </Link>
             )}
 
             {isGuest ? (
               <Link
-                href="/login?next=/list-property"
+                href="/login?next=/list-property/start"
                 className="rounded-xl border border-[var(--border)] bg-white px-5 py-3 text-sm font-semibold text-[var(--forest)]"
               >
-                Sign in
-              </Link>
-            ) : null}
-
-            {variant === "student" ? (
-              <Link
-                href="/provider/onboarding?next=/list-property/start"
-                className="rounded-xl border border-[var(--border)] bg-white px-5 py-3 text-sm font-semibold text-[var(--forest)]"
-              >
-                Become a property provider
+                Already have an account? Sign in
               </Link>
             ) : null}
           </div>
@@ -75,11 +73,11 @@ export default function ProviderEntryContent({
               </span>
               <div>
                 <p className="font-bold text-[var(--forest)]">
-                  Enter property details
+                  Create a landlord account
                 </p>
                 <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-                  Add location, room type, rent, required fees, availability
-                  and amenities.
+                  Choose Landlord and create your login. Add a name to that
+                  same account—there is no separate provider account.
                 </p>
               </div>
             </li>
@@ -90,11 +88,11 @@ export default function ProviderEntryContent({
               </span>
               <div>
                 <p className="font-bold text-[var(--forest)]">
-                  Sign in before saving
+                  Add property details
                 </p>
                 <p className="mt-1 text-sm leading-6 text-[var(--muted)]">
-                  Guests can start the form first. An account is required to
-                  own, edit and submit the listing.
+                  Add location, rooms, pricing, availability and amenities in
+                  your landlord workspace.
                 </p>
               </div>
             </li>

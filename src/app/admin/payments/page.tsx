@@ -1,8 +1,7 @@
 import { Suspense } from "react";
 
+import AdminWorkspaceNav from "@/components/admin/AdminWorkspaceNav";
 import AdminPaymentsContent from "@/components/admin/AdminPaymentsContent";
-import SiteFooter from "@/components/layout/SiteFooter";
-import SiteHeader from "@/components/layout/SiteHeader";
 
 interface AdminPaymentsPageProps {
   searchParams: Promise<{
@@ -15,7 +14,7 @@ export default function AdminPaymentsPage({
 }: AdminPaymentsPageProps) {
   return (
     <>
-      <SiteHeader />
+      <AdminWorkspaceNav current="payments" />
       <main className="min-h-[70vh] bg-[var(--paper)]">
         <Suspense
           fallback={
@@ -51,7 +50,6 @@ export default function AdminPaymentsPage({
           <AdminPaymentsContent searchParams={searchParams} />
         </Suspense>
       </main>
-      <SiteFooter />
     </>
   );
 }

@@ -7,8 +7,6 @@ import { safeNextPath } from "@/lib/supabase/auth-shared";
 import { supabaseAuthenticatedRest } from "@/lib/supabase/authenticated-rest";
 import type { TablesInsert } from "@/types/database";
 
-const providerTypes = ["landlord", "agent", "property_manager"] as const;
-
 function resolvedNextPath(value: FormDataEntryValue | null) {
   return typeof value === "string" && value
     ? safeNextPath(value)
@@ -25,7 +23,7 @@ function onboardingUrl(nextPath: string, error?: string) {
   return `/provider/onboarding?${params.toString()}`;
 }
 
-export async function createProvider(formData: FormData) {
+export async function createLandlordProfile(formData: FormData) {
   const nextPath = resolvedNextPath(formData.get("next"));
   const user = await getCurrentUser();
 
@@ -36,23 +34,19 @@ export async function createProvider(formData: FormData) {
   }
 
   const displayName = String(formData.get("displayName") ?? "").trim();
-  const providerType = String(formData.get("providerType") ?? "");
 
   if (displayName.length < 2) {
     redirect(
       onboardingUrl(
         nextPath,
-        "Enter a provider or business name.",
+        "Enter your name or property business name.",
       ),
     );
   }
 
-  if (!providerTypes.includes(providerType as (typeof providerTypes)[number])) {
+  if (displayName.length > 120) {
     redirect(
-      onboardingUrl(
-        nextPath,
-        "Choose a valid provider type.",
-      ),
+      onboardingUrl(nextPath, "Keep the landlord or business name under 120 characters."),
     );
   }
 
@@ -67,7 +61,7 @@ export async function createProvider(formData: FormData) {
   const payload: TablesInsert<"providers"> = {
     profile_id: user.id,
     display_name: displayName,
-    provider_type: providerType as TablesInsert<"providers">["provider_type"],
+    provider_type: "landlord",
   };
 
   await supabaseAuthenticatedRest("providers", {

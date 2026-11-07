@@ -23,13 +23,16 @@ verified session in HTTP-only cookies.
 
 ## Sign in and sign up
 
-Sign in and sign up have separate routes and focused forms. New users choose a student or provider
-account type during sign up. That choice is stored as account metadata to resume provider onboarding
-if needed; the database role remains the authorization source. Student accounts go to the student
-portal, while provider access begins after provider onboarding creates a provider record. Account
-actions return validation errors to the matching form and preserve valid intended destinations.
-Both pages provide pending feedback, accessible focus states, and reduced-motion-aware loading and
-entrance effects.
+Sign in and sign up have separate routes and focused forms. Signup first asks the user to choose
+Tenant or Landlord, then collects account details. Those choices map to student or provider account
+metadata respectively. Tenant sign-in routes to the student portal; Landlord sign-in resumes
+landlord setup until a landlord workspace record exists, then routes to that workspace. Landlord
+setup adds a profile to the existing login; it does not create another authentication account.
+Agents do not self-register and are managed by the platform team. The database role remains the
+authorization source. The account menu identifies the signed-in role with a matching icon and portal
+link. Account actions return validation errors to the matching form and preserve valid intended
+destinations. Both pages provide pending feedback, accessible focus states, and reduced-motion-aware
+loading and entrance effects.
 
 ## Support and policies
 
@@ -39,7 +42,7 @@ available as clearly labeled drafts pending operator and legal review.
 
 ## Provider listing
 
-Provider entry → account → identity/contact verification → property details → photos/facilities/pricing → location → submit for review → admin decision → publish.
+Provider entry → sign in or create a Landlord login → finish the landlord profile on that same login → property details → photos/facilities/pricing → location → submit for review → admin decision → publish. Agents are managed by the platform team, not through public signup. Listing forms are not available to guests; public listing information remains viewable without an account.
 
 ## Admin verification
 

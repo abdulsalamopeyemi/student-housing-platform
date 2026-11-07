@@ -10,6 +10,7 @@ import {
 } from "@/lib/auth/email-validation";
 import { getCurrentAccount } from "@/lib/data/account";
 import {
+  clearAuthSession,
   resendSignupConfirmation,
   requestPasswordRecovery,
   signInWithPassword,
@@ -57,6 +58,7 @@ function checkEmailRedirectUrl(
   nextPath: string,
   type?: "error" | "message",
   message?: string,
+  setupRequired = false,
 ) {
   const params = new URLSearchParams({
     email,
@@ -65,6 +67,10 @@ function checkEmailRedirectUrl(
 
   if (type && message) {
     params.set(type, message);
+  }
+
+  if (setupRequired) {
+    params.set("setup", "required");
   }
 
   return `/auth/check-email?${params.toString()}`;
@@ -82,21 +88,67 @@ function dashboardForRole(role: "student" | "provider" | "admin" | null) {
   return "/account";
 }
 
+function isProviderPath(path: string) {
+  return path === "/list-property" ||
+    path.startsWith("/list-property/") ||
+    path === "/provider" ||
+    path.startsWith("/provider/");
+}
+
+function signupDestination(
+  accountType: AccountType,
+  requestedPath: string,
+) {
+  if (accountType === "student") {
+    if (isProviderPath(requestedPath)) {
+      return "/account";
+    }
+
+    return requestedPath === "/explore" ? "/account" : requestedPath;
+  }
+
+  if (requestedPath.startsWith("/provider/onboarding")) {
+    return requestedPath;
+  }
+
+  if (isProviderPath(requestedPath)) {
+    return `/provider/onboarding?next=${encodeURIComponent(requestedPath)}`;
+  }
+
+  if (requestedPath === "/explore" || requestedPath === "/account") {
+    return "/provider/onboarding?next=/list-property";
+  }
+
+  return requestedPath;
+}
+
 function loginDestination(
   nextPath: string,
   role: "student" | "provider" | "admin" | null,
   accountType: AccountType,
 ) {
-  if (nextPath !== "/explore" && nextPath !== "/account") {
-    return nextPath;
+  if (role === "admin") {
+    return nextPath === "/explore" || nextPath === "/account"
+      ? dashboardForRole(role)
+      : nextPath;
   }
 
-  if (role === "provider" || role === "admin") {
-    return dashboardForRole(role);
+  if (role === "provider") {
+    return nextPath === "/explore" || nextPath === "/account"
+      ? dashboardForRole(role)
+      : nextPath;
   }
 
   if (accountType === "provider") {
-    return "/provider/onboarding?next=/list-property";
+    return signupDestination(accountType, nextPath);
+  }
+
+  if (isProviderPath(nextPath)) {
+    return "/account";
+  }
+
+  if (nextPath !== "/explore" && nextPath !== "/account") {
+    return nextPath;
   }
 
   return dashboardForRole(role);
@@ -248,6 +300,11 @@ export async function login(formData: FormData) {
   }
 
   const { profile } = await getCurrentAccount();
+  if (profile?.role === "admin") {
+    await clearAuthSession();
+    redirect("/admin/sign-in?message=Use+the+admin+sign-in+page.");
+  }
+
   const accountType =
     session?.user.user_metadata?.account_type === "provider"
       ? "provider"
@@ -263,16 +320,11 @@ export async function signup(formData: FormData) {
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
   const requestedNextPath = safeNextPath(formData.get("next"));
-  const accountType = String(formData.get("accountType") ?? "student");
-  const isPortalPath = ["/explore", "/account", "/list-property"].includes(
-    requestedNextPath,
-  );
+  const accountType = String(formData.get("accountType") ?? "");
   const nextPath =
-    accountType === "provider" && isPortalPath
-      ? "/provider/onboarding?next=/list-property"
-      : requestedNextPath === "/explore"
-        ? "/account"
-        : requestedNextPath;
+    accountType === "student" || accountType === "provider"
+      ? signupDestination(accountType, requestedNextPath)
+      : requestedNextPath;
   const emailError = submittedEmailError(email);
 
   if (accountType !== "student" && accountType !== "provider") {
@@ -335,7 +387,7 @@ export async function signup(formData: FormData) {
     );
   }
 
-  const { session, error } = await signUpWithPassword(
+  const { session, user, error } = await signUpWithPassword(
     fullName,
     email,
     password,
@@ -354,11 +406,26 @@ export async function signup(formData: FormData) {
     );
   }
 
-  if (session) {
-    redirect(nextPath);
+  if (session || user?.email_confirmed_at) {
+    redirect(
+      checkEmailRedirectUrl(
+        email,
+        nextPath,
+        "error",
+        "Email confirmation is disabled for this project. The site administrator must enable email confirmations in Supabase before accounts can be verified.",
+        true,
+      ),
+    );
   }
 
-  redirect(checkEmailRedirectUrl(email, nextPath));
+  redirect(
+    checkEmailRedirectUrl(
+      email,
+      nextPath,
+      "message",
+      "Your account was created. We sent a verification link to your email address.",
+    ),
+  );
 }
 
 export async function resendConfirmation(formData: FormData) {

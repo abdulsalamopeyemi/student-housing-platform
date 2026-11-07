@@ -6,6 +6,7 @@ export type AccountType = "student" | "provider";
 export interface SupabaseAuthUser {
   id: string;
   email?: string;
+  email_confirmed_at?: string | null;
   user_metadata?: {
     full_name?: string;
     account_type?: AccountType;
@@ -31,4 +32,16 @@ export function safeNextPath(value: FormDataEntryValue | string | null | undefin
   }
 
   return value;
+}
+
+export function safeAdminNextPath(
+  value: FormDataEntryValue | string | null | undefined,
+) {
+  const path = safeNextPath(value);
+
+  if (!path.startsWith("/admin/") || path === "/admin/sign-in") {
+    return "/admin/reviews";
+  }
+
+  return path;
 }

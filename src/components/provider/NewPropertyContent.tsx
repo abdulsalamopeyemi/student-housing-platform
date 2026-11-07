@@ -15,20 +15,17 @@ interface NewPropertyContentProps {
 export default async function NewPropertyContent({
   searchParams,
 }: NewPropertyContentProps) {
-  const [{ user, provider }, universities, amenities, params] =
-    await Promise.all([
-      getCurrentProvider(),
-      getUniversities(),
-      getAmenities(),
-      searchParams,
-    ]);
+  const [{ user, provider }, params] = await Promise.all([
+    getCurrentProvider(),
+    searchParams,
+  ]);
 
   if (!user) {
     redirect("/login?next=/provider/properties/new");
   }
 
   if (!provider) {
-    redirect("/provider/onboarding");
+    redirect("/provider/onboarding?next=/provider/properties/new");
   }
 
   if (provider.provider_type === "agent") {
@@ -36,6 +33,11 @@ export default async function NewPropertyContent({
       "/list-property?message=Agents+manage+properties+assigned+by+owners+and+cannot+create+owner+listings.",
     );
   }
+
+  const [universities, amenities] = await Promise.all([
+    getUniversities(),
+    getAmenities(),
+  ]);
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-12 lg:px-8 lg:py-16">

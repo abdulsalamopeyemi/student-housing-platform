@@ -643,9 +643,8 @@ export default async function ProviderWorkspaceContent({
                         </form>
                       ) : (
                         <p className="mt-3 rounded-2xl bg-[var(--cream)] px-4 py-3 text-sm leading-6 text-[var(--muted)]">
-                          No verified agents are available yet. Agents can register
-                          through provider onboarding, but an admin must verify
-                          them before a property owner can assign them.
+                          No platform-approved agents are available yet. Agent
+                          access is managed by the Student Housing team.
                         </p>
                       )}
                     </div>

@@ -16,7 +16,7 @@ interface SignupPageProps {
 export const metadata = {
   title: "Create an account",
   description:
-    "Create a Student Housing account to save homes, track inspections, or manage property listings.",
+    "Choose Tenant or Landlord, then create the Student Housing account and workspace that fit.",
 };
 
 export default function SignupPage({ searchParams }: SignupPageProps) {

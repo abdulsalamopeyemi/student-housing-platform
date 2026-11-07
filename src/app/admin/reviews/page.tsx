@@ -1,8 +1,7 @@
 import { Suspense } from "react";
 
 import AdminReviewContent from "@/components/admin/AdminReviewContent";
-import SiteFooter from "@/components/layout/SiteFooter";
-import SiteHeader from "@/components/layout/SiteHeader";
+import AdminWorkspaceNav from "@/components/admin/AdminWorkspaceNav";
 
 interface AdminReviewsPageProps {
   searchParams: Promise<{
@@ -16,7 +15,7 @@ export default function AdminReviewsPage({
 }: AdminReviewsPageProps) {
   return (
     <>
-      <SiteHeader />
+      <AdminWorkspaceNav current="reviews" />
       <main className="min-h-[70vh] bg-[var(--paper)]">
         <Suspense
           fallback={
@@ -50,7 +49,6 @@ export default function AdminReviewsPage({
           <AdminReviewContent searchParams={searchParams} />
         </Suspense>
       </main>
-      <SiteFooter />
     </>
   );
 }

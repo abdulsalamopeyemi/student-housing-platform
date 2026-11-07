@@ -1,7 +1,7 @@
 import "server-only";
 
 import { requireAdmin } from "@/lib/data/admin";
-import { supabaseAuthenticatedRest } from "@/lib/supabase/authenticated-rest";
+import { supabaseSecretRest } from "@/lib/supabase/secret-rest";
 
 export interface PaymentProviderSetup {
   id: string;
@@ -19,7 +19,7 @@ export async function getPaymentProviderSetups() {
   await requireAdmin("/admin/payments");
 
   const [providers, accounts] = await Promise.all([
-    supabaseAuthenticatedRest<
+    supabaseSecretRest<
       Array<{
         id: string;
         display_name: string | null;
@@ -29,7 +29,7 @@ export async function getPaymentProviderSetups() {
     >(
       "providers?provider_type=in.(landlord,property_manager)&verification_status=eq.verified&select=id,display_name,provider_type,verification_status&order=display_name.asc",
     ),
-    supabaseAuthenticatedRest<
+    supabaseSecretRest<
       Array<{
         provider_id: string;
         subaccount_code: string;

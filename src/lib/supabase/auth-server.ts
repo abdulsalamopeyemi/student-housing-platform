@@ -103,7 +103,9 @@ export async function getCurrentUser(): Promise<SupabaseAuthUser | null> {
     return null;
   }
 
-  return (await response.json()) as SupabaseAuthUser;
+  const user = (await response.json()) as SupabaseAuthUser;
+
+  return user.email_confirmed_at ? user : null;
 }
 
 export async function adoptAuthTokens(
@@ -127,6 +129,13 @@ export async function adoptAuthTokens(
   }
 
   const user = (await response.json()) as SupabaseAuthUser;
+
+  if (!user.email_confirmed_at) {
+    return {
+      user: null,
+      error: "Your email address has not been confirmed.",
+    };
+  }
 
   await storeAuthTokens({
     access_token: accessToken,
@@ -163,6 +172,14 @@ export async function signInWithPassword(email: string, password: string) {
   }
 
   const session = payload as SupabaseAuthSession;
+
+  if (!session.user.email_confirmed_at) {
+    return {
+      session: null,
+      error: "Email not confirmed",
+    };
+  }
+
   await storeAuthSession(session);
 
   return { session, error: null };
@@ -222,7 +239,6 @@ export async function signUpWithPassword(
     possibleSession.user
   ) {
     const session = possibleSession as SupabaseAuthSession;
-    await storeAuthSession(session);
     return { session, user: session.user, error: null };
   }
 

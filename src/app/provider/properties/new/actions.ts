@@ -27,7 +27,7 @@ export async function createPropertyDraft(formData: FormData) {
   }
 
   if (!provider) {
-    redirect("/provider/onboarding");
+    redirect("/provider/onboarding?next=/provider/properties/new");
   }
 
   if (provider.provider_type === "agent") {
