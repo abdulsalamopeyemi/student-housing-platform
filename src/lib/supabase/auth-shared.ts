@@ -1,11 +1,14 @@
 export const ACCESS_TOKEN_COOKIE = "student-housing-access-token";
 export const REFRESH_TOKEN_COOKIE = "student-housing-refresh-token";
 
+export type AccountType = "student" | "provider";
+
 export interface SupabaseAuthUser {
   id: string;
   email?: string;
   user_metadata?: {
     full_name?: string;
+    account_type?: AccountType;
     [key: string]: unknown;
   };
 }

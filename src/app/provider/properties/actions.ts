@@ -22,6 +22,8 @@ export async function submitPropertyForReview(formData: FormData) {
     redirect("/list-property?message=Property+could+not+be+submitted.");
   }
 
+  let destination = "";
+
   try {
     const images = await supabaseAuthenticatedRest<Array<{ id: string }>>(
       `property_images?property_id=eq.${encodeURIComponent(
@@ -30,34 +32,36 @@ export async function submitPropertyForReview(formData: FormData) {
     );
 
     if (images.length === 0) {
-      redirect(
-        `/provider/properties/${encodeURIComponent(
-          propertyId,
-        )}/images?message=${encodeURIComponent(
-          "Add at least one real property photo before submitting for review.",
-        )}`,
-      );
-    }
-
-    const rows = await supabaseAuthenticatedRest<Array<{ id: string }>>(
-      `properties?id=eq.${encodeURIComponent(
+      destination = `/provider/properties/${encodeURIComponent(
         propertyId,
-      )}&provider_id=eq.${encodeURIComponent(provider.id)}&select=id`,
-      {
-        method: "PATCH",
-        prefer: "return=representation",
-        body: JSON.stringify({
-          publication_status: "pending_review",
-          verification_status: "pending",
-        }),
-      },
-    );
+      )}/images?message=${encodeURIComponent(
+        "Add at least one real property photo before submitting for review.",
+      )}`;
+    } else {
+      const rows = await supabaseAuthenticatedRest<Array<{ id: string }>>(
+        `properties?id=eq.${encodeURIComponent(
+          propertyId,
+        )}&provider_id=eq.${encodeURIComponent(provider.id)}&select=id`,
+        {
+          method: "PATCH",
+          prefer: "return=representation",
+          body: JSON.stringify({
+            publication_status: "pending_review",
+            verification_status: "pending",
+          }),
+        },
+      );
 
-    if (rows.length === 0) {
-      redirect("/list-property?message=Property+could+not+be+submitted.");
+      if (rows.length === 0) {
+        destination = "/list-property?message=Property+could+not+be+submitted.";
+      }
     }
   } catch {
-    redirect("/list-property?message=Property+could+not+be+submitted.");
+    destination = "/list-property?message=Property+could+not+be+submitted.";
+  }
+
+  if (destination) {
+    redirect(destination);
   }
 
   redirect("/list-property?message=Property+submitted+for+review.");

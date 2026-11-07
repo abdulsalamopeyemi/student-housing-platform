@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import InspectionRequestForm from "@/components/property/InspectionRequestForm";
 import ReportPropertyForm from "@/components/property/ReportPropertyForm";
 import SavePropertyButton from "@/components/property/SavePropertyButton";
+import { getAvailabilityFreshness } from "@/lib/availability";
 import { getCurrentAccount } from "@/lib/data/account";
 import { getPublishedPropertyBySlug } from "@/lib/data/public-properties";
 import { isPropertySaved } from "@/lib/data/student-saved-properties";
@@ -50,6 +51,9 @@ export default async function PropertyDetailsContent({
         ? `${property.availableRooms} rooms left`
         : `${property.availableRooms} rooms available`;
 
+  const availabilityFreshness = getAvailabilityFreshness(
+    property.availabilityUpdatedAt,
+  );
   const facilityItems = [...new Set([...property.facilities, ...property.utilities])];
 
   return (
@@ -196,9 +200,30 @@ export default async function PropertyDetailsContent({
                   <p className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
                     Availability last updated
                   </p>
-                  <p className="mt-2 font-semibold text-[var(--forest)]">
-                    {new Date(property.availabilityUpdatedAt).toLocaleDateString("en-NG")}
+                  <p
+                    className={[
+                      "mt-2 font-semibold",
+                      availabilityFreshness.isStale
+                        ? "text-amber-700"
+                        : "text-[var(--forest)]",
+                    ].join(" ")}
+                  >
+                    {availabilityFreshness.label}
                   </p>
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    {availabilityFreshness.dateLabel}
+                  </p>
+                  {availabilityFreshness.isStale ? (
+                    <p className="mt-2 text-xs leading-5 text-amber-700">
+                      Availability has not been updated recently. Confirm with
+                      the property contact before making plans or payments.
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+                      Room availability can change. Confirm it again before
+                      making a payment.
+                    </p>
+                  )}
                 </div>
               </div>
             </section>

@@ -51,7 +51,7 @@ export default async function HeaderAccountControls() {
             </Link>
 
             <Link
-              href="/login#signup"
+              href="/signup"
               className="rounded-xl bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--emerald)]"
             >
               Create account
@@ -80,7 +80,7 @@ export function HeaderAccountFallback() {
         </Link>
 
         <Link
-          href="/login#signup"
+          href="/signup"
           className="rounded-xl bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold text-white"
         >
           Create account

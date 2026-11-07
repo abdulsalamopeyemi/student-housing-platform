@@ -6,7 +6,7 @@ import type { Tables } from "@/types/database";
 
 export type AccountProfile = Pick<
   Tables<"profiles">,
-  "id" | "full_name" | "role"
+  "id" | "full_name" | "role" | "phone" | "university_id"
 >;
 
 export async function getCurrentAccount() {
@@ -18,7 +18,7 @@ export async function getCurrentAccount() {
 
   try {
     const profiles = await supabaseAuthenticatedRest<AccountProfile[]>(
-      `profiles?id=eq.${encodeURIComponent(user.id)}&select=id,full_name,role&limit=1`,
+      `profiles?id=eq.${encodeURIComponent(user.id)}&select=id,full_name,role,phone,university_id&limit=1`,
     );
 
     return {

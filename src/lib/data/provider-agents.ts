@@ -48,6 +48,6 @@ export async function getAssignedAgentProperties(agentProviderId: string) {
   const ids = assignments.map((item) => item.property_id).join(",");
 
   return supabaseAuthenticatedRest<ProviderProperty[]>(
-    `properties?id=in.(${ids})&select=id,name,slug,area,distance_label,publication_status,verification_status,updated_at,universities(name),room_types(id,name,total_count,available_count,annual_rent)&order=updated_at.desc`,
+    `properties?id=in.(${ids})&select=id,name,slug,area,distance_label,publication_status,verification_status,updated_at,universities(name),room_types(id,name,total_count,available_count,annual_rent,availability_updated_at)&order=updated_at.desc`,
   );
 }

@@ -4,6 +4,9 @@ const footerLinks = [
   { label: "Explore homes", href: "/explore" },
   { label: "How it works", href: "/#how-it-works" },
   { label: "List a property", href: "/list-property" },
+  { label: "Support", href: "/support" },
+  { label: "Privacy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
   { label: "Sign in", href: "/login" },
 ];
 
@@ -49,7 +52,7 @@ export default function SiteFooter() {
 
       <div className="border-t border-[var(--border)]">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-5 text-xs text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between lg:px-8">
-          <p>Student Housing prototype</p>
+          <p>Student Housing · Policies in draft review</p>
           <p>Clearer information before accommodation decisions.</p>
         </div>
       </div>

@@ -9,6 +9,8 @@ import {
 import { updateInspectionStatus } from "@/app/provider/inspections/actions";
 import { submitPropertyForReview } from "@/app/provider/properties/actions";
 import { updateRoomAvailability } from "@/app/provider/rooms/actions";
+import ActionSubmitButton from "@/components/ui/ActionSubmitButton";
+import { getAvailabilityFreshness } from "@/lib/availability";
 import {
   getAssignedAgentProperties,
   getVerifiedAgents,
@@ -92,16 +94,30 @@ export default async function ProviderWorkspaceContent({
     (request) =>
       request.status === "requested" || request.status === "confirmed",
   ).length;
+  const attentionCount = isAgent
+    ? inspectionRequests.filter((request) => request.status === "requested")
+        .length
+    : properties.filter(
+        (property) =>
+          property.publication_status === "draft" ||
+          property.publication_status === "rejected",
+      ).length;
+  const publishedCount = properties.filter(
+    (property) => property.publication_status === "published",
+  ).length;
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-14 lg:px-8 lg:py-20">
       {params.message ? (
-        <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+        <div
+          role="status"
+          className="ui-enter mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900"
+        >
           {params.message}
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-6 rounded-3xl border border-[var(--border)] bg-white p-6 sm:p-8 lg:flex-row lg:items-start lg:justify-between">
+      <div className="ui-enter flex flex-col gap-6 rounded-3xl border border-[var(--border)] bg-white p-6 shadow-sm shadow-[var(--forest)]/5 sm:p-8 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-sm font-bold uppercase tracking-wide text-[var(--emerald)]">
             {isAgent ? "Agent workspace" : "Provider workspace"}
@@ -137,55 +153,55 @@ export default async function ProviderWorkspaceContent({
         </div>
       </div>
 
-      <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-3xl border border-[var(--border)] bg-white p-6">
-          <p className="text-sm font-bold text-[var(--forest)]">
-            1. {isAgent ? "Agent profile" : "Provider profile"}
-          </p>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            {provider.verification_status === "verified"
-              ? "Verified"
-              : statusLabel(provider.verification_status)}
-          </p>
-        </div>
-
-        <div className="rounded-3xl border border-[var(--border)] bg-white p-6">
-          <p className="text-sm font-bold text-[var(--forest)]">
-            2. {isAgent ? "Assigned properties" : "Property details"}
-          </p>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            {properties.length > 0
-              ? `${properties.length} ${isAgent ? "assigned" : "saved"} ${properties.length === 1 ? "property" : "properties"}`
-              : isAgent
-                ? "No property assigned yet"
-                : "Create your first property draft"}
-          </p>
-        </div>
-
-        <div className="rounded-3xl border border-[var(--border)] bg-white p-6">
-          <p className="text-sm font-bold text-[var(--forest)]">
-            3. Inspection requests
-          </p>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            {activeInspectionCount > 0
-              ? `${activeInspectionCount} active ${activeInspectionCount === 1 ? "request" : "requests"}`
-              : "No active inspection requests"}
-          </p>
-        </div>
-
-        <div className="rounded-3xl border border-[var(--border)] bg-white p-6">
-          <p className="text-sm font-bold text-[var(--forest)]">
-            4. {isAgent ? "Availability" : "Review and publish"}
-          </p>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            {isAgent
-              ? "Keep assigned property availability accurate"
-              : "Submit complete drafts for platform review"}
-          </p>
-        </div>
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          {
+            label: "Active inspections",
+            value: activeInspectionCount,
+            detail: "Requests to follow up",
+            href: "#requests",
+          },
+          {
+            label: isAgent ? "Assigned properties" : "Your properties",
+            value: properties.length,
+            detail: isAgent ? "Listings you manage" : "Listings in your workspace",
+            href: "#properties",
+          },
+          {
+            label: isAgent ? "New requests" : "Needs your attention",
+            value: attentionCount,
+            detail: isAgent
+              ? "Waiting for a response"
+              : "Drafts or requested changes",
+            href: isAgent ? "#requests" : "#properties",
+          },
+          {
+            label: "Published",
+            value: publishedCount,
+            detail: "Visible to students",
+            href: "#properties",
+          },
+        ].map((stat, index) => (
+          <Link
+            key={stat.label}
+            href={stat.href}
+            className="ui-enter rounded-2xl border border-[var(--border)] bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[var(--emerald)] hover:shadow-lg hover:shadow-[var(--forest)]/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--emerald)]"
+            style={{ animationDelay: `${(index + 1) * 55}ms` }}
+          >
+            <span className="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
+              {stat.label}
+            </span>
+            <span className="mt-2 block text-3xl font-bold tabular-nums text-[var(--forest)]">
+              {stat.value}
+            </span>
+            <span className="mt-1 block text-xs text-[var(--muted)]">
+              {stat.detail}
+            </span>
+          </Link>
+        ))}
       </div>
 
-      <section className="mt-10">
+      <section id="requests" className="mt-10 scroll-mt-8">
         <div>
           <p className="text-sm font-bold uppercase tracking-wide text-[var(--emerald)]">
             Student enquiries
@@ -215,7 +231,7 @@ export default async function ProviderWorkspaceContent({
             {inspectionRequests.map((request) => (
               <article
                 key={request.id}
-                className="rounded-3xl border border-[var(--border)] bg-white p-6"
+                className="ui-enter rounded-3xl border border-[var(--border)] bg-white p-6 transition-shadow hover:shadow-lg hover:shadow-[var(--forest)]/5"
               >
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                   <div>
@@ -280,16 +296,22 @@ export default async function ProviderWorkspaceContent({
                         <form action={updateInspectionStatus}>
                           <input type="hidden" name="requestId" value={request.id} />
                           <input type="hidden" name="status" value="confirmed" />
-                          <button className="rounded-xl bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold text-white">
+                          <ActionSubmitButton
+                            pendingText="Confirming…"
+                            className="rounded-xl bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--emerald)]"
+                          >
                             Confirm
-                          </button>
+                          </ActionSubmitButton>
                         </form>
                         <form action={updateInspectionStatus}>
                           <input type="hidden" name="requestId" value={request.id} />
                           <input type="hidden" name="status" value="declined" />
-                          <button className="rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700">
+                          <ActionSubmitButton
+                            pendingText="Declining…"
+                            className="rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700"
+                          >
                             Decline
-                          </button>
+                          </ActionSubmitButton>
                         </form>
                       </>
                     ) : request.status === "confirmed" ? (
@@ -297,16 +319,22 @@ export default async function ProviderWorkspaceContent({
                         <form action={updateInspectionStatus}>
                           <input type="hidden" name="requestId" value={request.id} />
                           <input type="hidden" name="status" value="completed" />
-                          <button className="rounded-xl bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold text-white">
+                          <ActionSubmitButton
+                            pendingText="Updating…"
+                            className="rounded-xl bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--emerald)]"
+                          >
                             Mark completed
-                          </button>
+                          </ActionSubmitButton>
                         </form>
                         <form action={updateInspectionStatus}>
                           <input type="hidden" name="requestId" value={request.id} />
                           <input type="hidden" name="status" value="declined" />
-                          <button className="rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700">
+                          <ActionSubmitButton
+                            pendingText="Declining…"
+                            className="rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700"
+                          >
                             Decline
-                          </button>
+                          </ActionSubmitButton>
                         </form>
                       </>
                     ) : null}
@@ -318,7 +346,7 @@ export default async function ProviderWorkspaceContent({
         )}
       </section>
 
-      <section className="mt-10">
+      <section id="properties" className="mt-10 scroll-mt-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-bold uppercase tracking-wide text-[var(--emerald)]">
@@ -369,12 +397,15 @@ export default async function ProviderWorkspaceContent({
               const occupiedRooms = room
                 ? Math.max(0, room.total_count - room.available_count)
                 : 0;
+              const availabilityFreshness = room
+                ? getAvailabilityFreshness(room.availability_updated_at)
+                : null;
               const assignment = assignmentsByProperty.get(property.id);
 
               return (
                 <article
                   key={property.id}
-                  className="rounded-3xl border border-[var(--border)] bg-white p-6"
+                  className="ui-enter rounded-3xl border border-[var(--border)] bg-white p-6 transition-shadow hover:shadow-lg hover:shadow-[var(--forest)]/5"
                 >
                   <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
                     <div>
@@ -439,11 +470,14 @@ export default async function ProviderWorkspaceContent({
                             name="propertyId"
                             value={property.id}
                           />
-                          <button className="rounded-xl bg-[var(--gold)] px-4 py-2.5 text-sm font-bold text-[var(--ink)]">
+                          <ActionSubmitButton
+                            pendingText="Submitting…"
+                            className="rounded-xl bg-[var(--gold)] px-4 py-2.5 text-sm font-bold text-[var(--ink)] transition hover:brightness-95"
+                          >
                             {property.publication_status === "rejected"
                               ? "Resubmit for review"
                               : "Submit for review"}
-                          </button>
+                          </ActionSubmitButton>
                         </form>
                       ) : (
                         <span className="text-sm font-semibold text-[var(--muted)]">
@@ -455,6 +489,29 @@ export default async function ProviderWorkspaceContent({
 
                   {room ? (
                     <div className="mt-6 rounded-2xl bg-[var(--cream)] p-4">
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs font-bold uppercase tracking-wide text-[var(--forest)]">
+                          Room availability
+                        </p>
+                        {availabilityFreshness ? (
+                          <span
+                            className={[
+                              "text-xs font-semibold",
+                              availabilityFreshness.isStale
+                                ? "text-amber-700"
+                                : "text-[var(--muted)]",
+                            ].join(" ")}
+                          >
+                            {availabilityFreshness.label}
+                          </span>
+                        ) : null}
+                      </div>
+                      {availabilityFreshness?.isStale ? (
+                        <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+                          This availability is more than a week old. Please
+                          confirm the room count before students rely on it.
+                        </p>
+                      ) : null}
                       <div className="grid grid-cols-3 gap-3 text-center">
                         <div>
                           <p className="text-xl font-bold text-[var(--forest)]">
@@ -515,9 +572,12 @@ export default async function ProviderWorkspaceContent({
                             className="w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm"
                           />
                         </label>
-                        <button className="self-end rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-[var(--forest)]">
+                        <ActionSubmitButton
+                          pendingText="Updating…"
+                          className="self-end rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-[var(--forest)] transition hover:bg-[var(--paper)]"
+                        >
                           Update availability
-                        </button>
+                        </ActionSubmitButton>
                       </form>
                     </div>
                   ) : null}
@@ -540,9 +600,12 @@ export default async function ProviderWorkspaceContent({
                           </div>
                           <form action={removeAgentFromProperty}>
                             <input type="hidden" name="propertyId" value={property.id} />
-                            <button className="rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-700">
+                            <ActionSubmitButton
+                              pendingText="Removing…"
+                              className="rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-700"
+                            >
                               Remove agent
-                            </button>
+                            </ActionSubmitButton>
                           </form>
                         </div>
                       ) : verifiedAgents.length > 0 ? (
@@ -571,9 +634,12 @@ export default async function ProviderWorkspaceContent({
                               ))}
                             </select>
                           </label>
-                          <button className="self-end rounded-xl bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold text-white">
+                          <ActionSubmitButton
+                            pendingText="Assigning…"
+                            className="self-end rounded-xl bg-[var(--forest)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--emerald)]"
+                          >
                             Assign agent
-                          </button>
+                          </ActionSubmitButton>
                         </form>
                       ) : (
                         <p className="mt-3 rounded-2xl bg-[var(--cream)] px-4 py-3 text-sm leading-6 text-[var(--muted)]">

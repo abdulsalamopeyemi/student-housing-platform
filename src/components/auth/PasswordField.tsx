@@ -36,7 +36,7 @@ export default function PasswordField({
           type={isVisible ? "text" : "password"}
           name={name}
           autoComplete={autoComplete}
-          className={`w-full rounded-xl border border-[var(--border)] px-4 py-3 pr-20 outline-none focus:border-[var(--emerald)] ${backgroundClassName}`}
+          className={`auth-input pr-20 ${backgroundClassName}`}
         />
 
         <button
@@ -44,7 +44,7 @@ export default function PasswordField({
           aria-pressed={isVisible}
           aria-label={isVisible ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
           onClick={() => setIsVisible((visible) => !visible)}
-          className="absolute inset-y-0 right-0 flex items-center px-4 text-sm font-semibold text-[var(--forest)] hover:text-[var(--emerald)]"
+          className="absolute inset-y-0 right-0 flex items-center rounded-r-xl px-4 text-sm font-semibold text-[var(--forest)] transition hover:text-[var(--emerald)] focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-[var(--emerald)]"
         >
           {isVisible ? "Hide" : "Show"}
         </button>

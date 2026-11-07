@@ -38,7 +38,7 @@ export default function AudiencePaths() {
                 Find accommodation
               </Link>
               <Link
-                href="/login#signup"
+                href="/signup?accountType=student"
                 className="rounded-xl border border-[var(--border)] px-5 py-3 text-sm font-semibold text-[var(--forest)]"
               >
                 Create student account
@@ -66,7 +66,7 @@ export default function AudiencePaths() {
                 List a property
               </Link>
               <Link
-                href="/login#signup"
+                href="/signup?accountType=provider"
                 className="rounded-xl border border-[var(--border)] bg-white px-5 py-3 text-sm font-semibold text-[var(--forest)]"
               >
                 Create provider account

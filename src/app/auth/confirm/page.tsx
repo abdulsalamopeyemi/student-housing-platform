@@ -13,16 +13,26 @@ export default function ConfirmEmailPage() {
 
   useEffect(() => {
     async function confirmSession() {
-      const hash = window.location.hash.startsWith("#")
-        ? window.location.hash.slice(1)
-        : window.location.hash;
-
+      const currentUrl = new URL(window.location.href);
+      const hash = currentUrl.hash.startsWith("#")
+        ? currentUrl.hash.slice(1)
+        : currentUrl.hash;
       const params = new URLSearchParams(hash);
       const errorDescription = params.get("error_description");
 
+      // Remove tokens and auth error details from the visible URL/history as soon
+      // as they have been read. URLSearchParams has already decoded the value.
+      window.history.replaceState(
+        {},
+        "",
+        `${currentUrl.pathname}${currentUrl.search}`,
+      );
+
       if (errorDescription) {
         setState("error");
-        setMessage(decodeURIComponent(errorDescription.replaceAll("+", " ")));
+        setMessage(
+          errorDescription.replaceAll("+", " "),
+        );
         return;
       }
 
@@ -38,41 +48,47 @@ export default function ConfirmEmailPage() {
       ) {
         setState("error");
         setMessage(
-          "The email may already be confirmed, but this link did not contain a usable session. Return to sign in with your email and password.",
+          "This confirmation link is incomplete or has expired. Request a new confirmation email, or sign in if you have already confirmed your address.",
         );
         return;
       }
 
-      const response = await fetch("/auth/session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          accessToken,
-          refreshToken,
-          expiresIn,
-        }),
-      });
+      try {
+        const response = await fetch("/auth/session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            accessToken,
+            refreshToken,
+            expiresIn,
+          }),
+        });
 
-      if (!response.ok) {
+        if (!response.ok) {
+          setState("error");
+          setMessage(
+            "Your email may be confirmed, but we could not finish signing you in. Please return to sign in with your email and password.",
+          );
+          return;
+        }
+
+        const requestedNext = currentUrl.searchParams.get("next");
+        const nextPath =
+          requestedNext &&
+          requestedNext.startsWith("/") &&
+          !requestedNext.startsWith("//")
+            ? requestedNext
+            : "/account";
+
+        window.location.replace(nextPath);
+      } catch {
         setState("error");
         setMessage(
-          "Your email may be confirmed, but we could not create the browser session. Please sign in normally.",
+          "Your email link was opened, but we could not connect to finish signing you in. Check your connection and try signing in again.",
         );
-        return;
       }
-
-      const requestedNext = new URLSearchParams(window.location.search).get("next");
-      const nextPath =
-        requestedNext &&
-        requestedNext.startsWith("/") &&
-        !requestedNext.startsWith("//")
-          ? requestedNext
-          : "/account";
-
-      window.history.replaceState({}, "", "/auth/confirm");
-      window.location.replace(nextPath);
     }
 
     void confirmSession();
@@ -86,7 +102,9 @@ export default function ConfirmEmailPage() {
         </p>
 
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-[var(--forest)]">
-          {state === "working" ? "Finishing your sign-up" : "Confirmation needs attention"}
+          {state === "working"
+            ? "Finishing your sign-up"
+            : "Confirmation needs attention"}
         </h1>
 
         <p className="mt-4 leading-7 text-[var(--muted)]">{message}</p>

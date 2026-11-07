@@ -5,8 +5,12 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/data/admin";
 import { supabaseAuthenticatedRest } from "@/lib/supabase/authenticated-rest";
 
-function adminRedirect(message: string) {
-  redirect(`/admin/reviews?message=${encodeURIComponent(message)}`);
+function adminRedirect(message: string, result: "message" | "error" = "message") {
+  redirect(`/admin/reviews?${result}=${encodeURIComponent(message)}`);
+}
+
+function adminError(message: string) {
+  adminRedirect(message, "error");
 }
 
 async function recordVerificationEvent(input: {
@@ -38,7 +42,7 @@ export async function verifyProvider(formData: FormData) {
   const notes = String(formData.get("notes") ?? "").trim();
 
   if (!providerId) {
-    adminRedirect("Provider could not be verified.");
+    adminError("Provider could not be verified.");
   }
 
   const rows = await supabaseAuthenticatedRest<Array<{ id: string }>>(
@@ -51,7 +55,7 @@ export async function verifyProvider(formData: FormData) {
   );
 
   if (rows.length === 0) {
-    adminRedirect("Provider could not be verified.");
+    adminError("Provider could not be verified.");
   }
 
   await recordVerificationEvent({
@@ -70,7 +74,7 @@ export async function approveProperty(formData: FormData) {
   const notes = String(formData.get("notes") ?? "").trim();
 
   if (!propertyId) {
-    adminRedirect("Property could not be approved.");
+    adminError("Property could not be approved.");
   }
 
   const properties = await supabaseAuthenticatedRest<
@@ -82,7 +86,7 @@ export async function approveProperty(formData: FormData) {
   const property = properties[0];
 
   if (!property || property.publication_status !== "pending_review") {
-    adminRedirect("This property is no longer awaiting review.");
+    adminError("This property is no longer awaiting review.");
   }
 
   const providers = await supabaseAuthenticatedRest<
@@ -92,7 +96,7 @@ export async function approveProperty(formData: FormData) {
   );
 
   if (providers[0]?.verification_status !== "verified") {
-    adminRedirect("Verify the provider before publishing this property.");
+    adminError("Verify the provider before publishing this property.");
   }
 
   const rows = await supabaseAuthenticatedRest<Array<{ id: string }>>(
@@ -109,7 +113,7 @@ export async function approveProperty(formData: FormData) {
   );
 
   if (rows.length === 0) {
-    adminRedirect("Property could not be approved.");
+    adminError("Property could not be approved.");
   }
 
   await recordVerificationEvent({
@@ -128,11 +132,11 @@ export async function rejectProperty(formData: FormData) {
   const notes = String(formData.get("notes") ?? "").trim();
 
   if (!propertyId) {
-    adminRedirect("Property could not be rejected.");
+    adminError("Property could not be rejected.");
   }
 
   if (notes.length < 5) {
-    adminRedirect("Add a short reason before rejecting the property.");
+    adminError("Add a short reason before rejecting the property.");
   }
 
   const rows = await supabaseAuthenticatedRest<Array<{ id: string }>>(
@@ -149,7 +153,7 @@ export async function rejectProperty(formData: FormData) {
   );
 
   if (rows.length === 0) {
-    adminRedirect("This property is no longer awaiting review.");
+    adminError("This property is no longer awaiting review.");
   }
 
   await recordVerificationEvent({
@@ -177,7 +181,7 @@ export async function updatePropertyReportStatus(formData: FormData) {
       nextStatus as (typeof allowedReportStatuses)[number],
     )
   ) {
-    adminRedirect("Report status could not be updated.");
+    adminError("Report status could not be updated.");
   }
 
   const reports = await supabaseAuthenticatedRest<
@@ -191,7 +195,7 @@ export async function updatePropertyReportStatus(formData: FormData) {
   const report = reports[0];
 
   if (!report || report.status === "resolved" || report.status === "dismissed") {
-    adminRedirect("This report is no longer active.");
+    adminError("This report is no longer active.");
   }
 
   const rows = await supabaseAuthenticatedRest<Array<{ id: string }>>(
@@ -207,7 +211,7 @@ export async function updatePropertyReportStatus(formData: FormData) {
   );
 
   if (rows.length === 0) {
-    adminRedirect("Report status could not be updated.");
+    adminError("Report status could not be updated.");
   }
 
   adminRedirect(
@@ -216,5 +220,64 @@ export async function updatePropertyReportStatus(formData: FormData) {
       : nextStatus === "resolved"
         ? "Report marked resolved."
         : "Report dismissed.",
+  );
+}
+
+const allowedSupportStatuses = ["in_progress", "resolved", "dismissed"] as const;
+
+export async function updateSupportRequestStatus(formData: FormData) {
+  await requireAdmin();
+
+  const requestId = String(formData.get("requestId") ?? "").trim();
+  const nextStatus = String(formData.get("status") ?? "").trim();
+
+  if (
+    !requestId ||
+    !allowedSupportStatuses.includes(
+      nextStatus as (typeof allowedSupportStatuses)[number],
+    )
+  ) {
+    adminError("Support request could not be updated.");
+  }
+
+  const requests = await supabaseAuthenticatedRest<
+    Array<{ id: string; status: "open" | "in_progress" | "resolved" | "dismissed" }>
+  >(
+    `support_requests?id=eq.${encodeURIComponent(
+      requestId,
+    )}&select=id,status&limit=1`,
+  );
+
+  const request = requests[0];
+  const canUpdate =
+    request?.status === "open" ||
+    (request?.status === "in_progress" &&
+      (nextStatus === "resolved" || nextStatus === "dismissed"));
+
+  if (!request || !canUpdate) {
+    adminError("This support request is no longer active.");
+  }
+
+  const updated = await supabaseAuthenticatedRest<Array<{ id: string }>>(
+    `support_requests?id=eq.${encodeURIComponent(
+      requestId,
+    )}&status=eq.${request.status}&select=id`,
+    {
+      method: "PATCH",
+      prefer: "return=representation",
+      body: JSON.stringify({ status: nextStatus }),
+    },
+  );
+
+  if (updated.length === 0) {
+    adminError("Support request could not be updated.");
+  }
+
+  adminRedirect(
+    nextStatus === "in_progress"
+      ? "Support request assigned for follow-up."
+      : nextStatus === "resolved"
+        ? "Support request marked resolved."
+        : "Support request dismissed.",
   );
 }

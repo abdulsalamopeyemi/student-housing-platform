@@ -22,7 +22,7 @@ When UI, copy, assets, architecture, or product behavior changes, update the rel
 
 The project has moved beyond a static landing page.
 
-Implemented prototype flows now include:
+Implemented flows now include:
 
 - homepage
 - property search entry
@@ -33,5 +33,10 @@ Implemented prototype flows now include:
 - save-button state
 - responsive mobile menu
 - inspection-request UI
+- password recovery and reset
+- support requests and admin support queue
+- draft Terms and Privacy pages
 
-The next milestone is real persistence with Supabase Postgres.
+The public marketplace and student/provider actions are connected to Supabase. Remaining work is
+to apply and verify all migrations, configure and test Storage policies, finalize legal documents
+with the operator, and complete production integration testing.

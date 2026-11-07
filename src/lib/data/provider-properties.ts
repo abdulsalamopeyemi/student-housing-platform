@@ -20,6 +20,7 @@ export interface ProviderProperty {
     total_count: number;
     available_count: number;
     annual_rent: number;
+    availability_updated_at: string;
   }>;
 }
 
@@ -27,7 +28,7 @@ export async function getProviderProperties(providerId: string) {
   return supabaseAuthenticatedRest<ProviderProperty[]>(
     `properties?provider_id=eq.${encodeURIComponent(
       providerId,
-    )}&select=id,name,slug,area,distance_label,publication_status,verification_status,updated_at,universities(name),room_types(id,name,total_count,available_count,annual_rent)&order=updated_at.desc`,
+    )}&select=id,name,slug,area,distance_label,publication_status,verification_status,updated_at,universities(name),room_types(id,name,total_count,available_count,annual_rent,availability_updated_at)&order=updated_at.desc`,
   );
 }
 

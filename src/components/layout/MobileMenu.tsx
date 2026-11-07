@@ -113,7 +113,7 @@ export default function MobileMenu({
                   Sign in
                 </Link>
                 <Link
-                  href="/login#signup"
+                  href="/signup"
                   onClick={closeMenu}
                   className="rounded-xl bg-[var(--forest)] px-4 py-3 text-center text-sm font-semibold text-white"
                 >

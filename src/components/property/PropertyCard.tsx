@@ -1,10 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import SavePropertyButton from "@/components/property/SavePropertyButton";
+import { getAvailabilityFreshness } from "@/lib/availability";
 import type { StudentProperty } from "@/types/property";
 
 interface PropertyCardProps {
   property: StudentProperty;
+  showSaveButton?: boolean;
+  initiallySaved?: boolean;
 }
 
 const currencyFormatter = new Intl.NumberFormat("en-NG", {
@@ -13,8 +17,13 @@ const currencyFormatter = new Intl.NumberFormat("en-NG", {
   maximumFractionDigits: 0,
 });
 
-export default function PropertyCard({ property }: PropertyCardProps) {
+export default function PropertyCard({
+  property,
+  showSaveButton = false,
+  initiallySaved = false,
+}: PropertyCardProps) {
   const coverImage = property.images[0] ?? null;
+  const freshness = getAvailabilityFreshness(property.availabilityUpdatedAt);
   const availabilityLabel =
     property.availability === "occupied"
       ? "Fully occupied"
@@ -61,9 +70,19 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             </p>
           </div>
 
-          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-[var(--emerald)]">
-            {availabilityLabel}
-          </span>
+          <div className="text-right">
+            <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-[var(--emerald)]">
+              {availabilityLabel}
+            </span>
+            <p
+              className={[
+                "mt-1.5 text-[11px] font-medium",
+                freshness.isStale ? "text-amber-700" : "text-[var(--muted)]",
+              ].join(" ")}
+            >
+              {freshness.label}
+            </p>
+          </div>
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-2 rounded-2xl bg-[var(--cream)] p-3 text-center">
@@ -108,13 +127,23 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           </p>
         )}
 
-        <div className="mt-6 border-t border-[var(--border)] pt-4">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
           <Link
             href={`/properties/${property.slug}`}
             className="inline-flex rounded-xl bg-[var(--forest)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--emerald)]"
           >
             View details
           </Link>
+
+          {showSaveButton ? (
+            <SavePropertyButton
+              propertyId={property.id}
+              propertySlug={property.slug}
+              propertyName={property.name}
+              initiallySaved={initiallySaved}
+              variant="light"
+            />
+          ) : null}
         </div>
 
         <p className="mt-3 text-xs leading-5 text-[var(--muted)]">

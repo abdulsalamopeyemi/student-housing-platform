@@ -70,7 +70,7 @@ Need to review listings, manage verification states, handle reports, and keep ma
 - provider CTA
 
 ### M2 — Explore/search
-**Status: implemented with demo property data**
+**Status: implemented with live published-property data**
 
 - location filter
 - budget filter
@@ -79,7 +79,7 @@ Need to review listings, manage verification states, handle reports, and keep ma
 - empty-results state
 
 ### M3 — Property details
-**Status: implemented with demo property data**
+**Status: implemented with live published-property data**
 
 - dynamic `/properties/[slug]` route
 - property overview
@@ -104,6 +104,7 @@ Need to review listings, manage verification states, handle reports, and keep ma
 
 - email/password sign-up
 - email/password sign-in
+- password recovery and reset
 - HTTP-only session cookies
 - protected provider routes
 - refresh-token flow for protected routes
@@ -121,25 +122,37 @@ Need to review listings, manage verification states, handle reports, and keep ma
 - room availability
 - provider draft list
 - submit property for review
+- first room type only; multiple room types remain future work
 
 ### M7 — Real marketplace data + inspection requests
+**Status: implemented in application code; verify against the deployed database**
 
-- replace demo property arrays with published Postgres properties
-- persist inspection requests
-- request status
-- provider access to relevant requests
-- persisted student saved properties
+- public Explore and property details use published Postgres properties
+- inspection requests persist and have student/provider status flows
+- student saved homes persist and can be compared
+- student portal profile, saved-home, and inspection activity
+- tenancy activation and room reservations are not yet implemented
 
 ### M8 — Verification and moderation
+**Status: implemented foundation; requires workflow testing**
 
 - admin roles
 - provider/property review
 - publish/reject actions
 - reporting
 - audit history
+- admin operations overview with linked moderation, support, and payout queues
+
+### Supporting pages and requests
+**Status: implemented in application code; support migration must be applied**
+
+- Support request form with authenticated submission and admin queue
+- Terms and privacy draft pages (not final legal documents)
+- Footer links to support, terms, and privacy
 
 ### M9 — Production launch
 
+- reservation/payment workflow with gateway-verified room holds
 - property photo Storage buckets and policies
 - analytics
 - performance
@@ -148,3 +161,7 @@ Need to review listings, manage verification states, handle reports, and keep ma
 - monitoring
 - deployment
 - real pilot with Malete properties
+
+Before public launch, confirm the operator/legal identity, applicable privacy law,
+retention/deletion practices, payment/refund terms, email delivery, storage policies,
+and production monitoring. The legal pages must be reviewed and finalized first.

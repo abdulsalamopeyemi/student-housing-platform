@@ -22,6 +22,16 @@ export interface AdminPropertyReport {
   } | null;
 }
 
+export interface AdminSupportRequest {
+  id: string;
+  contact_email: string;
+  category: "account" | "property" | "inspection" | "payment" | "privacy" | "other";
+  subject: string;
+  message: string;
+  status: "open" | "in_progress" | "resolved" | "dismissed";
+  created_at: string;
+}
+
 export interface PendingProviderVerification {
   id: string;
   display_name: string | null;
@@ -84,6 +94,14 @@ export async function getAdminPropertyReports() {
 
   return supabaseAuthenticatedRest<AdminPropertyReport[]>(
     "reports?status=in.(open,reviewing)&select=id,reason,details,status,created_at,properties(id,name,slug,area)&order=created_at.asc",
+  );
+}
+
+export async function getAdminSupportRequests() {
+  await requireAdmin();
+
+  return supabaseAuthenticatedRest<AdminSupportRequest[]>(
+    "support_requests?status=in.(open,in_progress)&select=id,contact_email,category,subject,message,status,created_at&order=created_at.asc",
   );
 }
 

@@ -68,6 +68,7 @@ export async function toggleSavedProperty(
       );
 
       revalidatePath("/account");
+      revalidatePath("/explore");
       revalidatePath(propertyPath);
 
       return {

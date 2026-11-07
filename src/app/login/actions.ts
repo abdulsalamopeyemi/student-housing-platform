@@ -11,10 +11,15 @@ import {
 import { getCurrentAccount } from "@/lib/data/account";
 import {
   resendSignupConfirmation,
+  requestPasswordRecovery,
   signInWithPassword,
   signUpWithPassword,
+  updateCurrentUserPassword,
 } from "@/lib/supabase/auth-server";
-import { safeNextPath } from "@/lib/supabase/auth-shared";
+import {
+  type AccountType,
+  safeNextPath,
+} from "@/lib/supabase/auth-shared";
 
 function loginRedirectUrl(
   type: "error" | "message",
@@ -29,6 +34,42 @@ function loginRedirectUrl(
   return `/login?${params.toString()}`;
 }
 
+function signupRedirectUrl(
+  type: "error" | "message",
+  message: string,
+  nextPath: string,
+  accountType?: string,
+) {
+  const params = new URLSearchParams({
+    [type]: message,
+    next: nextPath,
+  });
+
+  if (accountType === "provider" || accountType === "student") {
+    params.set("accountType", accountType);
+  }
+
+  return `/signup?${params.toString()}`;
+}
+
+function checkEmailRedirectUrl(
+  email: string,
+  nextPath: string,
+  type?: "error" | "message",
+  message?: string,
+) {
+  const params = new URLSearchParams({
+    email,
+    next: nextPath,
+  });
+
+  if (type && message) {
+    params.set(type, message);
+  }
+
+  return `/auth/check-email?${params.toString()}`;
+}
+
 function dashboardForRole(role: "student" | "provider" | "admin" | null) {
   if (role === "admin") {
     return "/admin/reviews";
@@ -41,13 +82,59 @@ function dashboardForRole(role: "student" | "provider" | "admin" | null) {
   return "/account";
 }
 
-async function confirmationRedirectUrl(nextPath: string) {
+function loginDestination(
+  nextPath: string,
+  role: "student" | "provider" | "admin" | null,
+  accountType: AccountType,
+) {
+  if (nextPath !== "/explore" && nextPath !== "/account") {
+    return nextPath;
+  }
+
+  if (role === "provider" || role === "admin") {
+    return dashboardForRole(role);
+  }
+
+  if (accountType === "provider") {
+    return "/provider/onboarding?next=/list-property";
+  }
+
+  return dashboardForRole(role);
+}
+
+async function authRedirectUrl(
+  path: string,
+  nextPath: string,
+): Promise<string | null> {
   const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 
   if (configuredSiteUrl) {
-    const url = new URL("/auth/confirm", configuredSiteUrl);
-    url.searchParams.set("next", nextPath);
-    return url.toString();
+    try {
+      const siteUrl = new URL(configuredSiteUrl);
+      const isLocalHost =
+        siteUrl.hostname === "localhost" ||
+        siteUrl.hostname === "127.0.0.1" ||
+        siteUrl.hostname === "[::1]" ||
+        siteUrl.hostname.endsWith(".localhost");
+
+      if (
+        !["http:", "https:"].includes(siteUrl.protocol) ||
+        (process.env.NODE_ENV === "production" &&
+          (siteUrl.protocol !== "https:" || isLocalHost))
+      ) {
+        return null;
+      }
+
+      const redirectUrl = new URL(path, siteUrl.origin);
+      redirectUrl.searchParams.set("next", nextPath);
+      return redirectUrl.toString();
+    } catch {
+      return null;
+    }
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return null;
   }
 
   const requestHeaders = await headers();
@@ -55,7 +142,7 @@ async function confirmationRedirectUrl(nextPath: string) {
     requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
 
   if (!host) {
-    return `http://localhost:3000/auth/confirm?next=${encodeURIComponent(nextPath)}`;
+    return `http://localhost:3000${path}?next=${encodeURIComponent(nextPath)}`;
   }
 
   const forwardedProtocol = requestHeaders.get("x-forwarded-proto");
@@ -65,8 +152,15 @@ async function confirmationRedirectUrl(nextPath: string) {
       ? "http"
       : "https");
 
-  return `${protocol}://${host}/auth/confirm?next=${encodeURIComponent(nextPath)}`;
+  return `${protocol}://${host}${path}?next=${encodeURIComponent(nextPath)}`;
 }
+
+async function confirmationRedirectUrl(nextPath: string) {
+  return authRedirectUrl("/auth/confirm", nextPath);
+}
+
+const productionRedirectConfigurationError =
+  "Account email links are not configured for this deployment. Set NEXT_PUBLIC_SITE_URL to the deployed app origin, then try again.";
 
 function submittedEmailError(email: string) {
   const validationError = emailValidationError(email);
@@ -141,7 +235,7 @@ export async function login(formData: FormData) {
     redirect(loginRedirectUrl("error", "Enter your password.", nextPath));
   }
 
-  const { error } = await signInWithPassword(email, password);
+  const { session, error } = await signInWithPassword(email, password);
 
   if (error) {
     redirect(
@@ -153,12 +247,14 @@ export async function login(formData: FormData) {
     );
   }
 
-  if (nextPath !== "/explore") {
-    redirect(nextPath);
-  }
-
   const { profile } = await getCurrentAccount();
-  redirect(dashboardForRole(profile?.role ?? null));
+  const accountType =
+    session?.user.user_metadata?.account_type === "provider"
+      ? "provider"
+      : "student";
+  redirect(
+    loginDestination(nextPath, profile?.role ?? null, accountType),
+  );
 }
 
 export async function signup(formData: FormData) {
@@ -168,17 +264,20 @@ export async function signup(formData: FormData) {
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
   const requestedNextPath = safeNextPath(formData.get("next"));
   const accountType = String(formData.get("accountType") ?? "student");
+  const isPortalPath = ["/explore", "/account", "/list-property"].includes(
+    requestedNextPath,
+  );
   const nextPath =
-    requestedNextPath === "/explore"
-      ? accountType === "provider"
-        ? "/provider/onboarding?next=/list-property"
-        : "/account"
-      : requestedNextPath;
+    accountType === "provider" && isPortalPath
+      ? "/provider/onboarding?next=/list-property"
+      : requestedNextPath === "/explore"
+        ? "/account"
+        : requestedNextPath;
   const emailError = submittedEmailError(email);
 
   if (accountType !== "student" && accountType !== "provider") {
     redirect(
-      loginRedirectUrl(
+      signupRedirectUrl(
         "error",
         "Choose whether you are looking for accommodation or listing accommodation.",
         requestedNextPath,
@@ -188,53 +287,69 @@ export async function signup(formData: FormData) {
 
   if (fullName.length < 2 || fullName.length > 100) {
     redirect(
-      loginRedirectUrl(
+      signupRedirectUrl(
         "error",
         "Enter your full name using 2 to 100 characters.",
         nextPath,
+        accountType,
       ),
     );
   }
 
   if (emailError) {
-    redirect(loginRedirectUrl("error", emailError, nextPath));
+    redirect(signupRedirectUrl("error", emailError, nextPath, accountType));
   }
 
   if (password.length < 8) {
     redirect(
-      loginRedirectUrl(
+      signupRedirectUrl(
         "error",
         "Use a password with at least 8 characters.",
         nextPath,
+        accountType,
       ),
     );
   }
 
   if (password !== confirmPassword) {
     redirect(
-      loginRedirectUrl(
+      signupRedirectUrl(
         "error",
         "The passwords do not match.",
         nextPath,
+        accountType,
       ),
     );
   }
 
   const emailRedirectTo = await confirmationRedirectUrl(nextPath);
 
+  if (!emailRedirectTo) {
+    redirect(
+      signupRedirectUrl(
+        "error",
+        productionRedirectConfigurationError,
+        nextPath,
+        accountType,
+      ),
+    );
+  }
+
   const { session, error } = await signUpWithPassword(
     fullName,
     email,
     password,
+    accountType,
     emailRedirectTo,
   );
 
   if (error) {
     redirect(
-      loginRedirectUrl(
+      signupRedirectUrl(
         "error",
         friendlyAuthError(error, "signup"),
         nextPath,
+        accountType,
       ),
     );
   }
@@ -243,13 +358,7 @@ export async function signup(formData: FormData) {
     redirect(nextPath);
   }
 
-  redirect(
-    loginRedirectUrl(
-      "message",
-      "Account created. We sent a confirmation email. Confirm your address before signing in. If it does not arrive, use the resend option below.",
-      nextPath,
-    ),
-  );
+  redirect(checkEmailRedirectUrl(email, nextPath));
 }
 
 export async function resendConfirmation(formData: FormData) {
@@ -261,23 +370,115 @@ export async function resendConfirmation(formData: FormData) {
     redirect(loginRedirectUrl("error", emailError, nextPath));
   }
 
-  const { error } = await resendSignupConfirmation(email);
+  const emailRedirectTo = await confirmationRedirectUrl(nextPath);
+
+  if (!emailRedirectTo) {
+    redirect(
+      checkEmailRedirectUrl(
+        email,
+        nextPath,
+        "error",
+        productionRedirectConfigurationError,
+      ),
+    );
+  }
+  const { error } = await resendSignupConfirmation(email, emailRedirectTo);
 
   if (error) {
     redirect(
-      loginRedirectUrl(
+      checkEmailRedirectUrl(
+        email,
+        nextPath,
         "error",
         friendlyAuthError(error, "resend"),
-        nextPath,
       ),
     );
   }
 
   redirect(
-    loginRedirectUrl(
-      "message",
-      "If an unconfirmed account exists for that email, a new confirmation message has been sent. Check Inbox, Spam, Promotions, and Updates.",
+    checkEmailRedirectUrl(
+      email,
       nextPath,
+      "message",
+      "If an unconfirmed account exists for that address, a new confirmation email has been requested. Check your inbox and spam folder.",
     ),
   );
+}
+
+export async function requestPasswordReset(formData: FormData) {
+  const email = normalizeEmail(formData.get("email"));
+  const emailError = submittedEmailError(email);
+
+  if (emailError) {
+    redirect(`/auth/forgot-password?error=${encodeURIComponent(emailError)}`);
+  }
+
+  const redirectTo = await authRedirectUrl("/auth/recover", "/auth/reset-password");
+
+  if (!redirectTo) {
+    redirect(
+      `/auth/forgot-password?error=${encodeURIComponent(
+        productionRedirectConfigurationError,
+      )}`,
+    );
+  }
+
+  let recoveryFailed = false;
+
+  try {
+    const { error } = await requestPasswordRecovery(email, redirectTo);
+    recoveryFailed = Boolean(error);
+  } catch {
+    recoveryFailed = true;
+  }
+
+  if (recoveryFailed) {
+    redirect(
+      "/auth/forgot-password?error=We+could+not+request+a+reset+right+now.+Try+again+shortly.",
+    );
+  }
+
+  redirect(
+    "/auth/forgot-password?message=If+an+account+exists+for+that+email%2C+a+password+reset+link+has+been+sent.",
+  );
+}
+
+export async function resetPassword(formData: FormData) {
+  const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
+
+  if (password.length < 8) {
+    redirect(
+      "/auth/reset-password?error=Use+a+password+with+at+least+8+characters.",
+    );
+  }
+
+  if (password !== confirmPassword) {
+    redirect("/auth/reset-password?error=The+passwords+do+not+match.");
+  }
+
+  const { user } = await getCurrentAccount();
+
+  if (!user) {
+    redirect(
+      "/auth/forgot-password?error=Your+reset+session+has+expired.+Request+a+new+link.",
+    );
+  }
+
+  let passwordUpdateFailed = false;
+
+  try {
+    const { error } = await updateCurrentUserPassword(password);
+    passwordUpdateFailed = Boolean(error);
+  } catch {
+    passwordUpdateFailed = true;
+  }
+
+  if (passwordUpdateFailed) {
+    redirect(
+      "/auth/reset-password?error=We+could+not+update+your+password.+Request+a+new+reset+link+and+try+again.",
+    );
+  }
+
+  redirect("/account?message=Your+password+has+been+updated.");
 }

@@ -19,6 +19,19 @@ function lagosToday() {
   }).format(new Date());
 }
 
+function isValidDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+
+  return (
+    !Number.isNaN(parsed.getTime()) &&
+    parsed.toISOString().slice(0, 10) === value
+  );
+}
+
 async function requireStudentAccount() {
   const { user, profile } = await getCurrentAccount();
 
@@ -45,7 +58,7 @@ export async function rescheduleStudentInspection(formData: FormData) {
     redirect(accountMessage("Inspection request could not be identified."));
   }
 
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(preferredDate)) {
+  if (!isValidDate(preferredDate)) {
     redirect(accountMessage("Choose a valid inspection date."));
   }
 
@@ -56,6 +69,8 @@ export async function rescheduleStudentInspection(formData: FormData) {
   if (!["1", "2", "3", "4+"].includes(occupantGroupSize)) {
     redirect(accountMessage("Choose how many people plan to stay."));
   }
+
+  let updateError = "";
 
   try {
     const rows = await supabaseAuthenticatedRest<Array<{ id: string }>>(
@@ -77,14 +92,14 @@ export async function rescheduleStudentInspection(formData: FormData) {
     );
 
     if (rows.length === 0) {
-      redirect(
-        accountMessage(
-          "This inspection request can no longer be rescheduled.",
-        ),
-      );
+      updateError = "This inspection request can no longer be rescheduled.";
     }
   } catch {
-    redirect(accountMessage("We could not reschedule the inspection request."));
+    updateError = "We could not reschedule the inspection request.";
+  }
+
+  if (updateError) {
+    redirect(accountMessage(updateError));
   }
 
   revalidatePath("/account");
@@ -104,6 +119,8 @@ export async function cancelStudentInspection(formData: FormData) {
     redirect(accountMessage("Inspection request could not be identified."));
   }
 
+  let updateError = "";
+
   try {
     const rows = await supabaseAuthenticatedRest<Array<{ id: string }>>(
       `inspection_requests?id=eq.${encodeURIComponent(
@@ -122,14 +139,14 @@ export async function cancelStudentInspection(formData: FormData) {
     );
 
     if (rows.length === 0) {
-      redirect(
-        accountMessage(
-          "This inspection request can no longer be cancelled.",
-        ),
-      );
+      updateError = "This inspection request can no longer be cancelled.";
     }
   } catch {
-    redirect(accountMessage("We could not cancel the inspection request."));
+    updateError = "We could not cancel the inspection request.";
+  }
+
+  if (updateError) {
+    redirect(accountMessage(updateError));
   }
 
   revalidatePath("/account");

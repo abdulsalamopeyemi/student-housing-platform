@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 
-import LoginContent from "@/components/auth/LoginContent";
+import AuthLoadingSkeleton from "@/components/auth/AuthLoadingSkeleton";
+import SigninContent from "@/components/auth/SigninContent";
 import SiteFooter from "@/components/layout/SiteFooter";
 import SiteHeader from "@/components/layout/SiteHeader";
 
@@ -12,19 +13,25 @@ interface LoginPageProps {
   }>;
 }
 
+export const metadata = {
+  title: "Sign in",
+  description:
+    "Sign in to your Student Housing account to manage saved homes, inspection requests, or property listings.",
+};
+
 export default function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <>
       <SiteHeader />
-      <main className="min-h-[70vh] bg-[var(--paper)]">
+      <main className="auth-page flex-1">
         <Suspense
           fallback={
-            <div className="mx-auto max-w-6xl px-5 py-20 lg:px-8">
-              <div className="h-12 max-w-xl animate-pulse rounded-2xl bg-[var(--cream)]" />
+            <div className="px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
+              <AuthLoadingSkeleton />
             </div>
           }
         >
-          <LoginContent searchParams={searchParams} />
+          <SigninContent searchParams={searchParams} />
         </Suspense>
       </main>
       <SiteFooter />
