@@ -10,17 +10,46 @@ The application already sends signup confirmation links to `/auth/confirm`, adop
 
 In the Supabase Dashboard, open **Authentication → URL Configuration**.
 
+Set **Site URL** to the origin where the app is actually running:
+
+- Local development: `http://localhost:3000`
+- Deployed app: the public deployed origin, for example `https://your-app.example.com`
+
+Then add every origin that may open an email link to the **Redirect URLs** allow
+list:
+
+- `http://localhost:3000/**`
+- `http://127.0.0.1:3000/**`
+- `https://your-app.example.com/**`
+
+> **Important:** Supabase ignores a `redirect_to` value that is not in this
+> allow list and silently falls back to the **Site URL**. That is why a
+> confirmation email sent from a deployed app can open on
+> `http://localhost:3000` instead of the deployed `/auth/confirm` page, and why
+> the account is confirmed but the visitor never sees the verification step.
+> A quick way to verify the setting is to request
+> `/auth/v1/verify?token=bogus&type=signup&redirect_to=<your-app>/auth/confirm`
+> and inspect the `Location` header: it should point at your app, not
+> `localhost`.
+
+Also set `NEXT_PUBLIC_SITE_URL` in the deployment environment to the same public
+origin. The app uses it to build confirmation and recovery links; when it is
+missing, the app falls back to the request origin, which may not be
+allow-listed.
+
 Then open **Authentication → Sign In / Providers → Email** and make sure
 **Confirm email** is enabled. The application does not create an authenticated
 session during signup and accepts a login session only when Supabase reports a
 confirmed email address. If confirmation is disabled, Supabase may mark new
 addresses as confirmed automatically, bypassing the verification email. The
-signup flow displays a setup error in this case.
+signup flow now refuses to create an account in that state and displays a setup
+error instead.
 
 For local development, use:
 
 - Site URL: `http://localhost:3000`
-- Redirect URL allow list: `http://localhost:3000/**`
+- Redirect URL allow list: `http://localhost:3000/**` and
+  `http://127.0.0.1:3000/**`
 
 When the application is deployed, set the Site URL to the real public application URL and add that domain to the Redirect URL allow list. Keep localhost in the allow list for local development.
 
@@ -100,3 +129,32 @@ Test with an account you control:
    password again.
 
 Never paste recovery URLs or tokens into support messages or source control.
+
+## 7. Troubleshooting the signup link
+
+**The email opens `http://localhost:3000` even though the app is deployed.**
+
+The deployed origin is not in Supabase's Redirect URL allow list, so Supabase
+replaced the requested `/auth/confirm` destination with the project Site URL.
+Update **Authentication → URL Configuration** as described in section 1, then
+send a fresh confirmation email. Existing links keep the old destination.
+
+**The email link confirms the account, but the visitor lands on the homepage
+and never sees a verification page.**
+
+The link fell back to the app root. The app now forwards auth hashes from any
+page to `/auth/confirm` (or `/auth/recover` for password resets), so the session
+is adopted and the visitor is routed to onboarding. The allow-list fix above is
+still required for links opened on another device.
+
+**A newly created account can sign in without opening the email.**
+
+Check **Authentication → Sign In / Providers → Email → Confirm email**. If it is
+off, Supabase auto-confirms new accounts. The signup action now checks the
+project auth settings and refuses to create accounts while auto-confirmation is
+on, showing a setup error instead.
+
+**The confirmation link says it expired.**
+
+Links are single-use and time-limited. Open `/auth/check-email`, enter the same
+address, and request a new confirmation email. Do not create the account again.

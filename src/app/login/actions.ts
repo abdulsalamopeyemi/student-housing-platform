@@ -11,6 +11,7 @@ import {
 import { getCurrentAccount } from "@/lib/data/account";
 import {
   clearAuthSession,
+  getAuthSettings,
   resendSignupConfirmation,
   requestPasswordRecovery,
   signInWithPassword,
@@ -154,57 +155,74 @@ function loginDestination(
   return dashboardForRole(role);
 }
 
-async function authRedirectUrl(
-  path: string,
-  nextPath: string,
-): Promise<string | null> {
+async function requestOrigin(): Promise<string | null> {
   const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 
   if (configuredSiteUrl) {
     try {
       const siteUrl = new URL(configuredSiteUrl);
-      const isLocalHost =
-        siteUrl.hostname === "localhost" ||
-        siteUrl.hostname === "127.0.0.1" ||
-        siteUrl.hostname === "[::1]" ||
-        siteUrl.hostname.endsWith(".localhost");
 
-      if (
-        !["http:", "https:"].includes(siteUrl.protocol) ||
-        (process.env.NODE_ENV === "production" &&
-          (siteUrl.protocol !== "https:" || isLocalHost))
-      ) {
+      if (!["http:", "https:"].includes(siteUrl.protocol)) {
         return null;
       }
 
-      const redirectUrl = new URL(path, siteUrl.origin);
-      redirectUrl.searchParams.set("next", nextPath);
-      return redirectUrl.toString();
+      // A production email link must point at a publicly reachable https origin.
+      if (process.env.NODE_ENV === "production" && siteUrl.protocol !== "https:") {
+        return null;
+      }
+
+      return siteUrl.origin;
     } catch {
       return null;
     }
   }
 
-  if (process.env.NODE_ENV === "production") {
+  // Fall back to the origin that served this request so preview deployments and
+  // other temporary hosts still send confirmation links to the right place.
+  const requestHeaders = await headers();
+  const forwardedHost = requestHeaders
+    .get("x-forwarded-host")
+    ?.split(",")[0]
+    ?.trim();
+  const host =
+    forwardedHost || requestHeaders.get("host")?.split(",")[0]?.trim();
+
+  if (!host) {
     return null;
   }
 
-  const requestHeaders = await headers();
-  const host =
-    requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+  const isLocalHost =
+    host.startsWith("localhost") ||
+    host.startsWith("127.0.0.1") ||
+    host.startsWith("[::1]");
 
-  if (!host) {
-    return `http://localhost:3000${path}?next=${encodeURIComponent(nextPath)}`;
+  if (process.env.NODE_ENV === "production" && isLocalHost) {
+    return null;
   }
 
-  const forwardedProtocol = requestHeaders.get("x-forwarded-proto");
-  const protocol =
-    forwardedProtocol ??
-    (host.startsWith("localhost") || host.startsWith("127.0.0.1")
-      ? "http"
-      : "https");
+  const forwardedProtocol = requestHeaders
+    .get("x-forwarded-proto")
+    ?.split(",")[0]
+    ?.trim();
+  const protocol = forwardedProtocol ?? (isLocalHost ? "http" : "https");
 
-  return `${protocol}://${host}${path}?next=${encodeURIComponent(nextPath)}`;
+  return `${protocol}://${host}`;
+}
+
+async function authRedirectUrl(
+  path: string,
+  nextPath: string,
+): Promise<string | null> {
+  const origin = await requestOrigin();
+
+  if (!origin) {
+    return null;
+  }
+
+  const redirectUrl = new URL(path, origin);
+  redirectUrl.searchParams.set("next", nextPath);
+
+  return redirectUrl.toString();
 }
 
 async function confirmationRedirectUrl(nextPath: string) {
@@ -368,6 +386,30 @@ export async function signup(formData: FormData) {
       signupRedirectUrl(
         "error",
         "The passwords do not match.",
+        nextPath,
+        accountType,
+      ),
+    );
+  }
+
+  const authSettings = await getAuthSettings();
+
+  if (authSettings?.disable_signup) {
+    redirect(
+      signupRedirectUrl(
+        "error",
+        "New account creation is currently disabled. Contact support if you need an account.",
+        nextPath,
+        accountType,
+      ),
+    );
+  }
+
+  if (authSettings?.mailer_autoconfirm) {
+    redirect(
+      signupRedirectUrl(
+        "error",
+        "Email verification is not enabled for this deployment, so new accounts cannot be created safely. The site administrator must enable Confirm email in Supabase.",
         nextPath,
         accountType,
       ),
