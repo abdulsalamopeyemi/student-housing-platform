@@ -36,6 +36,26 @@ reservation and gateway-payment workflows remain deferred.
 Payout configuration remains separate from reservation checkout. No payment
 gateway or reservation behavior was implemented in this work.
 
+## 3. Signup email confirmation hardening
+
+- Confirmation and recovery links now fall back to the request origin when
+  `NEXT_PUBLIC_SITE_URL` is not configured, so preview deployments do not build
+  links to an unrelated host.
+- Auth hashes that arrive on the app root are forwarded to `/auth/confirm` or
+  `/auth/recover` instead of being ignored. This recovers the flow when Supabase
+  falls back to the project Site URL.
+- The confirmation endpoint now reports the account type, so a link without a
+  `next` destination still routes landlords to onboarding and tenants to their
+  account.
+- Signup checks the Supabase auth settings before creating an account and
+  refuses to continue when signups are disabled or email auto-confirmation is
+  on, preventing unverified accounts from being created.
+- Local Supabase config now requires email confirmation and allow-lists the
+  localhost app origins.
+
+The hosted Supabase project still needs its **Site URL** and **Redirect URLs**
+updated in the dashboard. That setting cannot be changed from the repository.
+
 ## Validation
 
 - `npm run lint`

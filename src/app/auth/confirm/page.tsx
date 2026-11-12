@@ -74,13 +74,21 @@ export default function ConfirmEmailPage() {
           return;
         }
 
+        const result = (await response.json().catch(() => null)) as {
+          accountType?: "student" | "provider";
+        } | null;
+
         const requestedNext = currentUrl.searchParams.get("next");
+        const fallbackPath =
+          result?.accountType === "provider"
+            ? "/provider/onboarding?next=/list-property"
+            : "/account";
         const nextPath =
           requestedNext &&
           requestedNext.startsWith("/") &&
           !requestedNext.startsWith("//")
             ? requestedNext
-            : "/account";
+            : fallbackPath;
 
         window.location.replace(nextPath);
       } catch {

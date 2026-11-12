@@ -36,15 +36,19 @@ export async function POST(request: Request) {
     );
   }
 
-  const { error } = await adoptAuthTokens(
+  const { user, error } = await adoptAuthTokens(
     accessToken,
     refreshToken,
     Math.floor(expiresIn),
   );
 
-  if (error) {
-    return NextResponse.json({ error }, { status: 401 });
+  if (error || !user) {
+    return NextResponse.json({ error: error ?? "Unauthorized" }, { status: 401 });
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({
+    ok: true,
+    accountType:
+      user.user_metadata?.account_type === "provider" ? "provider" : "student",
+  });
 }

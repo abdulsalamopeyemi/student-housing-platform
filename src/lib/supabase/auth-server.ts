@@ -146,6 +146,36 @@ export async function adoptAuthTokens(
   return { user, error: null };
 }
 
+interface SupabaseAuthSettings {
+  disable_signup?: boolean;
+  mailer_autoconfirm?: boolean;
+}
+
+/**
+ * Reads the public auth settings for the project. The signup flow uses this to
+ * refuse to create accounts when email confirmation is disabled, because those
+ * accounts are marked verified immediately and can sign in without ever
+ * opening a confirmation message.
+ */
+export async function getAuthSettings(): Promise<SupabaseAuthSettings | null> {
+  try {
+    const response = await fetch(`${supabasePublicConfig.url}/auth/v1/settings`, {
+      headers: {
+        apikey: supabasePublicConfig.publishableKey,
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as SupabaseAuthSettings;
+  } catch {
+    return null;
+  }
+}
+
 export async function signInWithPassword(email: string, password: string) {
   const response = await fetch(
     `${supabasePublicConfig.url}/auth/v1/token?grant_type=password`,
