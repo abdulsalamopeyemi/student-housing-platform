@@ -4,6 +4,7 @@ const footerLinks = [
   { label: "Explore homes", href: "/explore" },
   { label: "How it works", href: "/#how-it-works" },
   { label: "List a property", href: "/list-property" },
+  { label: "FAQs", href: "/faq" },
   { label: "Support", href: "/support" },
   { label: "Privacy", href: "/privacy" },
   { label: "Terms", href: "/terms" },

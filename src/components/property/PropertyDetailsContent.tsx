@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { io } from "next/cache";
 import { notFound } from "next/navigation";
 
 import InspectionRequestForm from "@/components/property/InspectionRequestForm";
@@ -51,6 +52,7 @@ export default async function PropertyDetailsContent({
         ? `${property.availableRooms} rooms left`
         : `${property.availableRooms} rooms available`;
 
+  await io();
   const availabilityFreshness = getAvailabilityFreshness(
     property.availabilityUpdatedAt,
   );

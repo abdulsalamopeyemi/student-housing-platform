@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { io } from "next/cache";
 
 import SavePropertyButton from "@/components/property/SavePropertyButton";
 import { getAvailabilityFreshness } from "@/lib/availability";
@@ -17,11 +18,13 @@ const currencyFormatter = new Intl.NumberFormat("en-NG", {
   maximumFractionDigits: 0,
 });
 
-export default function PropertyCard({
+export default async function PropertyCard({
   property,
   showSaveButton = false,
   initiallySaved = false,
 }: PropertyCardProps) {
+  await io();
+
   const coverImage = property.images[0] ?? null;
   const freshness = getAvailabilityFreshness(property.availabilityUpdatedAt);
   const availabilityLabel =

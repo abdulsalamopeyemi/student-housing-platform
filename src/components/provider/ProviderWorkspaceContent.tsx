@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { io } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { signOut } from "@/app/auth/actions";
@@ -105,6 +106,8 @@ export default async function ProviderWorkspaceContent({
   const publishedCount = properties.filter(
     (property) => property.publication_status === "published",
   ).length;
+
+  await io();
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-14 lg:px-8 lg:py-20">

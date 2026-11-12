@@ -1,6 +1,4 @@
-const uni = async () => await fetch("http://localhost:3000/api/universities");
 export default function Hero() {
-  console.log("hello NEXT");
   return (
     <section className="relative overflow-hidden bg-[var(--cream)]">
       <div className="mx-auto grid max-w-7xl gap-12 px-5 py-20 lg:grid-cols-2 lg:px-8 lg:py-28">
